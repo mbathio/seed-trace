@@ -1,0 +1,132 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 30% 98%;
+    --foreground: 110 20% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 110 20% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 110 20% 15%;
+
+    --primary: 122 46% 35%;
+    --primary-foreground: 355 100% 100%;
+
+    --secondary: 34 50% 65%;
+    --secondary-foreground: 110 20% 15%;
+
+    --muted: 110 15% 90%;
+    --muted-foreground: 110 10% 40%;
+
+    --accent: 34 70% 65%;
+    --accent-foreground: 110 20% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 110 15% 85%;
+    --input: 110 15% 85%;
+    --ring: 122 46% 35%;
+    --radius: 0.5rem;
+
+    --sidebar-background: 122 46% 35%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 34 70% 65%;
+    --sidebar-primary-foreground: 110 20% 15%;
+    --sidebar-accent: 122 10% 45%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 122 15% 30%;
+    --sidebar-ring: 34 70% 65%;
+  }
+
+  .dark {
+    --background: 110 20% 10%;
+    --foreground: 110 15% 95%;
+
+    --card: 110 20% 15%;
+    --card-foreground: 110 15% 95%;
+
+    --popover: 110 20% 15%;
+    --popover-foreground: 110 15% 95%;
+
+    --primary: 122 46% 45%;
+    --primary-foreground: 110 20% 10%;
+
+    --secondary: 34 50% 65%;
+    --secondary-foreground: 110 20% 10%;
+
+    --muted: 110 20% 20%;
+    --muted-foreground: 110 15% 65%;
+
+    --accent: 34 50% 50%;
+    --accent-foreground: 110 15% 95%;
+
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 110 15% 95%;
+
+    --border: 110 20% 25%;
+    --input: 110 20% 25%;
+    --ring: 122 46% 45%;
+
+    --sidebar-background: 110 30% 15%;
+    --sidebar-foreground: 110 15% 95%;
+    --sidebar-primary: 122 46% 45%;
+    --sidebar-primary-foreground: 110 15% 95%;
+    --sidebar-accent: 110 15% 25%;
+    --sidebar-accent-foreground: 110 15% 95%;
+    --sidebar-border: 110 15% 20%;
+    --sidebar-ring: 34 50% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Styles spécifiques pour le système ISRA */
+.seed-card {
+  @apply relative overflow-hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.seed-card:hover {
+  transform: translateY(-5px);
+  @apply shadow-lg;
+}
+
+.breadcrumb-item {
+  @apply inline-flex items-center;
+}
+
+.breadcrumb-item:not(:last-child):after {
+  content: '/';
+  @apply mx-2 text-muted-foreground;
+}
+
+.genealogy-tree {
+  @apply mt-6 space-y-6;
+}
+
+.genealogy-node {
+  @apply relative p-4 border rounded-md;
+}
+
+.genealogy-node:not(:first-child):before {
+  content: '';
+  @apply absolute w-1 bg-primary/30 left-1/2 -top-6 h-6 -translate-x-1/2;
+}
+
+.genealogy-level {
+  @apply flex justify-center gap-8 flex-wrap;
+}
