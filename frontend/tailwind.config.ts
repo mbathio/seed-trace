@@ -63,26 +63,20 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
-				// Couleurs spécifiques au projet ISRA
-				'isra-green': {
-					light: '#8BC34A',
-					DEFAULT: '#689F38',
-					dark: '#558B2F'
-				},
-				'isra-brown': {
-					light: '#A1887F',
-					DEFAULT: '#795548',
-					dark: '#5D4037'
-				},
-				'isra-yellow': {
-					light: '#FFF59D',
-					DEFAULT: '#FDD835',
-					dark: '#F9A825'
-				},
-				'isra-beige': {
-					light: '#F5F5DC',
-					DEFAULT: '#E8E4C9',
-					dark: '#D6CABD'
+				// Custom ISRA colors
+				isra: {
+					green: {
+						light: '#81C784',
+						DEFAULT: '#4CAF50',
+						dark: '#2E7D32',
+					},
+					brown: {
+						light: '#A1887F',
+						DEFAULT: '#8D6E63',
+						dark: '#6D4C41',
+					},
+					beige: '#F5F5DC',
+					gray: '#E0E0E0',
 				}
 			},
 			borderRadius: {

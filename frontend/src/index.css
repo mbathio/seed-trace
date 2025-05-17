@@ -5,82 +5,83 @@
 
 @layer base {
   :root {
-    --background: 60 30% 98%;
-    --foreground: 110 20% 15%;
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
-    --card-foreground: 110 20% 15%;
+    --card-foreground: 222.2 84% 4.9%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 110 20% 15%;
+    --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 122 46% 35%;
-    --primary-foreground: 355 100% 100%;
+    --primary: 122 39% 49%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 34 50% 65%;
-    --secondary-foreground: 110 20% 15%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 110 15% 90%;
-    --muted-foreground: 110 10% 40%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 34 70% 65%;
-    --accent-foreground: 110 20% 15%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 110 15% 85%;
-    --input: 110 15% 85%;
-    --ring: 122 46% 35%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 122 39% 49%;
+
     --radius: 0.5rem;
 
-    --sidebar-background: 122 46% 35%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 34 70% 65%;
-    --sidebar-primary-foreground: 110 20% 15%;
-    --sidebar-accent: 122 10% 45%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 122 15% 30%;
-    --sidebar-ring: 34 70% 65%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 122 39% 49%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 122 39% 49%;
   }
 
   .dark {
-    --background: 110 20% 10%;
-    --foreground: 110 15% 95%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
 
-    --card: 110 20% 15%;
-    --card-foreground: 110 15% 95%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 110 20% 15%;
-    --popover-foreground: 110 15% 95%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 122 46% 45%;
-    --primary-foreground: 110 20% 10%;
+    --primary: 122 39% 49%;
+    --primary-foreground: 222.2 47.4% 11.2%;
 
-    --secondary: 34 50% 65%;
-    --secondary-foreground: 110 20% 10%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 110 20% 20%;
-    --muted-foreground: 110 15% 65%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 34 50% 50%;
-    --accent-foreground: 110 15% 95%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 45%;
-    --destructive-foreground: 110 15% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
 
-    --border: 110 20% 25%;
-    --input: 110 20% 25%;
-    --ring: 122 46% 45%;
-
-    --sidebar-background: 110 30% 15%;
-    --sidebar-foreground: 110 15% 95%;
-    --sidebar-primary: 122 46% 45%;
-    --sidebar-primary-foreground: 110 15% 95%;
-    --sidebar-accent: 110 15% 25%;
-    --sidebar-accent-foreground: 110 15% 95%;
-    --sidebar-border: 110 15% 20%;
-    --sidebar-ring: 34 50% 65%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 122 39% 49%;
+    
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 122 39% 49%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 122 39% 49%;
   }
 }
 
@@ -94,39 +95,68 @@
   }
 }
 
-/* Styles spécifiques pour le système ISRA */
-.seed-card {
-  @apply relative overflow-hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+/* Custom ISRA styles */
+.bg-isra-green {
+  @apply bg-[#4CAF50];
 }
 
-.seed-card:hover {
-  transform: translateY(-5px);
-  @apply shadow-lg;
+.bg-isra-green-light {
+  @apply bg-[#81C784];
 }
 
-.breadcrumb-item {
-  @apply inline-flex items-center;
+.bg-isra-green-dark {
+  @apply bg-[#2E7D32];
 }
 
-.breadcrumb-item:not(:last-child):after {
-  content: '/';
-  @apply mx-2 text-muted-foreground;
+.text-isra-green {
+  @apply text-[#4CAF50];
 }
 
-.genealogy-tree {
-  @apply mt-6 space-y-6;
+.text-isra-green-light {
+  @apply text-[#81C784];
 }
 
-.genealogy-node {
-  @apply relative p-4 border rounded-md;
+.text-isra-green-dark {
+  @apply text-[#2E7D32];
 }
 
-.genealogy-node:not(:first-child):before {
-  content: '';
-  @apply absolute w-1 bg-primary/30 left-1/2 -top-6 h-6 -translate-x-1/2;
+.border-isra-green {
+  @apply border-[#4CAF50];
 }
 
-.genealogy-level {
-  @apply flex justify-center gap-8 flex-wrap;
+.hover\:bg-isra-green:hover {
+  @apply hover:bg-[#4CAF50];
+}
+
+.hover\:bg-isra-green-dark:hover {
+  @apply hover:bg-[#2E7D32];
+}
+
+.hover\:text-isra-green:hover {
+  @apply hover:text-[#4CAF50];
+}
+
+.bg-isra-brown {
+  @apply bg-[#8D6E63];
+}
+
+.bg-isra-brown-light {
+  @apply bg-[#A1887F];
+}
+
+.text-isra-brown {
+  @apply text-[#8D6E63];
+}
+
+.bg-isra-beige {
+  @apply bg-[#F5F5DC];
+}
+
+.text-isra-beige {
+  @apply text-[#F5F5DC];
+}
+
+/* Button style overrides */
+.btn-isra-primary {
+  @apply bg-isra-green hover:bg-isra-green-dark text-white;
 }

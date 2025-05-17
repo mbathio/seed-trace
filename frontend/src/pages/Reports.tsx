@@ -1,162 +1,174 @@
 
-import Layout from "@/components/Layout";
+import { useState } from "react";
+import Navbar from "@/components/layout/Navbar";
+import Sidebar from "@/components/layout/Sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Filter } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserRole, MOCK_USERS } from "@/utils/seedTypes";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
-// Données fictives pour les graphiques
-const seedProductionData = [
-  { name: "Janvier", production: 500 },
-  { name: "Février", production: 320 },
-  { name: "Mars", production: 720 },
-  { name: "Avril", production: 420 },
-  { name: "Mai", production: 650 },
-  { name: "Juin", production: 780 },
+// Mock data for reports
+const MOCK_PRODUCTION_DATA = [
+  { name: "Jan", riz: 120, mais: 80, arachide: 60 },
+  { name: "Fev", riz: 150, mais: 70, arachide: 65 },
+  { name: "Mar", riz: 180, mais: 90, arachide: 80 },
+  { name: "Avr", riz: 200, mais: 110, arachide: 90 },
+  { name: "Mai", riz: 250, mais: 130, arachide: 100 },
+  { name: "Jun", riz: 270, mais: 150, arachide: 110 }
 ];
 
-const varietyDistributionData = [
-  { name: "Sahel 108", value: 35 },
-  { name: "Sahel 134", value: 25 },
-  { name: "Sahel 177", value: 15 },
-  { name: "NERICA L-19", value: 15 },
-  { name: "ISRIZ 4", value: 10 },
+const MOCK_QUALITY_DATA = [
+  { name: "Excellente", value: 65 },
+  { name: "Bonne", value: 25 },
+  { name: "Moyenne", value: 8 },
+  { name: "Insuffisante", value: 2 }
 ];
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#A28AD5"];
-
-const recentReports = [
-  {
-    id: "RPT001",
-    title: "Rapport de production semestriel",
-    date: "2025-04-10",
-    type: "production"
-  },
-  {
-    id: "RPT002",
-    title: "Rapport de distribution Q1 2025",
-    date: "2025-04-02",
-    type: "distribution"
-  },
-  {
-    id: "RPT003",
-    title: "Bilan des inspections 2024",
-    date: "2025-03-15",
-    type: "inspection"
-  },
-  {
-    id: "RPT004",
-    title: "Rapport qualité des semences",
-    date: "2025-03-05",
-    type: "qualité"
-  }
+const MOCK_REGION_DATA = [
+  { region: "Saint-Louis", production: 450, surface: 120 },
+  { region: "Dagana", production: 380, surface: 100 },
+  { region: "Podor", production: 320, surface: 85 },
+  { region: "Richard-Toll", production: 290, surface: 75 },
+  { region: "Matam", production: 250, surface: 65 }
 ];
 
-export default function Reports() {
-  const [period, setPeriod] = useState("month");
-  const [reportType, setReportType] = useState("all");
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
-  // Filtrer les rapports en fonction du type sélectionné
-  const filteredReports = reportType === "all" 
-    ? recentReports 
-    : recentReports.filter(report => report.type === reportType);
-
-  // Fonction pour obtenir la couleur du badge de type de rapport
-  const getReportBadgeColor = (type: string) => {
-    switch (type) {
-      case "production": return "bg-blue-500";
-      case "distribution": return "bg-green-500";
-      case "inspection": return "bg-yellow-500";
-      case "qualité": return "bg-purple-500";
-      default: return "bg-gray-500";
-    }
-  };
-
-  // Fonction pour obtenir le libellé en français du type de rapport
-  const getReportTypeLabel = (type: string) => {
-    switch (type) {
-      case "production": return "Production";
-      case "distribution": return "Distribution";
-      case "inspection": return "Inspection";
-      case "qualité": return "Qualité";
-      default: return type;
-    }
-  };
-
+const Reports = () => {
+  // Simuler un utilisateur connecté avec le rôle "manager"
+  const userRole: UserRole = "manager";
+  const userName = MOCK_USERS.find(user => user.role === userRole)?.name || "";
+  const [period, setPeriod] = useState<string>("6months");
+  const [crop, setCrop] = useState<string>("all");
+  
   return (
-    <Layout>
-      <div className="container py-8">
-        <div className="flex flex-col gap-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-isra-green">Rapports</h1>
-            <Button className="bg-isra-green hover:bg-isra-green/90">
-              Générer un rapport
-            </Button>
+    <div className="min-h-screen bg-gray-100">
+      <Navbar userRole={userRole} userName={userName} />
+      <div className="flex">
+        <Sidebar userRole={userRole} />
+        <main className="flex-1 p-6 ml-64">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">Rapports et Statistiques</h1>
+            <p className="text-gray-600">
+              Analyse et visualisation des données de production de semences
+            </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Production de semences</CardTitle>
-                  <Select
-                    value={period}
-                    onValueChange={setPeriod}
-                  >
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Période" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="month">Mensuel</SelectItem>
-                      <SelectItem value="quarter">Trimestriel</SelectItem>
-                      <SelectItem value="year">Annuel</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <CardDescription>Production en kilogrammes (kg)</CardDescription>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Production Totale</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
+                <div className="text-3xl font-bold text-isra-green">1,450 tonnes</div>
+                <p className="text-sm text-green-600">↑ 12% par rapport à la période précédente</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Surface Cultivée</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-isra-green">385 hectares</div>
+                <p className="text-sm text-green-600">↑ 8% par rapport à la période précédente</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Multiplicateurs Actifs</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-isra-green">48</div>
+                <p className="text-sm text-orange-600">→ Stable par rapport à la période précédente</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg">Taux de Certification</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold text-isra-green">92%</div>
+                <p className="text-sm text-green-600">↑ 5% par rapport à la période précédente</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <Card className="lg:col-span-2">
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle>Production par Culture</CardTitle>
+                  <div className="flex space-x-2">
+                    <Select value={period} onValueChange={setPeriod}>
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Période" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="3months">3 mois</SelectItem>
+                        <SelectItem value="6months">6 mois</SelectItem>
+                        <SelectItem value="1year">1 an</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={crop} onValueChange={setCrop}>
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Culture" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Toutes</SelectItem>
+                        <SelectItem value="rice">Riz</SelectItem>
+                        <SelectItem value="corn">Maïs</SelectItem>
+                        <SelectItem value="peanut">Arachide</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
-                      data={seedProductionData}
-                      margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                      data={MOCK_PRODUCTION_DATA}
+                      margin={{
+                        top: 20,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis dataKey="name" />
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="production" fill="#10B981" name="Production (kg)" />
+                      <Bar dataKey="riz" name="Riz" fill="#8884d8" />
+                      <Bar dataKey="mais" name="Maïs" fill="#82ca9d" />
+                      <Bar dataKey="arachide" name="Arachide" fill="#ffc658" />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader>
-                <CardTitle>Distribution par variété</CardTitle>
-                <CardDescription>Pourcentage de chaque variété distribuée</CardDescription>
+                <CardTitle>Qualité des Semences</CardTitle>
+                <CardDescription>Répartition par niveau de qualité</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px]">
+                <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie
-                        data={varietyDistributionData}
+                        data={MOCK_QUALITY_DATA}
                         cx="50%"
                         cy="50%"
                         labelLine={false}
-                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                        outerRadius={90}
+                        outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                       >
-                        {varietyDistributionData.map((entry, index) => (
+                        {MOCK_QUALITY_DATA.map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
@@ -170,63 +182,53 @@ export default function Reports() {
 
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Rapports récents</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-muted-foreground" />
-                  <Select
-                    value={reportType}
-                    onValueChange={setReportType}
-                  >
-                    <SelectTrigger className="w-[160px]">
-                      <SelectValue placeholder="Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Tous les types</SelectItem>
-                      <SelectItem value="production">Production</SelectItem>
-                      <SelectItem value="distribution">Distribution</SelectItem>
-                      <SelectItem value="inspection">Inspection</SelectItem>
-                      <SelectItem value="qualité">Qualité</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <CardDescription>Téléchargez ou consultez les rapports récents</CardDescription>
+              <CardTitle>Production par Région</CardTitle>
+              <CardDescription>Données des principales régions de production</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {filteredReports.length > 0 ? (
-                  filteredReports.map((report) => (
-                    <div key={report.id} className="flex items-center justify-between p-4 border rounded-md hover:bg-muted/50 transition-colors">
-                      <div className="flex items-center gap-3">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <div className="font-medium">{report.title}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {new Date(report.date).toLocaleDateString("fr-FR")}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <Badge className={getReportBadgeColor(report.type)}>
-                          {getReportTypeLabel(report.type)}
-                        </Badge>
-                        <Button variant="outline" size="icon">
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-6 text-muted-foreground">
-                    Aucun rapport trouvé pour ce type.
-                  </div>
-                )}
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4">Région</th>
+                      <th className="text-right py-3 px-4">Production (tonnes)</th>
+                      <th className="text-right py-3 px-4">Surface (hectares)</th>
+                      <th className="text-right py-3 px-4">Rendement (t/ha)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {MOCK_REGION_DATA.map((item, index) => (
+                      <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : ""}>
+                        <td className="py-2 px-4">{item.region}</td>
+                        <td className="text-right py-2 px-4">{item.production}</td>
+                        <td className="text-right py-2 px-4">{item.surface}</td>
+                        <td className="text-right py-2 px-4">{(item.production / item.surface).toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="border-t font-medium">
+                      <td className="py-2 px-4">Total</td>
+                      <td className="text-right py-2 px-4">
+                        {MOCK_REGION_DATA.reduce((acc, item) => acc + item.production, 0)}
+                      </td>
+                      <td className="text-right py-2 px-4">
+                        {MOCK_REGION_DATA.reduce((acc, item) => acc + item.surface, 0)}
+                      </td>
+                      <td className="text-right py-2 px-4">
+                        {(MOCK_REGION_DATA.reduce((acc, item) => acc + item.production, 0) / 
+                          MOCK_REGION_DATA.reduce((acc, item) => acc + item.surface, 0)).toFixed(2)}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
             </CardContent>
           </Card>
-        </div>
+        </main>
       </div>
-    </Layout>
+    </div>
   );
-}
+};
+
+export default Reports;
