@@ -107,9 +107,11 @@ const SeedLotInfoCard = ({ lot }: { lot: SeedLot }) => {
       <CardFooter className="flex justify-between">
         <Button variant="outline">Modifier</Button>
         <div className="flex gap-2">
-          <Button variant="outline">
-            Imprimer QR Code
-          </Button>
+          <Link to={`/qr-code?lotId=${lot.id}`}>
+            <Button variant="outline">
+              Imprimer QR Code
+            </Button>
+          </Link>
           <Button>Gérer Stock</Button>
         </div>
       </CardFooter>
