@@ -34,14 +34,12 @@ export const login = async (
       throw new AuthenticationError("Identifiants invalides");
     }
 
-    // Générer le token JWT
+    // Générer le token JWT - Correction du problème de signature
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET as string,
       {
         expiresIn: process.env.JWT_EXPIRES_IN || "1d",
-        issuer: "isra-seeds-api",
-        subject: user.id.toString(),
       }
     );
 
@@ -97,14 +95,12 @@ export const register = async (
       },
     });
 
-    // Générer le token JWT
+    // Générer le token JWT - Correction du problème de signature
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, role: newUser.role },
       process.env.JWT_SECRET as string,
       {
         expiresIn: process.env.JWT_EXPIRES_IN || "1d",
-        issuer: "isra-seeds-api",
-        subject: newUser.id.toString(),
       }
     );
 

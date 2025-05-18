@@ -442,13 +442,14 @@ export const getSeedLotGenealogy = async (
 
       if (!lot) return ancestors;
 
-      if (lot.parentLotId) {
-        ancestors.push({
+      if (lot.parentLot) {
+        result.parentInfo = {
           id: lot.parentLot.id,
           level: lot.parentLot.level,
           variety: lot.parentLot.variety.name,
-        });
-        return findAncestors(lot.parentLotId, ancestors);
+        };
+      } else {
+        result.parentInfo = null;
       }
 
       return ancestors;

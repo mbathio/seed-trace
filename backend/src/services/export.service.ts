@@ -127,8 +127,10 @@ export class ExportService {
 
       return result;
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       Logger.error(
-        `Error exporting seed lots: ${error.message}`,
+        `Error exporting seed lots: ${errorMessage}`,
         "ExportService",
         { error, format, filters },
         userId

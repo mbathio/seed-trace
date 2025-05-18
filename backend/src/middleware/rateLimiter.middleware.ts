@@ -1,13 +1,16 @@
 // backend/src/middleware/rateLimiter.middleware.ts
 
 import { Request, Response, NextFunction } from "express";
-import rateLimit from "express-rate-limit";
+import rateLimit, {
+  Options,
+  RateLimitRequestHandler,
+} from "express-rate-limit";
 import Logger from "../services/logging.service";
 
 /**
  * Configuration des limites de taux par défaut
  */
-const defaultLimiterOptions = {
+const defaultLimiterOptions: Partial<Options> = {
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limiter chaque IP à 100 requêtes par fenêtre
   standardHeaders: true, // Retourner les infos de rate limit dans les headers `RateLimit-*`
@@ -17,7 +20,7 @@ const defaultLimiterOptions = {
     message: "Trop de requêtes, veuillez réessayer plus tard",
     code: "RATE_LIMIT_EXCEEDED",
   },
-  handler: (req: Request, res: Response, _options: any, next: NextFunction) => {
+  handler: (req: Request, res: Response) => {
     Logger.warn(
       `Rate limit exceeded for IP: ${req.ip}`,
       "RateLimit",
@@ -40,14 +43,14 @@ const defaultLimiterOptions = {
 /**
  * Rate limiter standard pour la plupart des routes
  */
-export const standardLimiter = rateLimit({
+export const standardLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultLimiterOptions,
 });
 
 /**
  * Rate limiter plus strict pour les routes d'authentification
  */
-export const authLimiter = rateLimit({
+export const authLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultLimiterOptions,
   windowMs: 60 * 60 * 1000, // 1 heure
   max: 10, // Limiter chaque IP à 10 tentatives de connexion par heure
@@ -61,7 +64,7 @@ export const authLimiter = rateLimit({
 /**
  * Rate limiter pour les routes d'API qui nécessitent beaucoup d'appels
  */
-export const apiLimiter = rateLimit({
+export const apiLimiter: RateLimitRequestHandler = rateLimit({
   ...defaultLimiterOptions,
   max: 1000, // Limiter chaque IP à 1000 requêtes par fenêtre
 });

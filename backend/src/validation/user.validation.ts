@@ -10,18 +10,18 @@ import { Role } from "@prisma/client";
 export const createUserSchema = {
   name: {
     required: true,
-    type: "string",
+    type: "string" as "string",
     min: 2,
     max: 100,
   },
   email: {
     required: true,
-    type: "string",
+    type: "string" as "string",
     pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   },
   password: {
     required: true,
-    type: "string",
+    type: "string" as "string",
     min: 8,
     custom: (value: string) => {
       // Au moins une majuscule, une minuscule, un chiffre et un caractère spécial
@@ -45,12 +45,12 @@ export const createUserSchema = {
 export const loginSchema = {
   email: {
     required: true,
-    type: "string",
+    type: "string" as "string",
     pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   },
   password: {
     required: true,
-    type: "string",
+    type: "string" as "string",
     min: 8,
   },
 };
@@ -59,13 +59,13 @@ export const loginSchema = {
 export const updateUserSchema = {
   name: {
     required: false,
-    type: "string",
+    type: "string" as "string",
     min: 2,
     max: 100,
   },
   email: {
     required: false,
-    type: "string",
+    type: "string" as "string",
     pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   },
   role: {
@@ -74,18 +74,17 @@ export const updateUserSchema = {
   },
   isActive: {
     required: false,
-    type: "boolean",
+    type: "boolean" as "boolean",
   },
   currentPassword: {
     required: false,
-    type: "string",
+    type: "string" as "string",
   },
   newPassword: {
     required: false,
-    type: "string",
+    type: "string" as "string",
     min: 8,
     custom: (value: string) => {
-      // Au moins une majuscule, une minuscule, un chiffre et un caractère spécial
       if (
         !value.match(
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
@@ -102,14 +101,13 @@ export const updateUserSchema = {
 export const changePasswordSchema = {
   currentPassword: {
     required: true,
-    type: "string",
+    type: "string" as "string",
   },
   newPassword: {
     required: true,
-    type: "string",
+    type: "string" as "string",
     min: 8,
     custom: (value: string) => {
-      // Au moins une majuscule, une minuscule, un chiffre et un caractère spécial
       if (
         !value.match(
           /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
@@ -130,10 +128,10 @@ export const filterUserSchema = {
   },
   isActive: {
     required: false,
-    type: "boolean",
+    type: "boolean" as "boolean",
   },
   search: {
     required: false,
-    type: "string",
+    type: "string" as "string",
   },
 };

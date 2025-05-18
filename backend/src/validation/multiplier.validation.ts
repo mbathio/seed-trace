@@ -10,23 +10,23 @@ import { MultiplierStatus } from "@prisma/client";
 export const createMultiplierSchema = {
   name: {
     required: true,
-    type: "string",
+    type: "string" as "string",
     min: 2,
     max: 100,
   },
   address: {
     required: true,
-    type: "string",
+    type: "string" as "string",
     min: 5,
   },
   phone: {
     required: false,
-    type: "string",
+    type: "string" as "string",
     pattern: /^(?:\+[0-9]{1,3})?[0-9]{6,14}$/,
   },
   email: {
     required: false,
-    type: "string",
+    type: "string" as "string",
     pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   },
   status: {
@@ -39,23 +39,23 @@ export const createMultiplierSchema = {
 export const updateMultiplierSchema = {
   name: {
     required: false,
-    type: "string",
+    type: "string" as "string",
     min: 2,
     max: 100,
   },
   address: {
     required: false,
-    type: "string",
+    type: "string" as "string",
     min: 5,
   },
   phone: {
     required: false,
-    type: "string",
+    type: "string" as "string",
     pattern: /^(?:\+[0-9]{1,3})?[0-9]{6,14}$/,
   },
   email: {
     required: false,
-    type: "string",
+    type: "string" as "string",
     pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   },
   status: {
@@ -68,16 +68,16 @@ export const updateMultiplierSchema = {
 export const distributeLotSchema = {
   lotId: {
     required: true,
-    type: "string",
+    type: "string" as "string",
   },
   quantity: {
     required: true,
-    type: "number",
+    type: "number" as "number",
     min: 0.1,
   },
   distributionDate: {
     required: true,
-    type: "date",
+    type: "date" as "date",
   },
 };
 
@@ -89,6 +89,6 @@ export const filterMultiplierSchema = {
   },
   search: {
     required: false,
-    type: "string",
+    type: "string" as "string",
   },
 };
