@@ -1,0 +1,23 @@
+# Dépendances
+/node_modules
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Distribution
+/dist
+
+# Coverage
+/coverage
+
+# Misc
+.DS_Store

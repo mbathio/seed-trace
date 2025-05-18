@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Modèle pour les utilisateurs
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(TECHNICIAN)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Modèle pour les variétés de semences
+model SeedVariety {
+  id           Int       @id @default(autoincrement())
+  name         String
+  description  String?
+  origin       String?
+  creationDate DateTime
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lots         SeedLot[]
+}
+
+// Modèle pour les lots de semences
+model SeedLot {
+  id              String            @id
+  variety         SeedVariety       @relation(fields: [varietyId], references: [id])
+  varietyId       Int
+  parentLot       SeedLot?          @relation("LotGenealogy", fields: [parentLotId], references: [id])
+  parentLotId     String?
+  childLots       SeedLot[]         @relation("LotGenealogy")
+  level           SeedLevel
+  quantity        Float
+  productionDate  DateTime
+  status          LotStatus         @default(ACTIVE)
+  qrCode          String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  qualityControls QualityControl[]
+  productions     Production[]
+  distributedLots DistributedLot[]
+}
+
+// Modèle pour les contrôles de qualité
+model QualityControl {
+  id              Int       @id @default(autoincrement())
+  lot             SeedLot   @relation(fields: [lotId], references: [id])
+  lotId           String
+  controlDate     DateTime
+  germinationRate Float
+  varietyPurity   Float
+  result          TestResult
+  observations    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// Modèle pour les parcelles
+model Parcel {
+  id          Int          @id @default(autoincrement())
+  code        String?
+  latitude    Float
+  longitude   Float
+  area        Float
+  soilType    String?
+  status      ParcelStatus @default(AVAILABLE)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  productions Production[]
+}
+
+// Modèle pour les productions
+model Production {
+  id          Int             @id @default(autoincrement())
+  lot         SeedLot         @relation(fields: [lotId], references: [id])
+  lotId       String
+  parcel      Parcel          @relation(fields: [parcelId], references: [id])
+  parcelId    Int
+  sowingDate  DateTime
+  harvestDate DateTime?
+  yield       Float?
+  conditions  String?
+  status      ProductionStatus @default(PLANNING)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+// Modèle pour les multiplicateurs
+model Multiplier {
+  id              Int              @id @default(autoincrement())
+  name            String
+  address         String
+  phone           String?
+  email           String?
+  status          MultiplierStatus @default(ACTIVE)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  distributedLots DistributedLot[]
+}
+
+// Modèle pour les lots distribués aux multiplicateurs
+model DistributedLot {
+  id            Int        @id @default(autoincrement())
+  lot           SeedLot    @relation(fields: [lotId], references: [id])
+  lotId         String
+  multiplier    Multiplier @relation(fields: [multiplierId], references: [id])
+  multiplierId  Int
+  quantity      Float
+  distributionDate DateTime
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+}
+
+// Énumérations
+enum Role {
+  RESEARCHER
+  TECHNICIAN
+  MULTIPLIER
+  INSPECTOR
+  MANAGER
+  ADMIN
+}
+
+enum SeedLevel {
+  GO
+  G1
+  G2
+  G3
+  R1
+  R2
+}
+
+enum LotStatus {
+  ACTIVE
+  DISTRIBUTED
+  ELIMINATED
+}
+
+enum TestResult {
+  PASS
+  FAIL
+}
+
+enum ParcelStatus {
+  AVAILABLE
+  IN_USE
+  RESTING
+}
+
+enum ProductionStatus {
+  PLANNING
+  ONGOING
+  COMPLETED
+}
+
+enum MultiplierStatus {
+  ACTIVE
+  INACTIVE
+}
