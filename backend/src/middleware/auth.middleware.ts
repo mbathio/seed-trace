@@ -20,12 +20,13 @@ export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
+): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ message: "Authentification requise" });
+      res.status(401).json({ message: "Authentification requise" });
+      return; // Retourner ici au lieu de retourner la réponse
     }
 
     const token = authHeader.split(" ")[1];
@@ -41,26 +42,28 @@ export const authenticate = async (
     });
 
     if (!user || !user.isActive) {
-      return res
-        .status(401)
-        .json({ message: "Utilisateur non trouvé ou inactif" });
+      res.status(401).json({ message: "Utilisateur non trouvé ou inactif" });
+      return; // Retourner ici au lieu de retourner la réponse
     }
 
     req.user = { id: user.id, email: user.email, role: user.role };
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Token invalide ou expiré" });
+    res.status(401).json({ message: "Token invalide ou expiré" });
+    return; // Retourner ici au lieu de retourner la réponse
   }
 };
 
 export const authorize = (...roles: Role[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      return res.status(401).json({ message: "Authentification requise" });
+      res.status(401).json({ message: "Authentification requise" });
+      return; // Retourner ici au lieu de retourner la réponse
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Accès non autorisé" });
+      res.status(403).json({ message: "Accès non autorisé" });
+      return; // Retourner ici au lieu de retourner la réponse
     }
 
     next();

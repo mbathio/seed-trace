@@ -216,12 +216,10 @@ export const deleteSeedLot = async (req: Request, res: Response) => {
       where: { parentLotId: id },
     });
     if (childLots.length > 0) {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Impossible de supprimer ce lot car il possède des lots descendants",
-        });
+      return res.status(400).json({
+        message:
+          "Impossible de supprimer ce lot car il possède des lots descendants",
+      });
     }
 
     // Supprimer les contrôles qualité associés
@@ -328,11 +326,9 @@ export const getSeedLotGenealogy = async (req: Request, res: Response) => {
     return res.json(genealogy);
   } catch (error) {
     console.error("Get seed lot genealogy error:", error);
-    return res
-      .status(500)
-      .json({
-        message: "Erreur lors de la récupération de la généalogie du lot",
-      });
+    return res.status(500).json({
+      message: "Erreur lors de la récupération de la généalogie du lot",
+    });
   }
 };
 
