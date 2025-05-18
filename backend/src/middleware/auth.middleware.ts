@@ -1,8 +1,11 @@
+// backend/src/middleware/auth.middleware.ts
+
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { prisma } from "../app";
 import { Role } from "@prisma/client";
-import { unauthorized, forbidden } from "./error.middleware";
+import { AuthenticationError, AuthorizationError } from "../types/errors";
+import Logger from "../services/logging.service";
 
 // Étendre l'interface Request pour inclure l'utilisateur
 declare global {
@@ -29,7 +32,7 @@ export const authenticate = async (
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return next(unauthorized("Authentification requise"));
+      throw new AuthenticationError("Authentification requise");
     }
 
     const token = authHeader.split(" ")[1];
@@ -47,13 +50,21 @@ export const authenticate = async (
       });
 
       if (!user || !user.isActive) {
-        return next(unauthorized("Utilisateur non trouvé ou inactif"));
+        throw new AuthenticationError("Utilisateur non trouvé ou inactif");
       }
 
+      // Ajouter l'utilisateur à la requête
       req.user = { id: user.id, email: user.email, role: user.role };
+
       next();
     } catch (error) {
-      return next(unauthorized("Token invalide ou expiré"));
+      if (error instanceof jwt.JsonWebTokenError) {
+        throw new AuthenticationError("Token invalide");
+      } else if (error instanceof jwt.TokenExpiredError) {
+        throw new AuthenticationError("Token expiré");
+      } else {
+        throw error;
+      }
     }
   } catch (error) {
     next(error);
@@ -66,15 +77,31 @@ export const authenticate = async (
  */
 export const authorize = (...roles: Role[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      return next(unauthorized("Authentification requise"));
-    }
+    try {
+      if (!req.user) {
+        throw new AuthenticationError("Authentification requise");
+      }
 
-    if (!roles.includes(req.user.role)) {
-      return next(forbidden("Accès non autorisé"));
-    }
+      if (!roles.includes(req.user.role)) {
+        Logger.warn(
+          `Unauthorized access attempt: User ${req.user.id} with role ${
+            req.user.role
+          } tried to access a resource requiring roles: ${roles.join(", ")}`,
+          "Authorization",
+          {},
+          req.user.id,
+          req.ip
+        );
 
-    next();
+        throw new AuthorizationError(
+          "Vous n'avez pas les permissions nécessaires pour accéder à cette ressource"
+        );
+      }
+
+      next();
+    } catch (error) {
+      next(error);
+    }
   };
 };
 
@@ -86,16 +113,30 @@ export const authorizeOwnerOrAdmin = (
   getUserIdFromParams: (req: Request) => number
 ) => {
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (!req.user) {
-      return next(unauthorized("Authentification requise"));
+    try {
+      if (!req.user) {
+        throw new AuthenticationError("Authentification requise");
+      }
+
+      const ownerId = getUserIdFromParams(req);
+
+      if (req.user.role === Role.ADMIN || req.user.id === ownerId) {
+        return next();
+      }
+
+      Logger.warn(
+        `Unauthorized access attempt: User ${req.user.id} tried to access a resource owned by user ${ownerId}`,
+        "Authorization",
+        {},
+        req.user.id,
+        req.ip
+      );
+
+      throw new AuthorizationError(
+        "Vous n'avez pas les permissions nécessaires pour accéder à cette ressource"
+      );
+    } catch (error) {
+      next(error);
     }
-
-    const ownerId = getUserIdFromParams(req);
-
-    if (req.user.role === Role.ADMIN || req.user.id === ownerId) {
-      return next();
-    }
-
-    return next(forbidden("Accès non autorisé"));
   };
 };

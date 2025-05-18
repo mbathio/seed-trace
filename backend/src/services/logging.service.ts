@@ -1,13 +1,10 @@
-/**
- * Service de journalisation pour l'application
- * Permet d'enregistrer différents niveaux de logs et de les stocker
- * dans des fichiers ou de les envoyer à d'autres services.
- */
+// backend/src/services/logging.service.ts
 
 import fs from "fs";
 import path from "path";
 import { createWriteStream } from "fs";
 import { format } from "date-fns";
+import getLoggerConfig from "../config/logger";
 
 /**
  * Niveaux de log supportés
@@ -34,41 +31,19 @@ interface LogEntry {
 }
 
 /**
- * Configuration du logger
- */
-interface LoggerConfig {
-  logDirectory: string;
-  consoleOutput: boolean;
-  fileOutput: boolean;
-  minLevel: LogLevel;
-  maxFileSize: number; // en octets
-  maxFiles: number;
-}
-
-/**
  * Service de journalisation
  */
 export class LoggingService {
   private static instance: LoggingService;
-  private config: LoggerConfig;
+  private config = getLoggerConfig();
   private currentLogFile: string;
   private writeStream: fs.WriteStream | null = null;
   private currentFileSize: number = 0;
 
   /**
    * Constructeur privé (pattern Singleton)
-   * @param config Configuration du logger
    */
-  private constructor(config: LoggerConfig) {
-    this.config = {
-      logDirectory: config.logDirectory || "./logs",
-      consoleOutput: config.consoleOutput !== false,
-      fileOutput: config.fileOutput !== false,
-      minLevel: config.minLevel || LogLevel.INFO,
-      maxFileSize: config.maxFileSize || 10 * 1024 * 1024, // 10 Mo par défaut
-      maxFiles: config.maxFiles || 10,
-    };
-
+  private constructor() {
     // Créer le répertoire de logs s'il n'existe pas
     if (!fs.existsSync(this.config.logDirectory)) {
       fs.mkdirSync(this.config.logDirectory, { recursive: true });
@@ -80,14 +55,11 @@ export class LoggingService {
 
   /**
    * Obtenir l'instance du logger (Singleton)
-   * @param config Configuration du logger
    * @returns Instance du logger
    */
-  public static getInstance(config?: LoggerConfig): LoggingService {
-    if (!LoggingService.instance && config) {
-      LoggingService.instance = new LoggingService(config);
-    } else if (!LoggingService.instance) {
-      throw new Error("Logger not initialized");
+  public static getInstance(): LoggingService {
+    if (!LoggingService.instance) {
+      LoggingService.instance = new LoggingService();
     }
     return LoggingService.instance;
   }
@@ -422,17 +394,6 @@ export class LoggingService {
   }
 }
 
-// Export d'une instance par défaut initialisée
-const defaultConfig: LoggerConfig = {
-  logDirectory: process.env.LOG_DIRECTORY || "./logs",
-  consoleOutput: process.env.NODE_ENV !== "production",
-  fileOutput: true,
-  minLevel:
-    (process.env.LOG_LEVEL as LogLevel) ||
-    (process.env.NODE_ENV === "production" ? LogLevel.INFO : LogLevel.DEBUG),
-  maxFileSize: parseInt(process.env.LOG_MAX_FILE_SIZE || "10485760"), // 10 Mo
-  maxFiles: parseInt(process.env.LOG_MAX_FILES || "10"),
-};
-
-export const Logger = LoggingService.getInstance(defaultConfig);
+// Export d'une instance singleton
+const Logger = LoggingService.getInstance();
 export default Logger;

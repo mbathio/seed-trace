@@ -1,10 +1,18 @@
 // backend/src/services/qr.service.ts
 
 import QRCode from "qrcode";
+import jsQR from "jsqr"; // Bibliothèque pour décoder les QR codes
+import { createCanvas, loadImage } from "canvas"; // Pour créer un canvas et charger les images
 import { SeedLevel } from "@prisma/client";
+import Logger from "./logging.service";
+import fs from "fs";
+import { promisify } from "util";
+
+// Convertir les fonctions de callback en promesses
+const readFile = promisify(fs.readFile);
 
 /**
- * Service pour la génération et la gestion des codes QR
+ * Service pour la génération et la lecture des codes QR
  */
 export class QRService {
   /**
@@ -34,15 +42,35 @@ export class QRService {
     // Générer le code QR
     try {
       const dataUrl = await QRCode.toDataURL(JSON.stringify(qrData), {
-        errorCorrectionLevel: "H",
+        errorCorrectionLevel: "H", // Niveau de correction d'erreur élevé pour une meilleure lecture
         margin: 2,
         width: 300,
+        color: {
+          dark: "#000000", // Couleur des modules
+          light: "#FFFFFF", // Couleur de fond
+        },
       });
       return dataUrl;
     } catch (error) {
-      console.error("Erreur lors de la génération du QR code:", error);
+      Logger.error("Erreur lors de la génération du QR code:", "QRService", {
+        error,
+        lotId,
+      });
       throw new Error("Erreur lors de la génération du code QR");
     }
+  }
+
+  /**
+   * Méthode pour la compatibilité avec seedlot.service.ts
+   * Génère un code QR pour un lot de semences
+   */
+  static async generateForSeedLot(
+    lotId: string,
+    varietyName: string,
+    level: SeedLevel,
+    productionDate: Date
+  ): Promise<string> {
+    return this.generateSeedLotQR(lotId, varietyName, level, productionDate);
   }
 
   /**
@@ -78,7 +106,11 @@ export class QRService {
       });
       return dataUrl;
     } catch (error) {
-      console.error("Erreur lors de la génération du QR code:", error);
+      Logger.error("Erreur lors de la génération du QR code:", "QRService", {
+        error,
+        lotId,
+        controlId,
+      });
       throw new Error("Erreur lors de la génération du code QR");
     }
   }
@@ -113,7 +145,10 @@ export class QRService {
       });
       return dataUrl;
     } catch (error) {
-      console.error("Erreur lors de la génération du QR code:", error);
+      Logger.error("Erreur lors de la génération du QR code:", "QRService", {
+        error,
+        parcelId,
+      });
       throw new Error("Erreur lors de la génération du code QR");
     }
   }
@@ -154,36 +189,174 @@ export class QRService {
       });
       return dataUrl;
     } catch (error) {
-      console.error("Erreur lors de la génération du QR code:", error);
+      Logger.error("Erreur lors de la génération du QR code:", "QRService", {
+        error,
+        distributionId,
+        lotId,
+      });
       throw new Error("Erreur lors de la génération du code QR");
     }
   }
 
   /**
-   * Décode un code QR et renvoie les données
-   * @param dataUrl Data URL du code QR
-   * @returns Données décodées
+   * Décode une image QR code à partir d'une data URL
+   * @param dataUrl Data URL de l'image QR code
+   * @returns Données décodées du QR code
    */
-  static decodeQR(
-    dataUrl: string
-  ): { type: string; [key: string]: any } | null {
+  static async decodeQRFromDataURL(dataUrl: string): Promise<any> {
     try {
-      // Dans un cas réel, nous utiliserions une bibliothèque de décodage QR,
-      // mais pour cette implémentation, nous simulons simplement le décodage
-      // en extrayant les données encodées dans le QR code (qui serait normalement
-      // stocké dans la base de données)
+      // Charger l'image depuis la data URL
+      const image = await loadImage(dataUrl);
 
-      // Cette implémentation est simulée et ne fonctionnera pas réellement
-      // avec une vraie image QR code. Dans une application réelle, vous devriez
-      // utiliser une bibliothèque comme jsQR ou une API de décodage QR.
+      // Créer un canvas pour traiter l'image
+      const canvas = createCanvas(image.width, image.height);
+      const ctx = canvas.getContext("2d");
 
-      // Pour une implémentation réelle, vous pourriez avoir besoin d'un endpoint
-      // qui reçoit une image QR et utilise une bibliothèque côté serveur pour la décoder.
+      // Dessiner l'image sur le canvas
+      ctx.drawImage(image, 0, 0);
 
-      return null;
+      // Obtenir les données de l'image
+      const imageData = ctx.getImageData(0, 0, image.width, image.height);
+
+      // Décoder le QR code
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      });
+
+      if (!code) {
+        throw new Error("Aucun QR code trouvé dans l'image");
+      }
+
+      // Analyser les données JSON
+      return JSON.parse(code.data);
     } catch (error) {
-      console.error("Erreur lors du décodage du QR code:", error);
-      return null;
+      Logger.error("Erreur lors du décodage du QR code:", "QRService", {
+        error,
+      });
+      throw new Error(`Erreur lors du décodage du QR code: ${error.message}`);
+    }
+  }
+
+  /**
+   * Décode une image QR code à partir d'un fichier
+   * @param filePath Chemin du fichier image
+   * @returns Données décodées du QR code
+   */
+  static async decodeQRFromFile(filePath: string): Promise<any> {
+    try {
+      // Lire le fichier
+      const fileData = await readFile(filePath);
+
+      // Charger l'image
+      const image = await loadImage(fileData);
+
+      // Créer un canvas pour traiter l'image
+      const canvas = createCanvas(image.width, image.height);
+      const ctx = canvas.getContext("2d");
+
+      // Dessiner l'image sur le canvas
+      ctx.drawImage(image, 0, 0);
+
+      // Obtenir les données de l'image
+      const imageData = ctx.getImageData(0, 0, image.width, image.height);
+
+      // Décoder le QR code
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      });
+
+      if (!code) {
+        throw new Error("Aucun QR code trouvé dans l'image");
+      }
+
+      // Analyser les données JSON
+      return JSON.parse(code.data);
+    } catch (error) {
+      Logger.error(
+        "Erreur lors du décodage du QR code depuis le fichier:",
+        "QRService",
+        { error, filePath }
+      );
+      throw new Error(
+        `Erreur lors du décodage du QR code depuis le fichier: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Décode une image QR code à partir d'un buffer
+   * @param imageBuffer Buffer contenant l'image
+   * @returns Données décodées du QR code
+   */
+  static async decodeQRFromBuffer(imageBuffer: Buffer): Promise<any> {
+    try {
+      // Charger l'image depuis le buffer
+      const image = await loadImage(imageBuffer);
+
+      // Créer un canvas pour traiter l'image
+      const canvas = createCanvas(image.width, image.height);
+      const ctx = canvas.getContext("2d");
+
+      // Dessiner l'image sur le canvas
+      ctx.drawImage(image, 0, 0);
+
+      // Obtenir les données de l'image
+      const imageData = ctx.getImageData(0, 0, image.width, image.height);
+
+      // Décoder le QR code
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      });
+
+      if (!code) {
+        throw new Error("Aucun QR code trouvé dans l'image");
+      }
+
+      // Analyser les données JSON
+      return JSON.parse(code.data);
+    } catch (error) {
+      Logger.error(
+        "Erreur lors du décodage du QR code depuis le buffer:",
+        "QRService",
+        { error }
+      );
+      throw new Error(
+        `Erreur lors du décodage du QR code depuis le buffer: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Génère et enregistre un code QR dans un fichier
+   * @param data Données à encoder
+   * @param outputPath Chemin de sortie du fichier
+   * @returns Chemin du fichier généré
+   */
+  static async saveQRCodeToFile(
+    data: any,
+    outputPath: string
+  ): Promise<string> {
+    try {
+      await QRCode.toFile(outputPath, JSON.stringify(data), {
+        errorCorrectionLevel: "H",
+        margin: 2,
+        width: 300,
+        color: {
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
+      });
+
+      return outputPath;
+    } catch (error) {
+      Logger.error(
+        "Erreur lors de l'enregistrement du QR code dans un fichier:",
+        "QRService",
+        { error, outputPath }
+      );
+      throw new Error(
+        `Erreur lors de l'enregistrement du QR code: ${error.message}`
+      );
     }
   }
 }

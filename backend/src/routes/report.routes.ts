@@ -1,3 +1,5 @@
+// backend/src/routes/report.routes.ts
+
 import { Router } from "express";
 import {
   getProductionStats,
@@ -7,6 +9,14 @@ import {
   getVarietyReport,
 } from "../controllers/report.controller";
 import { authenticate, authorize } from "../middleware/auth.middleware";
+import { validate } from "../middleware/validation.middleware";
+import {
+  productionStatsSchema,
+  qualityStatsSchema,
+  regionalStatsSchema,
+  lotReportSchema,
+  varietyReportSchema,
+} from "../validation";
 import { Role } from "@prisma/client";
 
 const router = Router();
@@ -18,21 +28,38 @@ router.get(
   "/production",
   authenticate,
   authorize(...authorizedRoles),
+  validate(productionStatsSchema, { source: "query" }),
   getProductionStats
 );
+
 router.get(
   "/quality",
   authenticate,
   authorize(...authorizedRoles),
+  validate(qualityStatsSchema, { source: "query" }),
   getQualityStats
 );
+
 router.get(
   "/regional",
   authenticate,
   authorize(...authorizedRoles),
+  validate(regionalStatsSchema, { source: "query" }),
   getRegionalStats
 );
-router.get("/lot/:id", authenticate, getLotReport);
-router.get("/variety/:id", authenticate, getVarietyReport);
+
+router.get(
+  "/lot/:id",
+  authenticate,
+  validate(lotReportSchema, { source: "params" }),
+  getLotReport
+);
+
+router.get(
+  "/variety/:id",
+  authenticate,
+  validate(varietyReportSchema, { source: "params" }),
+  getVarietyReport
+);
 
 export default router;

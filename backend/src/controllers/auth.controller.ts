@@ -1,37 +1,60 @@
-import { Request, Response } from "express";
+// backend/src/controllers/auth.controller.ts
+
+import { Request, Response, NextFunction } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../app";
 import { Role } from "@prisma/client";
+import {
+  AuthenticationError,
+  ValidationError,
+  NotFoundError,
+} from "../types/errors";
+import Logger from "../services/logging.service";
 
-export const login = async (req: Request, res: Response) => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email et mot de passe requis" });
-    }
-
+    // Vérifier si l'utilisateur existe
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user || !user.isActive) {
-      return res
-        .status(401)
-        .json({ message: "Identifiants invalides ou compte inactif" });
+      throw new AuthenticationError("Identifiants invalides ou compte inactif");
     }
 
+    // Vérifier le mot de passe
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      return res.status(401).json({ message: "Identifiants invalides" });
+      throw new AuthenticationError("Identifiants invalides");
     }
 
+    // Générer le token JWT
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
       process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      {
+        expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+        issuer: "isra-seeds-api",
+        subject: user.id.toString(),
+      }
     );
 
+    // Logger la connexion
+    Logger.info(
+      `User ${user.id} (${user.email}) logged in`,
+      "Auth",
+      {},
+      user.id,
+      req.ip
+    );
+
+    // Retourner les informations de l'utilisateur
     return res.json({
       token,
       user: {
@@ -42,29 +65,29 @@ export const login = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error("Login error:", error);
-    return res.status(500).json({ message: "Erreur lors de la connexion" });
+    next(error);
   }
 };
 
-export const register = async (req: Request, res: Response) => {
+export const register = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { name, email, password, role = Role.TECHNICIAN } = req.body;
 
-    if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Nom, email et mot de passe requis" });
-    }
-
+    // Vérifier si l'email est déjà utilisé
     const existingUser = await prisma.user.findUnique({ where: { email } });
 
     if (existingUser) {
-      return res.status(400).json({ message: "Cet email est déjà utilisé" });
+      throw new ValidationError("Cet email est déjà utilisé", "email");
     }
 
+    // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Créer l'utilisateur
     const newUser = await prisma.user.create({
       data: {
         name,
@@ -74,12 +97,27 @@ export const register = async (req: Request, res: Response) => {
       },
     });
 
+    // Générer le token JWT
     const token = jwt.sign(
       { id: newUser.id, email: newUser.email, role: newUser.role },
       process.env.JWT_SECRET as string,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      {
+        expiresIn: process.env.JWT_EXPIRES_IN || "1d",
+        issuer: "isra-seeds-api",
+        subject: newUser.id.toString(),
+      }
     );
 
+    // Logger la création de l'utilisateur
+    Logger.info(
+      `User ${newUser.id} (${newUser.email}) created with role ${newUser.role}`,
+      "Auth",
+      {},
+      req.user?.id,
+      req.ip
+    );
+
+    // Retourner les informations de l'utilisateur
     return res.status(201).json({
       token,
       user: {
@@ -90,33 +128,27 @@ export const register = async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    console.error("Register error:", error);
-    return res.status(500).json({ message: "Erreur lors de l'inscription" });
+    next(error);
   }
 };
 
-export const me = async (req: Request, res: Response) => {
+export const me = async (req: Request, res: Response, next: NextFunction) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ message: "Non authentifié" });
+      throw new AuthenticationError();
     }
 
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: { id: true, name: true, email: true, role: true },
+      select: { id: true, name: true, email: true, role: true, isActive: true },
     });
 
     if (!user) {
-      return res.status(404).json({ message: "Utilisateur non trouvé" });
+      throw new NotFoundError("Utilisateur non trouvé");
     }
 
     return res.json({ user });
   } catch (error) {
-    console.error("Me error:", error);
-    return res
-      .status(500)
-      .json({
-        message: "Erreur lors de la récupération des informations utilisateur",
-      });
+    next(error);
   }
 };

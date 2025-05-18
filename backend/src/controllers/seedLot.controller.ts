@@ -1,12 +1,26 @@
-import { Request, Response } from "express";
+// backend/src/controllers/seedLot.controller.ts
+
+import { Request, Response, NextFunction } from "express";
 import { prisma } from "../app";
 import { SeedLevel, LotStatus } from "@prisma/client";
-import QRCode from "qrcode";
+import QRService from "../services/qr.service";
+import { ValidationError, NotFoundError, ConflictError } from "../types/errors";
+import Logger from "../services/logging.service";
+import {
+  AuditService,
+  AuditAction,
+  AuditEntity,
+} from "../services/audit.service";
 
 // Obtenir tous les lots de semences
-export const getAllSeedLots = async (req: Request, res: Response) => {
+export const getAllSeedLots = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { level, status, varietyId, search } = req.query;
+    const pagination = req.pagination || { skip: 0, limit: 10, page: 1 };
 
     const filters: any = {};
 
@@ -28,31 +42,46 @@ export const getAllSeedLots = async (req: Request, res: Response) => {
       ];
     }
 
-    const seedLots = await prisma.seedLot.findMany({
-      where: filters,
-      include: {
-        variety: true,
-        parentLot: {
-          select: {
-            id: true,
-            level: true,
+    // Récupérer les lots avec pagination
+    const [seedLots, total] = await Promise.all([
+      prisma.seedLot.findMany({
+        where: filters,
+        include: {
+          variety: true,
+          parentLot: {
+            select: {
+              id: true,
+              level: true,
+            },
           },
         },
-      },
-      orderBy: { productionDate: "desc" },
-    });
+        orderBy: { productionDate: "desc" },
+        skip: pagination.skip,
+        take: pagination.limit,
+      }),
+      prisma.seedLot.count({ where: filters }),
+    ]);
 
-    return res.json(seedLots);
+    return res.json({
+      data: seedLots,
+      pagination: {
+        page: pagination.page,
+        limit: pagination.limit,
+        total,
+        pages: Math.ceil(total / pagination.limit),
+      },
+    });
   } catch (error) {
-    console.error("Get all seed lots error:", error);
-    return res
-      .status(500)
-      .json({ message: "Erreur lors de la récupération des lots de semences" });
+    next(error);
   }
 };
 
 // Obtenir un lot de semences par son ID
-export const getSeedLotById = async (req: Request, res: Response) => {
+export const getSeedLotById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
 
@@ -74,20 +103,32 @@ export const getSeedLotById = async (req: Request, res: Response) => {
     });
 
     if (!seedLot) {
-      return res.status(404).json({ message: "Lot de semences non trouvé" });
+      throw new NotFoundError("Lot de semences non trouvé");
+    }
+
+    // Enregistrer l'audit de lecture
+    if (req.user) {
+      await AuditService.createAudit({
+        userId: req.user.id,
+        action: AuditAction.READ,
+        entity: AuditEntity.SEED_LOT,
+        entityId: id,
+        ipAddress: req.ip,
+      });
     }
 
     return res.json(seedLot);
   } catch (error) {
-    console.error("Get seed lot by ID error:", error);
-    return res
-      .status(500)
-      .json({ message: "Erreur lors de la récupération du lot de semences" });
+    next(error);
   }
 };
 
 // Créer un nouveau lot de semences
-export const createSeedLot = async (req: Request, res: Response) => {
+export const createSeedLot = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const {
       id,
@@ -99,18 +140,10 @@ export const createSeedLot = async (req: Request, res: Response) => {
       status = LotStatus.ACTIVE,
     } = req.body;
 
-    if (!id || !varietyId || !level || !quantity || !productionDate) {
-      return res
-        .status(400)
-        .json({ message: "Tous les champs obligatoires doivent être fournis" });
-    }
-
     // Vérifier si le lot existe déjà
     const existingLot = await prisma.seedLot.findUnique({ where: { id } });
     if (existingLot) {
-      return res
-        .status(400)
-        .json({ message: "Un lot avec cet identifiant existe déjà" });
+      throw new ConflictError("Un lot avec cet identifiant existe déjà", "id");
     }
 
     // Vérifier si la variété existe
@@ -118,7 +151,7 @@ export const createSeedLot = async (req: Request, res: Response) => {
       where: { id: parseInt(varietyId) },
     });
     if (!variety) {
-      return res.status(400).json({ message: "Variété non trouvée" });
+      throw new ValidationError("Variété non trouvée", "varietyId");
     }
 
     // Vérifier le lot parent si fourni
@@ -127,20 +160,45 @@ export const createSeedLot = async (req: Request, res: Response) => {
         where: { id: parentLotId },
       });
       if (!parentLot) {
-        return res.status(400).json({ message: "Lot parent non trouvé" });
+        throw new ValidationError("Lot parent non trouvé", "parentLotId");
+      }
+
+      // Vérifier que le niveau est cohérent avec le niveau parent
+      const levelOrder = {
+        GO: 0,
+        G1: 1,
+        G2: 2,
+        G3: 3,
+        R1: 4,
+        R2: 5,
+      };
+
+      const parentLevelIndex = levelOrder[parentLot.level];
+      const targetLevelIndex = levelOrder[level as SeedLevel];
+
+      if (targetLevelIndex <= parentLevelIndex) {
+        throw new ValidationError(
+          `Le niveau cible (${level}) doit être supérieur au niveau parent (${parentLot.level})`,
+          "level"
+        );
+      }
+
+      // Vérifier que la variété est la même que celle du parent
+      if (parentLot.varietyId !== parseInt(varietyId)) {
+        throw new ValidationError(
+          "La variété doit être la même que celle du lot parent",
+          "varietyId"
+        );
       }
     }
 
     // Générer le QR Code
-    const qrCodeData = JSON.stringify({
+    const qrCodeUrl = await QRService.generateSeedLotQR(
       id,
-      variety: variety.name,
-      level,
-      productionDate,
-      timestamp: new Date().toISOString(),
-    });
-
-    const qrCodeUrl = await QRCode.toDataURL(qrCodeData);
+      variety.name,
+      level as SeedLevel,
+      new Date(productionDate)
+    );
 
     // Créer le lot
     const newSeedLot = await prisma.seedLot.create({
@@ -149,24 +207,54 @@ export const createSeedLot = async (req: Request, res: Response) => {
         varietyId: parseInt(varietyId),
         parentLotId,
         level: level as SeedLevel,
-        quantity: parseFloat(quantity),
+        quantity: parseFloat(quantity.toString()),
         productionDate: new Date(productionDate),
         status: status as LotStatus,
         qrCode: qrCodeUrl,
       },
     });
 
+    // Enregistrer l'audit de création
+    if (req.user) {
+      await AuditService.createAudit({
+        userId: req.user.id,
+        action: AuditAction.CREATE,
+        entity: AuditEntity.SEED_LOT,
+        entityId: newSeedLot.id,
+        details: {
+          varietyId: newSeedLot.varietyId,
+          level: newSeedLot.level,
+          quantity: newSeedLot.quantity,
+        },
+        ipAddress: req.ip,
+      });
+    }
+
+    // Logger la création du lot
+    Logger.info(
+      `Lot ${newSeedLot.id} created with level ${newSeedLot.level}`,
+      "SeedLot",
+      {
+        varietyId: newSeedLot.varietyId,
+        parentLotId: newSeedLot.parentLotId,
+        quantity: newSeedLot.quantity,
+      },
+      req.user?.id,
+      req.ip
+    );
+
     return res.status(201).json(newSeedLot);
   } catch (error) {
-    console.error("Create seed lot error:", error);
-    return res
-      .status(500)
-      .json({ message: "Erreur lors de la création du lot de semences" });
+    next(error);
   }
 };
 
-// Mettre à jour un lot de semences (suite)
-export const updateSeedLot = async (req: Request, res: Response) => {
+// Mettre à jour un lot de semences
+export const updateSeedLot = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
     const { varietyId, parentLotId, level, quantity, productionDate, status } =
@@ -175,83 +263,162 @@ export const updateSeedLot = async (req: Request, res: Response) => {
     // Vérifier si le lot existe
     const existingLot = await prisma.seedLot.findUnique({ where: { id } });
     if (!existingLot) {
-      return res.status(404).json({ message: "Lot de semences non trouvé" });
+      throw new NotFoundError("Lot de semences non trouvé");
     }
+
+    // Préparer les données de mise à jour
+    const updateData: any = {};
+
+    // Vérifier et ajouter la variété si fournie
+    if (varietyId) {
+      const variety = await prisma.seedVariety.findUnique({
+        where: { id: parseInt(varietyId) },
+      });
+      if (!variety) {
+        throw new ValidationError("Variété non trouvée", "varietyId");
+      }
+      updateData.varietyId = parseInt(varietyId);
+    }
+
+    // Vérifier et ajouter le lot parent si fourni
+    if (parentLotId) {
+      const parentLot = await prisma.seedLot.findUnique({
+        where: { id: parentLotId },
+      });
+      if (!parentLot) {
+        throw new ValidationError("Lot parent non trouvé", "parentLotId");
+      }
+      updateData.parentLotId = parentLotId;
+    }
+
+    // Ajouter les autres champs
+    if (level) updateData.level = level as SeedLevel;
+    if (quantity !== undefined)
+      updateData.quantity = parseFloat(quantity.toString());
+    if (productionDate) updateData.productionDate = new Date(productionDate);
+    if (status) updateData.status = status as LotStatus;
 
     // Mettre à jour le lot
     const updatedSeedLot = await prisma.seedLot.update({
       where: { id },
-      data: {
-        varietyId: varietyId ? parseInt(varietyId) : undefined,
-        parentLotId,
-        level: level as SeedLevel,
-        quantity: quantity ? parseFloat(quantity) : undefined,
-        productionDate: productionDate ? new Date(productionDate) : undefined,
-        status: status as LotStatus,
-      },
+      data: updateData,
     });
+
+    // Enregistrer l'audit de mise à jour
+    if (req.user) {
+      await AuditService.createAudit({
+        userId: req.user.id,
+        action: AuditAction.UPDATE,
+        entity: AuditEntity.SEED_LOT,
+        entityId: updatedSeedLot.id,
+        details: updateData,
+        ipAddress: req.ip,
+      });
+    }
+
+    // Logger la mise à jour du lot
+    Logger.info(
+      `Lot ${updatedSeedLot.id} updated`,
+      "SeedLot",
+      updateData,
+      req.user?.id,
+      req.ip
+    );
 
     return res.json(updatedSeedLot);
   } catch (error) {
-    console.error("Update seed lot error:", error);
-    return res
-      .status(500)
-      .json({ message: "Erreur lors de la mise à jour du lot de semences" });
+    next(error);
   }
 };
 
 // Supprimer un lot de semences
-export const deleteSeedLot = async (req: Request, res: Response) => {
+export const deleteSeedLot = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
 
     // Vérifier si le lot existe
-    const existingLot = await prisma.seedLot.findUnique({ where: { id } });
+    const existingLot = await prisma.seedLot.findUnique({
+      where: { id },
+      include: {
+        childLots: true,
+        qualityControls: true,
+        productions: true,
+        distributedLots: true,
+      },
+    });
+
     if (!existingLot) {
-      return res.status(404).json({ message: "Lot de semences non trouvé" });
+      throw new NotFoundError("Lot de semences non trouvé");
     }
 
     // Vérifier si le lot a des lots descendants
-    const childLots = await prisma.seedLot.findMany({
-      where: { parentLotId: id },
+    if (existingLot.childLots.length > 0) {
+      throw new ValidationError(
+        "Impossible de supprimer ce lot car il possède des lots descendants",
+        "id"
+      );
+    }
+
+    // Transaction pour supprimer le lot et toutes ses dépendances
+    await prisma.$transaction(async (prisma) => {
+      // Supprimer les contrôles qualité associés
+      await prisma.qualityControl.deleteMany({ where: { lotId: id } });
+
+      // Supprimer les productions associées
+      await prisma.production.deleteMany({ where: { lotId: id } });
+
+      // Supprimer les distributions associées
+      await prisma.distributedLot.deleteMany({ where: { lotId: id } });
+
+      // Supprimer le lot
+      await prisma.seedLot.delete({ where: { id } });
     });
-    if (childLots.length > 0) {
-      return res.status(400).json({
-        message:
-          "Impossible de supprimer ce lot car il possède des lots descendants",
+
+    // Enregistrer l'audit de suppression
+    if (req.user) {
+      await AuditService.createAudit({
+        userId: req.user.id,
+        action: AuditAction.DELETE,
+        entity: AuditEntity.SEED_LOT,
+        entityId: id,
+        ipAddress: req.ip,
       });
     }
 
-    // Supprimer les contrôles qualité associés
-    await prisma.qualityControl.deleteMany({ where: { lotId: id } });
+    // Logger la suppression du lot
+    Logger.info(`Lot ${id} deleted`, "SeedLot", {}, req.user?.id, req.ip);
 
-    // Supprimer les productions associées
-    await prisma.production.deleteMany({ where: { lotId: id } });
-
-    // Supprimer les distributions associées
-    await prisma.distributedLot.deleteMany({ where: { lotId: id } });
-
-    // Supprimer le lot
-    await prisma.seedLot.delete({ where: { id } });
-
-    return res.json({ message: "Lot de semences supprimé avec succès" });
+    return res.json({
+      message: "Lot de semences supprimé avec succès",
+      data: {
+        id,
+        qualityControlsRemoved: existingLot.qualityControls.length,
+        productionsRemoved: existingLot.productions.length,
+        distributionsRemoved: existingLot.distributedLots.length,
+      },
+    });
   } catch (error) {
-    console.error("Delete seed lot error:", error);
-    return res
-      .status(500)
-      .json({ message: "Erreur lors de la suppression du lot de semences" });
+    next(error);
   }
 };
 
 // Obtenir la généalogie d'un lot
-export const getSeedLotGenealogy = async (req: Request, res: Response) => {
+export const getSeedLotGenealogy = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
 
     // Vérifier si le lot existe
     const seedLot = await prisma.seedLot.findUnique({ where: { id } });
     if (!seedLot) {
-      return res.status(404).json({ message: "Lot de semences non trouvé" });
+      throw new NotFoundError("Lot de semences non trouvé");
     }
 
     // Fonction récursive pour trouver les ancêtres
@@ -276,7 +443,11 @@ export const getSeedLotGenealogy = async (req: Request, res: Response) => {
       if (!lot) return ancestors;
 
       if (lot.parentLotId) {
-        ancestors.push(lot.parentLot);
+        ancestors.push({
+          id: lot.parentLot.id,
+          level: lot.parentLot.level,
+          variety: lot.parentLot.variety.name,
+        });
         return findAncestors(lot.parentLotId, ancestors);
       }
 
@@ -294,14 +465,18 @@ export const getSeedLotGenealogy = async (req: Request, res: Response) => {
 
       if (childLots.length === 0) return [];
 
-      const allDescendants = [...childLots];
+      const formattedChildren = childLots.map((child) => ({
+        id: child.id,
+        level: child.level,
+        variety: child.variety.name,
+      }));
 
-      for (const child of childLots) {
-        const descendants = await findDescendants(child.id);
-        allDescendants.push(...descendants);
-      }
+      const nestedDescendants = await Promise.all(
+        childLots.map((child) => findDescendants(child.id))
+      );
 
-      return allDescendants;
+      // Aplatir le tableau de résultats
+      return [...formattedChildren, ...nestedDescendants.flat()];
     };
 
     // Trouver les ancêtres et descendants
@@ -316,24 +491,35 @@ export const getSeedLotGenealogy = async (req: Request, res: Response) => {
       },
     });
 
+    if (!currentLot) {
+      throw new NotFoundError("Lot de semences non trouvé");
+    }
+
     // Combiner tous les lots
     const genealogy = {
-      current: currentLot,
+      current: {
+        id: currentLot.id,
+        level: currentLot.level,
+        variety: currentLot.variety.name,
+      },
       ancestors,
       descendants,
+      totalAncestors: ancestors.length,
+      totalDescendants: descendants.length,
     };
 
     return res.json(genealogy);
   } catch (error) {
-    console.error("Get seed lot genealogy error:", error);
-    return res.status(500).json({
-      message: "Erreur lors de la récupération de la généalogie du lot",
-    });
+    next(error);
   }
 };
 
 // Générer un QR code pour un lot
-export const generateQRCode = async (req: Request, res: Response) => {
+export const generateQRCode = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { id } = req.params;
 
@@ -346,20 +532,16 @@ export const generateQRCode = async (req: Request, res: Response) => {
     });
 
     if (!seedLot) {
-      return res.status(404).json({ message: "Lot de semences non trouvé" });
+      throw new NotFoundError("Lot de semences non trouvé");
     }
 
-    // Données pour le QR code
-    const qrCodeData = JSON.stringify({
-      id: seedLot.id,
-      variety: seedLot.variety.name,
-      level: seedLot.level,
-      productionDate: seedLot.productionDate,
-      timestamp: new Date().toISOString(),
-    });
-
     // Générer le QR code
-    const qrCodeUrl = await QRCode.toDataURL(qrCodeData);
+    const qrCodeUrl = await QRService.generateSeedLotQR(
+      seedLot.id,
+      seedLot.variety.name,
+      seedLot.level,
+      seedLot.productionDate
+    );
 
     // Mettre à jour le lot avec le nouveau QR code
     await prisma.seedLot.update({
@@ -369,9 +551,6 @@ export const generateQRCode = async (req: Request, res: Response) => {
 
     return res.json({ qrCode: qrCodeUrl });
   } catch (error) {
-    console.error("Generate QR code error:", error);
-    return res
-      .status(500)
-      .json({ message: "Erreur lors de la génération du QR code" });
+    next(error);
   }
 };

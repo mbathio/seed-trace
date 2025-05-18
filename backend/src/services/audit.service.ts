@@ -1,12 +1,7 @@
-/**
- * Service d'audit pour suivre les activités importantes
- * Enregistre les actions des utilisateurs dans la base de données
- */
+// backend/src/services/audit.service.ts
 
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/database";
 import Logger from "./logging.service";
-
-const prisma = new PrismaClient();
 
 /**
  * Types d'actions pouvant être auditées
@@ -52,13 +47,13 @@ interface AuditEntry {
 }
 
 /**
- * Service d'audit
+ * Service d'audit pour suivre les activités des utilisateurs
  */
 export class AuditService {
   /**
    * Créer une entrée d'audit
    * @param entry Données de l'entrée d'audit
-   * @returns L'entrée d'audit créée
+   * @returns L'entrée d'audit créée ou null en cas d'erreur
    */
   static async createAudit(entry: AuditEntry): Promise<any> {
     try {
@@ -67,24 +62,36 @@ export class AuditService {
       // Convertir les détails en chaîne JSON si nécessaire
       const detailsJson = details ? JSON.stringify(details) : null;
 
-      // Créer l'entrée d'audit dans la base de données
-      // Note: Ce code assume que vous avez un modèle Audit dans votre schéma Prisma
-      // Si ce n'est pas le cas, il faudra l'ajouter
-      const audit = await prisma.$executeRaw`
-        INSERT INTO "Audit" (
-          "userId", "action", "entity", "entityId", "details", "ipAddress", "createdAt"
-        ) VALUES (
-          ${userId}, ${action}, ${entity}, ${entityId.toString()}, ${detailsJson}, ${ipAddress}, NOW()
-        ) RETURNING *;
-      `;
+      // Convertir entityId en chaîne
+      const entityIdStr = entityId.toString();
 
-      Logger.debug(
-        `Audit created: ${action} on ${entity} ${entityId}`,
+      // Pour une implémentation complète, il faudrait que le modèle Audit existe dans le schéma Prisma
+      // Ce code simule la création d'un audit dans une table qui n'est pas encore créée
+
+      // Journaliser l'action d'audit
+      Logger.info(
+        `AUDIT: User ${userId} performed ${action} on ${entity} ${entityIdStr}`,
         "AuditService",
-        { userId }
+        {
+          action,
+          entity,
+          entityId: entityIdStr,
+          details,
+          ipAddress,
+        },
+        userId
       );
 
-      return audit;
+      return {
+        id: Date.now(), // Simulé
+        userId,
+        action,
+        entity,
+        entityId: entityIdStr,
+        details: detailsJson,
+        ipAddress,
+        createdAt: new Date(),
+      };
     } catch (error) {
       Logger.error("Failed to create audit entry", "AuditService", {
         error,
@@ -111,59 +118,19 @@ export class AuditService {
     limit?: number;
   }): Promise<any> {
     try {
-      const {
-        userId,
-        entity,
-        action,
-        entityId,
-        startDate,
-        endDate,
-        page = 1,
-        limit = 50,
-      } = options;
+      // Cette méthode est une simulation car le modèle Audit n'existe pas encore dans le schéma
+      // Dans une implémentation réelle, nous utiliserions Prisma pour interroger la base de données
 
-      // Construire la clause WHERE
-      const where: any = {};
+      const { page = 1, limit = 50 } = options;
 
-      if (userId) where.userId = userId;
-      if (entity) where.entity = entity;
-      if (action) where.action = action;
-      if (entityId) where.entityId = entityId.toString();
-
-      // Filtre par date
-      if (startDate || endDate) {
-        where.createdAt = {};
-        if (startDate) where.createdAt.gte = startDate;
-        if (endDate) where.createdAt.lte = endDate;
-      }
-
-      // Récupérer les entrées d'audit
-      const audits = await prisma.$queryRaw`
-        SELECT 
-          a.*, 
-          u.name as "userName", 
-          u.email as "userEmail"
-        FROM "Audit" a
-        LEFT JOIN "User" u ON a."userId" = u.id
-        WHERE ${where}
-        ORDER BY a."createdAt" DESC
-        LIMIT ${limit} OFFSET ${(page - 1) * limit};
-      `;
-
-      // Compter le nombre total d'entrées
-      const countResult = await prisma.$queryRaw`
-        SELECT COUNT(*) as total FROM "Audit" WHERE ${where};
-      `;
-
-      const total = parseInt((countResult as any)[0].total);
-
+      // Simuler des données d'audit
       return {
-        data: audits,
+        data: [],
         pagination: {
           page,
           limit,
-          total,
-          pages: Math.ceil(total / limit),
+          total: 0,
+          pages: 0,
         },
       };
     } catch (error) {

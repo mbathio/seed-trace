@@ -1,3 +1,5 @@
+// backend/src/routes/index.ts (Mis à jour pour inclure les routes QR)
+
 import { Router } from "express";
 import authRoutes from "./auth.routes";
 import userRoutes from "./user.routes";
@@ -8,6 +10,7 @@ import parcelRoutes from "./parcel.routes";
 import multiplierRoutes from "./multiplier.routes";
 import reportRoutes from "./report.routes";
 import productionRoutes from "./production.routes";
+import qrRoutes from "./qr.routes"; // Nouvelle importation pour les routes QR
 
 const router = Router();
 
@@ -37,5 +40,8 @@ router.use("/reports", reportRoutes);
 
 // Routes pour la gestion des productions
 router.use("/productions", productionRoutes);
+
+// Routes pour la gestion des codes QR
+router.use("/qr", qrRoutes);
 
 export default router;
