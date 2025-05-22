@@ -1,100 +1,93 @@
 // backend/src/app.ts
-
-import express, { Request, Response, NextFunction } from "express";
-import helmet from "helmet";
-import morgan from "morgan";
+import express from "express";
 import cors from "cors";
-import { prisma } from "./config/database";
-import routes from "./routes";
-import config from "./config";
-import { errorHandler, notFoundHandler } from "./middleware/error.middleware";
-import { pagination } from "./middleware/pagination.middleware";
-import requestLogger from "./middleware/requestLogger.middleware";
-import { noCache } from "./middleware/cacheControl.middleware";
-import { standardLimiter } from "./middleware/rateLimiter.middleware";
-import Logger from "./services/logging.service";
-import path from "path";
+import helmet from "helmet";
+import compression from "compression";
+import morgan from "morgan";
+import rateLimit from "express-rate-limit";
+import { config } from "./config/environment";
+import { errorHandler } from "./middleware/errorHandler";
+import { authMiddleware } from "./middleware/auth";
+import { validateRequest } from "./middleware/validation";
 
-// Initialisation de l'application Express
+// Routes
+import authRoutes from "./routes/auth";
+import userRoutes from "./routes/users";
+import varietyRoutes from "./routes/varieties";
+import parcelRoutes from "./routes/parcels";
+import multiplierRoutes from "./routes/multipliers";
+import seedLotRoutes from "./routes/seedLots";
+import qualityControlRoutes from "./routes/qualityControls";
+import productionRoutes from "./routes/productions";
+import reportRoutes from "./routes/reports";
+
 const app = express();
 
-// Middlewares de sécurité
+// Security middleware
 app.use(helmet());
-app.use(cors(config.auth.cors));
+app.use(compression());
 
-// Middlewares de logging
-if (process.env.NODE_ENV === "production") {
-  app.use(morgan("combined"));
-} else {
-  app.use(morgan("dev"));
-}
-app.use(requestLogger);
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Trop de requêtes depuis cette IP, veuillez réessayer plus tard.",
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+app.use(limiter);
 
-// Middlewares pour traiter le corps des requêtes
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-
-// Rate limiter
-app.use(standardLimiter);
-
-// Middleware de pagination global
+// CORS configuration
 app.use(
-  pagination({
-    defaultLimit: config.api.pagination.defaultLimit,
-    maxLimit: config.api.pagination.maxLimit,
+  cors({
+    origin: config.client.url,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// API Docs en développement
-if (process.env.NODE_ENV === "development") {
-  app.use("/api-docs", express.static(path.join(__dirname, "../docs")));
+// Body parsing middleware
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// Logging
+if (config.environment !== "test") {
+  app.use(morgan("combined"));
 }
 
-// Route de base pour vérifier que l'API fonctionne
-app.get("/", noCache, (req: Request, res: Response) => {
-  res.json({
-    message: "ISRA Seed Traceability API is running",
-    version: process.env.npm_package_version || "1.0.0",
-    environment: process.env.NODE_ENV || "development",
+// Health check
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
     timestamp: new Date().toISOString(),
+    service: "ISRA Seed Traceability System",
+    version: "1.0.0",
   });
 });
 
-// Route de statut pour les healthchecks
-app.get("/status", noCache, async (req: Request, res: Response) => {
-  try {
-    // Vérifier la connexion à la base de données
-    await prisma.$queryRaw`SELECT 1`;
+// API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/users", authMiddleware, userRoutes);
+app.use("/api/varieties", authMiddleware, varietyRoutes);
+app.use("/api/parcels", authMiddleware, parcelRoutes);
+app.use("/api/multipliers", authMiddleware, multiplierRoutes);
+app.use("/api/seed-lots", authMiddleware, seedLotRoutes);
+app.use("/api/quality-controls", authMiddleware, qualityControlRoutes);
+app.use("/api/productions", authMiddleware, productionRoutes);
+app.use("/api/reports", authMiddleware, reportRoutes);
 
-    res.json({
-      status: "healthy",
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      database: "connected",
-      env: process.env.NODE_ENV,
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: "unhealthy",
-      uptime: process.uptime(),
-      timestamp: new Date().toISOString(),
-      database: "disconnected",
-      error:
-        process.env.NODE_ENV === "development"
-          ? error
-          : "Database connection error",
-    });
-  }
+// 404 handler
+app.use("*", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Endpoint non trouvé",
+    data: null,
+    errors: [`Route ${req.method} ${req.originalUrl} non trouvée`],
+  });
 });
 
-// Routes API
-app.use(config.api.prefix, routes);
-
-// Middleware 404 pour les routes non trouvées
-app.use(notFoundHandler);
-
-// Middleware de gestion des erreurs
+// Global error handler
 app.use(errorHandler);
 
-// Exporter les objets app et prisma
-export { app, prisma };
+export default app;

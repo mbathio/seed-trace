@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: isra_user
+      POSTGRES_PASSWORD: isra_password
+      POSTGRES_DB: isra_seeds
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U isra_user -d isra_seeds"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  api:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      DATABASE_URL: "postgresql://isra_user:isra_password@postgres:5432/isra_seeds"
+      JWT_SECRET: "your-super-secret-jwt-key-change-in-production"
+      NODE_ENV: "development"
+      CLIENT_URL: "http://localhost:5173"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src:/app/src
+      - ./logs:/app/logs
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
