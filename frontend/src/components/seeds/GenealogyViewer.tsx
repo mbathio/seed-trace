@@ -42,7 +42,7 @@ const GenealogyViewer = ({ lotId }: GenealogyViewerProps) => {
 
   // Sort all lots by level for display
   const allRelatedLots = [...ancestors, currentLot, ...descendants].sort((a, b) => {
-    const levelOrder = { 'GO': 0, 'G1': 1, 'G2': 2, 'G3': 3, 'R1': 4, 'R2': 5 };
+    const levelOrder = { 'GO': 0, 'G1': 1, 'G2': 2, 'G3': 3, 'G4': 4, 'R1': 5, 'R2': 6 };
     return levelOrder[a.level as keyof typeof levelOrder] - levelOrder[b.level as keyof typeof levelOrder];
   });
 
@@ -65,6 +65,7 @@ const GenealogyViewer = ({ lotId }: GenealogyViewerProps) => {
       case 'G1': bgColor = "bg-blue-100"; break;
       case 'G2': bgColor = "bg-amber-100"; break;
       case 'G3': bgColor = "bg-green-100"; break;
+      case 'G4': bgColor = "bg-teal-100"; break;
       case 'R1': bgColor = "bg-purple-100"; break;
       case 'R2': bgColor = "bg-pink-100"; break;
       default: bgColor = "bg-gray-100";
@@ -109,12 +110,12 @@ const GenealogyViewer = ({ lotId }: GenealogyViewerProps) => {
                         {new Date(lot.productionDate).toLocaleDateString()}
                       </p>
                       <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                        lot.status === 'active' ? 'bg-green-100 text-green-800' : 
-                        lot.status === 'distributed' ? 'bg-blue-100 text-blue-800' :
+                        lot.status === "active" ? 'bg-green-100 text-green-800' : 
+                        lot.status === "distributed" ? 'bg-blue-100 text-blue-800' :
                         'bg-red-100 text-red-800'
                       }`}>
-                        {lot.status === 'active' ? 'Actif' : 
-                         lot.status === 'distributed' ? 'Distribué' : 'Éliminé'}
+                        {lot.status === "active" ? 'Actif' : 
+                         lot.status === "distributed" ? 'Distribué' : 'Éliminé'}
                       </span>
                     </div>
                   </div>

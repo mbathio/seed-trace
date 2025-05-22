@@ -30,7 +30,7 @@ const Dashboard = () => {
   const totalG1 = MOCK_SEED_LOTS.filter(lot => lot.level === 'G1').reduce((acc, lot) => acc + lot.quantity, 0);
   const totalG2 = MOCK_SEED_LOTS.filter(lot => lot.level === 'G2').reduce((acc, lot) => acc + lot.quantity, 0);
   
-  const activeLots = MOCK_SEED_LOTS.filter(lot => lot.status === 'active').length;
+  const activeLots = MOCK_SEED_LOTS.filter(lot => lot.status === "active").length;
 
   return (
     <div className="space-y-6">

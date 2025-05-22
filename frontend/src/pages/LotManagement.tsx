@@ -43,7 +43,7 @@ const LotManagement = () => {
     const matchesSearch = !searchTerm || 
       lot.id.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesLevel = filterLevel === 'all' || lot.level === filterLevel; // Modified condition
+    const matchesLevel = filterLevel === 'all' || lot.level === filterLevel;
     
     return matchesSearch && matchesLevel;
   });
@@ -109,11 +109,12 @@ const LotManagement = () => {
                           <SelectValue placeholder="Niveau" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all">Tous les niveaux</SelectItem> {/* Changed value from "" to "all" */}
+                          <SelectItem value="all">Tous les niveaux</SelectItem>
                           <SelectItem value="GO">GO</SelectItem>
                           <SelectItem value="G1">G1</SelectItem>
                           <SelectItem value="G2">G2</SelectItem>
                           <SelectItem value="G3">G3</SelectItem>
+                          <SelectItem value="G4">G4</SelectItem>
                           <SelectItem value="R1">R1</SelectItem>
                           <SelectItem value="R2">R2</SelectItem>
                         </SelectContent>

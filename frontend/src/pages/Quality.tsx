@@ -23,7 +23,10 @@ const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     germinationRate: 95,
     varietyPurity: 98,
     result: "pass",
-    observations: "Excellente qualité, conforme aux normes"
+    observations: "Excellente qualité, conforme aux normes",
+    inspectorId: 4,
+    moistureContent: 11.5,
+    seedHealth: 97
   },
   {
     id: 2,
@@ -32,7 +35,10 @@ const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     germinationRate: 92,
     varietyPurity: 97,
     result: "pass",
-    observations: "Qualité satisfaisante pour G1"
+    observations: "Qualité satisfaisante pour G1",
+    inspectorId: 4,
+    moistureContent: 12.0,
+    seedHealth: 95
   },
   {
     id: 3,
@@ -41,7 +47,10 @@ const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     germinationRate: 88,
     varietyPurity: 95,
     result: "pass",
-    observations: "Qualité acceptable mais à surveiller"
+    observations: "Qualité acceptable mais à surveiller",
+    inspectorId: 4,
+    moistureContent: 12.5,
+    seedHealth: 92
   },
   {
     id: 4,
@@ -50,7 +59,10 @@ const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     germinationRate: 85,
     varietyPurity: 93,
     result: "fail",
-    observations: "Taux de germination en dessous du seuil minimal requis"
+    observations: "Taux de germination en dessous du seuil minimal requis",
+    inspectorId: 4,
+    moistureContent: 13.2,
+    seedHealth: 88
   }
 ];
 

@@ -12,9 +12,12 @@ import LotRegisterPage from "./pages/LotRegisterPage";
 import GenealogyView from "./pages/GenealogyView";
 import Quality from "./pages/Quality";
 import Parcels from "./pages/Parcels";
+import ParcelDetail from "./pages/ParcelDetail";
 import NotFound from "./pages/NotFound";
 import Multipliers from "./pages/Multipliers";
+import MultiplierDetail from "./pages/MultiplierDetail";
 import Reports from "./pages/Reports";
+import ProductionDetail from "./pages/ProductionDetail";
 
 const queryClient = new QueryClient();
 
@@ -33,8 +36,11 @@ const App = () => (
           <Route path="/genealogy" element={<GenealogyView />} />
           <Route path="/quality" element={<Quality />} />
           <Route path="/parcels" element={<Parcels />} />
+          <Route path="/parcels/:id" element={<ParcelDetail />} />
           <Route path="/multipliers" element={<Multipliers />} />
+          <Route path="/multipliers/:id" element={<MultiplierDetail />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/production/:id" element={<ProductionDetail />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

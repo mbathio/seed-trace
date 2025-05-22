@@ -1,4 +1,6 @@
+
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -6,69 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { UserRole, MOCK_USERS } from "@/utils/seedTypes";
-
-// Mock data for multipliers
-const MOCK_MULTIPLIERS = [
-  {
-    id: 1,
-    name: "Moussa Diop",
-    location: "Dagana",
-    specialization: "Riz",
-    yearsExperience: 8,
-    status: "active" as MultiplierStatus,
-    certificationLevel: "expert" as CertificationLevel
-  },
-  {
-    id: 2,
-    name: "Fatou Sow",
-    location: "Richard-Toll",
-    specialization: "Arachide",
-    yearsExperience: 5,
-    status: "active" as MultiplierStatus,
-    certificationLevel: "intermediate" as CertificationLevel
-  },
-  {
-    id: 3,
-    name: "Amadou Ndiaye",
-    location: "Podor",
-    specialization: "Riz",
-    yearsExperience: 12,
-    status: "inactive" as MultiplierStatus,
-    certificationLevel: "expert" as CertificationLevel
-  },
-  {
-    id: 4,
-    name: "Aissatou Ba",
-    location: "Saint-Louis",
-    specialization: "Maïs",
-    yearsExperience: 3,
-    status: "active" as MultiplierStatus,
-    certificationLevel: "beginner" as CertificationLevel
-  },
-  {
-    id: 5,
-    name: "Ibrahima Fall",
-    location: "Matam",
-    specialization: "Sorgho",
-    yearsExperience: 7,
-    status: "active" as MultiplierStatus,
-    certificationLevel: "intermediate" as CertificationLevel
-  }
-];
+import { UserRole, MOCK_USERS, MOCK_MULTIPLIERS } from "@/utils/seedTypes";
 
 type MultiplierStatus = "active" | "inactive";
 type CertificationLevel = "beginner" | "intermediate" | "expert";
-
-interface Multiplier {
-  id: number;
-  name: string;
-  location: string;
-  specialization: string;
-  yearsExperience: number;
-  status: MultiplierStatus;
-  certificationLevel: CertificationLevel;
-}
 
 const StatusBadge = ({ status }: { status: MultiplierStatus }) => {
   const statusConfig = {
@@ -101,6 +44,8 @@ const Multipliers = () => {
   // Simuler un utilisateur connecté avec le rôle "manager"
   const userRole: UserRole = "manager";
   const userName = MOCK_USERS.find(user => user.role === userRole)?.name || "";
+  const navigate = useNavigate();
+  
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -108,11 +53,20 @@ const Multipliers = () => {
   const filteredMultipliers = MOCK_MULTIPLIERS.filter(multiplier => {
     const matchesTab = activeTab === "all" || multiplier.status === activeTab;
     const matchesSearch = multiplier.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          multiplier.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          multiplier.specialization.toLowerCase().includes(searchQuery.toLowerCase());
+                          multiplier.location.lat.toString().includes(searchQuery) ||
+                          multiplier.location.lng.toString().includes(searchQuery) ||
+                          multiplier.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          (multiplier.email && multiplier.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                          (multiplier.phone && multiplier.phone.includes(searchQuery)) ||
+                          multiplier.specialization.some(s => s.toLowerCase().includes(searchQuery.toLowerCase()));
     
     return matchesTab && matchesSearch;
   });
+
+  // Navigate to multiplier detail
+  const handleViewMultiplierDetail = (multiplierId: number) => {
+    navigate(`/multipliers/${multiplierId}`);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -158,7 +112,7 @@ const Multipliers = () => {
                     <StatusBadge status={multiplier.status} />
                   </div>
                   <CardDescription>
-                    {multiplier.location} • Spécialisation: {multiplier.specialization}
+                    {multiplier.address} • Spécialisation: {multiplier.specialization.join(", ")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -171,9 +125,24 @@ const Multipliers = () => {
                       <span className="text-muted-foreground">Certification:</span>
                       <CertificationBadge level={multiplier.certificationLevel} />
                     </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Parcelles:</span>
+                      <span className="font-medium">{multiplier.parcels?.length || 0}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Contrats actifs:</span>
+                      <span className="font-medium">
+                        {multiplier.contracts?.filter(c => c.status === 'active').length || 0}
+                      </span>
+                    </div>
                   </div>
                   <div className="mt-4 flex space-x-2">
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => handleViewMultiplierDetail(multiplier.id)}
+                    >
                       Voir détails
                     </Button>
                     <Button variant="outline" size="sm" className="flex-1">

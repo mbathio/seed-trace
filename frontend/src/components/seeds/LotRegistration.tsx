@@ -60,12 +60,13 @@ const LotRegistration = () => {
   };
 
   const seedLevels: { value: SeedLevel; label: string }[] = [
-    { value: 'GO', label: 'GO - Pré-base' },
-    { value: 'G1', label: 'G1 - Base première génération' },
-    { value: 'G2', label: 'G2 - Base deuxième génération' },
-    { value: 'G3', label: 'G3 - Certifiée première reproduction' },
-    { value: 'R1', label: 'R1 - Certifiée première reproduction' },
-    { value: 'R2', label: 'R2 - Certifiée deuxième reproduction' }
+    { value: "GO", label: 'GO - Pré-base' },
+    { value: "G1", label: 'G1 - Base première génération' },
+    { value: "G2", label: 'G2 - Base deuxième génération' },
+    { value: "G3", label: 'G3 - Base troisième génération' },
+    { value: "G4", label: 'G4 - Base quatrième génération' },
+    { value: "R1", label: 'R1 - Certifiée première reproduction' },
+    { value: "R2", label: 'R2 - Certifiée deuxième reproduction' }
   ];
 
   return (
