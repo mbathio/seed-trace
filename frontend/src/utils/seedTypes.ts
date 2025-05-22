@@ -1,6 +1,11 @@
-
 // Define user roles
-export type UserRole = "admin" | "manager" | "inspector" | "multiplier" | "guest" | "technician";
+export type UserRole =
+  | "admin"
+  | "manager"
+  | "inspector"
+  | "multiplier"
+  | "guest"
+  | "technician";
 
 // User interface
 export interface User {
@@ -15,7 +20,13 @@ export interface User {
 export type SeedLevel = "GO" | "G1" | "G2" | "G3" | "G4" | "R1" | "R2";
 
 // Crop types
-export type CropType = "rice" | "maize" | "peanut" | "sorghum" | "cowpea" | "millet";
+export type CropType =
+  | "rice"
+  | "maize"
+  | "peanut"
+  | "sorghum"
+  | "cowpea"
+  | "millet";
 
 // Define parcel status
 export type ParcelStatus = "available" | "in-use" | "resting";
@@ -64,16 +75,16 @@ export interface Contract {
   status: ContractStatus;
   parcelId?: number;
   paymentTerms?: string;
-  varietyId?: string;  // Added varietyId
-  quantity?: number;   // Added quantity
+  varietyId?: string; // Added varietyId
+  quantity?: number; // Added quantity
 }
 
 // Production history item
 export interface ProductionHistoryItem {
   contractId: number;
   cropType: CropType;
-  seedLevel: SeedLevel;  // Explicitly define seedLevel
-  level?: SeedLevel;     // Add level for backward compatibility
+  seedLevel: SeedLevel; // Explicitly define seedLevel
+  level?: SeedLevel; // Add level for backward compatibility
   season: string;
   year: number;
   quantity: number;
@@ -105,7 +116,14 @@ export interface Multiplier {
 }
 
 // Seed lot status
-export type SeedLotStatus = "pending" | "certified" | "rejected" | "in-stock" | "sold" | "active" | "distributed";
+export type SeedLotStatus =
+  | "pending"
+  | "certified"
+  | "rejected"
+  | "in-stock"
+  | "sold"
+  | "active"
+  | "distributed";
 
 // Seed lot interface
 export interface SeedLot {
@@ -116,12 +134,12 @@ export interface SeedLot {
   level: SeedLevel;
   quantity: number;
   productionDate: string; // ISO date string
-  expiryDate?: string;    // ISO date string
-  multiplier?: number;    // ID of the multiplier
+  expiryDate?: string; // ISO date string
+  multiplier?: number; // ID of the multiplier
   status: SeedLotStatus;
   parcelId?: number;
   batchNumber?: string;
-  parentLotId?: string;   // For traceability
+  parentLotId?: string; // For traceability
 }
 
 // Quality control interface
@@ -139,7 +157,15 @@ export interface QualityControl {
 }
 
 // Activity type
-export type ActivityType = "soil_preparation" | "sowing" | "fertilization" | "irrigation" | "weeding" | "pest_control" | "harvest" | "other";
+export type ActivityType =
+  | "soil_preparation"
+  | "sowing"
+  | "fertilization"
+  | "irrigation"
+  | "weeding"
+  | "pest_control"
+  | "harvest"
+  | "other";
 
 // Issue type
 export type IssueType = "disease" | "pest" | "weather" | "management" | "other";
@@ -176,7 +202,11 @@ export interface WeatherData {
 }
 
 // Production status
-export type ProductionStatus = "planned" | "in-progress" | "completed" | "cancelled";
+export type ProductionStatus =
+  | "planned"
+  | "in-progress"
+  | "completed"
+  | "cancelled";
 
 // Production interface
 export interface Production {
@@ -198,13 +228,83 @@ export interface Production {
 }
 
 // Report interface
+// Définir des types spécifiques pour les données de rapport
+export interface ProductionReportData {
+  totalProduction: number;
+  totalSurface: number;
+  averageYield: number;
+  productionByRegion: {
+    region: string;
+    production: number;
+    surface: number;
+  }[];
+  productionByCrop: {
+    crop: string;
+    production: number;
+  }[];
+}
+
+export interface QualityReportData {
+  totalTests: number;
+  passRate: number;
+  averageGerminationRate: number;
+  averageVarietyPurity: number;
+  qualityByLevel: {
+    level: SeedLevel;
+    passRate: number;
+    averageGermination: number;
+  }[];
+}
+
+export interface InventoryReportData {
+  totalLots: number;
+  totalQuantity: number;
+  lotsByLevel: {
+    level: SeedLevel;
+    count: number;
+    quantity: number;
+  }[];
+  lotsByCrop: {
+    crop: CropType;
+    count: number;
+    quantity: number;
+  }[];
+}
+
+export interface MultiplierPerformanceData {
+  totalMultipliers: number;
+  activeMultipliers: number;
+  averageExperience: number;
+  performanceByMultiplier: {
+    multiplierId: number;
+    name: string;
+    totalProduction: number;
+    averageQuality: number;
+    contractsCompleted: number;
+  }[];
+}
+
+// Union type pour tous les types de données de rapport
+export type ReportData =
+  | ProductionReportData
+  | QualityReportData
+  | InventoryReportData
+  | MultiplierPerformanceData
+  | Record<string, unknown>; // Pour les rapports personnalisés
+
+// Interface Report mise à jour
 export interface Report {
   id: number;
   title: string;
-  type: "production" | "quality" | "inventory" | "multiplier_performance" | "custom";
+  type:
+    | "production"
+    | "quality"
+    | "inventory"
+    | "multiplier_performance"
+    | "custom";
   creationDate: string;
   createdBy: number;
-  data?: any;
+  data?: ReportData; // Remplace any par ReportData
   fileName?: string;
 }
 
@@ -228,33 +328,33 @@ export const MOCK_USERS: User[] = [
     name: "Admin User",
     role: "admin",
     email: "admin@isra.sn",
-    avatar: "/avatars/admin.png"
+    avatar: "/avatars/admin.png",
   },
   {
     id: 2,
     name: "Amadou Diallo",
     role: "manager",
     email: "amadou@isra.sn",
-    avatar: "/avatars/manager.png"
+    avatar: "/avatars/manager.png",
   },
   {
     id: 3,
     name: "Marie Faye",
     role: "manager",
-    email: "marie@isra.sn"
+    email: "marie@isra.sn",
   },
   {
     id: 4,
     name: "Ousmane Ndiaye",
     role: "inspector",
-    email: "ousmane@isra.sn"
+    email: "ousmane@isra.sn",
   },
   {
     id: 5,
     name: "Fatou Sow",
     role: "multiplier",
-    email: "fatou@gmail.com"
-  }
+    email: "fatou@gmail.com",
+  },
 ];
 
 // Mock data for parcels
@@ -265,7 +365,7 @@ export const MOCK_PARCELS: Parcel[] = [
     area: 5.2,
     location: {
       lat: 16.5182,
-      lng: -15.5046
+      lng: -15.5046,
     },
     status: "in-use",
     soilType: "Argilo-limoneux",
@@ -278,20 +378,20 @@ export const MOCK_PARCELS: Parcel[] = [
       organicMatter: "3.2",
       nitrogen: "0.15",
       phosphorus: "32",
-      potassium: "180"
+      potassium: "180",
     },
     previousCrops: [
       {
         crop: "Riz",
         year: 2022,
-        season: "Hivernage"
+        season: "Hivernage",
       },
       {
         crop: "Maïs",
         year: 2022,
-        season: "Contre-saison chaude"
-      }
-    ]
+        season: "Contre-saison chaude",
+      },
+    ],
   },
   {
     id: 2,
@@ -299,7 +399,7 @@ export const MOCK_PARCELS: Parcel[] = [
     area: 3.8,
     location: {
       lat: 16.6518,
-      lng: -14.9592
+      lng: -14.9592,
     },
     status: "available",
     soilType: "Sableux",
@@ -310,9 +410,9 @@ export const MOCK_PARCELS: Parcel[] = [
       {
         crop: "Niébé",
         year: 2022,
-        season: "Contre-saison froide"
-      }
-    ]
+        season: "Contre-saison froide",
+      },
+    ],
   },
   {
     id: 3,
@@ -320,12 +420,12 @@ export const MOCK_PARCELS: Parcel[] = [
     area: 7.5,
     location: {
       lat: 16.4625,
-      lng: -15.7009
+      lng: -15.7009,
     },
     status: "resting",
     soilType: "Limono-sableux",
     irrigationSystem: "Gravitaire",
-    address: "Compagnie Sucrière Sénégalaise, Richard-Toll"
+    address: "Compagnie Sucrière Sénégalaise, Richard-Toll",
   },
   {
     id: 4,
@@ -333,13 +433,13 @@ export const MOCK_PARCELS: Parcel[] = [
     area: 4.2,
     location: {
       lat: 15.6552,
-      lng: -13.2578
+      lng: -13.2578,
     },
     status: "in-use",
     soilType: "Argilo-sableux",
     irrigationSystem: "Goutte-à-goutte",
-    address: "Zone agricole de Matam"
-  }
+    address: "Zone agricole de Matam",
+  },
 ];
 
 // Mock data for multipliers
@@ -351,7 +451,7 @@ export const MOCK_MULTIPLIERS: Multiplier[] = [
     address: "Dagana, Saint-Louis",
     location: {
       lat: 16.5182,
-      lng: -15.5046
+      lng: -15.5046,
     },
     yearsExperience: 8,
     certificationLevel: "expert",
@@ -369,8 +469,8 @@ export const MOCK_MULTIPLIERS: Multiplier[] = [
         seedLevel: "G1",
         expectedQuantity: 5000,
         status: "active",
-        parcelId: 1
-      }
+        parcelId: 1,
+      },
     ],
     history: [
       {
@@ -382,7 +482,7 @@ export const MOCK_MULTIPLIERS: Multiplier[] = [
         year: 2022,
         quantity: 4800,
         qualityScore: 92,
-        varietyId: "Sahel 202"
+        varietyId: "Sahel 202",
       },
       {
         contractId: 87,
@@ -393,9 +493,9 @@ export const MOCK_MULTIPLIERS: Multiplier[] = [
         year: 2022,
         quantity: 3200,
         qualityScore: 88,
-        varietyId: "ZM309"
-      }
-    ]
+        varietyId: "ZM309",
+      },
+    ],
   },
   {
     id: 2,
@@ -404,14 +504,14 @@ export const MOCK_MULTIPLIERS: Multiplier[] = [
     address: "Podor, Saint-Louis",
     location: {
       lat: 16.6518,
-      lng: -14.9592
+      lng: -14.9592,
     },
     yearsExperience: 5,
     certificationLevel: "intermediate",
     specialization: ["rice", "peanut"],
     phone: "77 234 56 78",
     email: "aminata@example.com",
-    parcels: [2]
+    parcels: [2],
   },
   {
     id: 3,
@@ -420,12 +520,12 @@ export const MOCK_MULTIPLIERS: Multiplier[] = [
     address: "Richard-Toll, Saint-Louis",
     location: {
       lat: 16.4625,
-      lng: -15.7009
+      lng: -15.7009,
     },
     yearsExperience: 10,
     certificationLevel: "expert",
     specialization: ["rice", "sorghum", "millet"],
-    parcels: [3]
+    parcels: [3],
   },
   {
     id: 4,
@@ -434,14 +534,14 @@ export const MOCK_MULTIPLIERS: Multiplier[] = [
     address: "Matam",
     location: {
       lat: 15.6552,
-      lng: -13.2578
+      lng: -13.2578,
     },
     yearsExperience: 3,
     certificationLevel: "beginner",
     specialization: ["maize", "cowpea"],
     phone: "77 345 67 89",
-    parcels: [4]
-  }
+    parcels: [4],
+  },
 ];
 
 // Mock data for seed lots
@@ -458,7 +558,7 @@ export const MOCK_SEED_LOTS: SeedLot[] = [
     multiplier: 1,
     status: "certified",
     parcelId: 1,
-    batchNumber: "BATCH-001"
+    batchNumber: "BATCH-001",
   },
   {
     id: "SL-G1-2023-001",
@@ -473,7 +573,7 @@ export const MOCK_SEED_LOTS: SeedLot[] = [
     status: "in-stock",
     parcelId: 1,
     batchNumber: "BATCH-002",
-    parentLotId: "SL-GO-2023-001"
+    parentLotId: "SL-GO-2023-001",
   },
   {
     id: "SL-G2-2023-001",
@@ -487,7 +587,7 @@ export const MOCK_SEED_LOTS: SeedLot[] = [
     multiplier: 2,
     status: "in-stock",
     parcelId: 2,
-    batchNumber: "BATCH-003"
+    batchNumber: "BATCH-003",
   },
   {
     id: "SL-GO-2023-002",
@@ -501,8 +601,8 @@ export const MOCK_SEED_LOTS: SeedLot[] = [
     multiplier: 3,
     status: "certified",
     parcelId: 3,
-    batchNumber: "BATCH-004"
-  }
+    batchNumber: "BATCH-004",
+  },
 ];
 
 // Mock data for varieties
@@ -511,45 +611,49 @@ export const MOCK_VARIETIES: Variety[] = [
     id: "sahel108",
     name: "Sahel 108",
     cropType: "rice",
-    description: "Variété de cycle court (100-110 jours) adaptée aux zones irriguées du Nord",
+    description:
+      "Variété de cycle court (100-110 jours) adaptée aux zones irriguées du Nord",
     maturityDays: 105,
     yieldPotential: 9.5,
     resistances: ["Blast", "Virus de la panachure jaune"],
     origin: "AfricaRice",
-    releaseYear: 1994
+    releaseYear: 1994,
   },
   {
     id: "sahel202",
     name: "Sahel 202",
     cropType: "rice",
-    description: "Variété améliorée à haut rendement, bien adaptée aux conditions sahéliennes",
+    description:
+      "Variété améliorée à haut rendement, bien adaptée aux conditions sahéliennes",
     maturityDays: 125,
     yieldPotential: 10,
     resistances: ["Blast", "Pyriculariose"],
     origin: "ISRA/AfricaRice",
-    releaseYear: 2007
+    releaseYear: 2007,
   },
   {
     id: "zm309",
     name: "ZM309",
     cropType: "maize",
-    description: "Variété de maïs tolérante à la sécheresse, adaptée aux zones semi-arides",
+    description:
+      "Variété de maïs tolérante à la sécheresse, adaptée aux zones semi-arides",
     maturityDays: 95,
     yieldPotential: 7.2,
     resistances: ["Streak", "Rouille"],
     origin: "IITA",
-    releaseYear: 2012
+    releaseYear: 2012,
   },
   {
     id: "73-33",
     name: "73-33",
     cropType: "peanut",
-    description: "Variété d'arachide traditionnelle du Sénégal, bien adaptée aux zones sahéliennes",
+    description:
+      "Variété d'arachide traditionnelle du Sénégal, bien adaptée aux zones sahéliennes",
     maturityDays: 90,
     yieldPotential: 3.5,
     origin: "ISRA",
-    releaseYear: 1973
-  }
+    releaseYear: 1973,
+  },
 ];
 
 // Mock quality controls
@@ -563,7 +667,7 @@ export const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     result: "pass",
     inspectorId: 4,
     moistureContent: 12.5,
-    seedHealth: 98
+    seedHealth: 98,
   },
   {
     id: 2,
@@ -574,7 +678,7 @@ export const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     result: "pass",
     inspectorId: 4,
     moistureContent: 13.0,
-    seedHealth: 96
+    seedHealth: 96,
   },
   {
     id: 3,
@@ -584,7 +688,7 @@ export const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     varietyPurity: 96.0,
     result: "pass",
     inspectorId: 4,
-    moistureContent: 13.8
+    moistureContent: 13.8,
   },
   {
     id: 4,
@@ -595,8 +699,8 @@ export const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     result: "fail",
     observations: "Taux de germination insuffisant",
     inspectorId: 4,
-    moistureContent: 14.2
-  }
+    moistureContent: 14.2,
+  },
 ];
 
 // Sample activities data
@@ -608,9 +712,9 @@ const sampleActivities: Activity[] = [
     personnel: ["Jean Diop", "Amadou Ndiaye"],
     inputs: [
       { name: "Tracteur", quantity: "4", unit: "heures" },
-      { name: "Carburant", quantity: "25", unit: "litres" }
+      { name: "Carburant", quantity: "25", unit: "litres" },
     ],
-    notes: "Sol en bon état, bonne structure"
+    notes: "Sol en bon état, bonne structure",
   },
   {
     type: "sowing",
@@ -619,9 +723,9 @@ const sampleActivities: Activity[] = [
     personnel: ["Aminata Sow", "Ibrahima Fall"],
     inputs: [
       { name: "Semences GO", quantity: "50", unit: "kg" },
-      { name: "Engrais de fond NPK", quantity: "100", unit: "kg" }
-    ]
-  }
+      { name: "Engrais de fond NPK", quantity: "100", unit: "kg" },
+    ],
+  },
 ];
 
 // Sample issues data
@@ -632,8 +736,8 @@ const sampleIssues: Issue[] = [
     description: "Présence importante de foreurs de tiges",
     severity: "medium",
     actions: "Application de biopesticide à base de neem",
-    resolved: true
-  }
+    resolved: true,
+  },
 ];
 
 // Sample weather data
@@ -642,14 +746,14 @@ const sampleWeatherData: WeatherData[] = [
     date: "2023-03-01",
     temperature: "32",
     rainfall: "0",
-    humidity: "45"
+    humidity: "45",
   },
   {
     date: "2023-03-15",
     temperature: "34",
     rainfall: "12",
-    humidity: "65"
-  }
+    humidity: "65",
+  },
 ];
 
 // Mock production data
@@ -669,7 +773,7 @@ export const MOCK_PRODUCTIONS: Production[] = [
     plannedQuantity: 5000,
     activities: sampleActivities,
     issues: sampleIssues,
-    weatherData: sampleWeatherData
+    weatherData: sampleWeatherData,
   },
   {
     id: 2,
@@ -683,7 +787,7 @@ export const MOCK_PRODUCTIONS: Production[] = [
     plannedQuantity: 3000,
     activities: [],
     issues: [],
-    weatherData: []
+    weatherData: [],
   },
   {
     id: 3,
@@ -700,8 +804,8 @@ export const MOCK_PRODUCTIONS: Production[] = [
     plannedQuantity: 2500,
     activities: [],
     issues: [],
-    weatherData: []
-  }
+    weatherData: [],
+  },
 ];
 
 // Mock reports
@@ -712,7 +816,7 @@ export const MOCK_REPORTS: Report[] = [
     type: "production",
     creationDate: "2023-04-01",
     createdBy: 2,
-    fileName: "production_rapport_t1_2023.pdf"
+    fileName: "production_rapport_t1_2023.pdf",
   },
   {
     id: 2,
@@ -720,7 +824,7 @@ export const MOCK_REPORTS: Report[] = [
     type: "quality",
     creationDate: "2023-03-15",
     createdBy: 4,
-    fileName: "qualite_g1_2023.pdf"
+    fileName: "qualite_g1_2023.pdf",
   },
   {
     id: 3,
@@ -728,7 +832,7 @@ export const MOCK_REPORTS: Report[] = [
     type: "multiplier_performance",
     creationDate: "2023-02-28",
     createdBy: 2,
-    fileName: "perf_multiplicateurs_nord_2023.xlsx"
+    fileName: "perf_multiplicateurs_nord_2023.xlsx",
   },
   {
     id: 4,
@@ -736,6 +840,6 @@ export const MOCK_REPORTS: Report[] = [
     type: "quality",
     creationDate: "2023-05-10",
     createdBy: 4,
-    fileName: "qualite_riz_sahel.pdf"
-  }
+    fileName: "qualite_riz_sahel.pdf",
+  },
 ];
