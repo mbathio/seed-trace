@@ -52,13 +52,13 @@ enum ParcelStatus {
 }
 
 enum SeedLotStatus {
-  pending
-  certified
-  rejected
-  in_stock
-  sold
-  active
-  distributed
+  PENDING
+  CERTIFIED
+  REJECTED
+  IN_STOCK
+  SOLD
+  ACTIVE
+  DISTRIBUTED
 }
 
 enum ContractStatus {
@@ -107,8 +107,8 @@ enum IssueSeverity {
 }
 
 enum QualityControlResult {
-  pass
-  fail
+  PASS
+  FAIL
 }
 
 enum ReportType {
