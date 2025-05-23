@@ -1,4 +1,4 @@
-// backend/src/utils/qrCode.ts
+// backend/src/utils/qrCode.ts (corrigé)
 import QRCode from "qrcode";
 import { config } from "../config/environment";
 
@@ -21,7 +21,6 @@ export class QRCodeService {
       const qrCodeDataURL = await QRCode.toDataURL(qrData, {
         errorCorrectionLevel: "M",
         type: "image/png",
-        quality: 0.92,
         margin: 1,
         color: {
           dark: "#000000",
@@ -46,7 +45,6 @@ export class QRCodeService {
       const buffer = await QRCode.toBuffer(qrData, {
         errorCorrectionLevel: "M",
         type: "png",
-        quality: 0.92,
         margin: 1,
         color: {
           dark: "#000000",

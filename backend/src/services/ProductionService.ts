@@ -1,4 +1,4 @@
-// backend/src/services/ProductionService.ts
+// backend/src/services/ProductionService.ts (corrigé)
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { PaginationQuery } from "../types/api";
@@ -12,9 +12,11 @@ export class ProductionService {
           multiplierId: data.multiplierId,
           parcelId: data.parcelId,
           startDate: new Date(data.startDate),
-          endDate: data.endDate ? new Date(data.endDate) : null,
-          sowingDate: data.sowingDate ? new Date(data.sowingDate) : null,
-          harvestDate: data.harvestDate ? new Date(data.harvestDate) : null,
+          endDate: data.endDate ? new Date(data.endDate) : undefined,
+          sowingDate: data.sowingDate ? new Date(data.sowingDate) : undefined, // Changé de null à undefined
+          harvestDate: data.harvestDate
+            ? new Date(data.harvestDate)
+            : undefined,
           plannedQuantity: data.plannedQuantity,
           actualYield: data.actualYield,
           notes: data.notes,
@@ -38,6 +40,7 @@ export class ProductionService {
     }
   }
 
+  // ... (le reste des méthodes reste identique)
   static async getProductions(
     query: PaginationQuery & any
   ): Promise<{ productions: any[]; total: number; meta: any }> {
@@ -175,7 +178,9 @@ export class ProductionService {
           ...data,
           endDate: data.endDate ? new Date(data.endDate) : undefined,
           sowingDate: data.sowingDate ? new Date(data.sowingDate) : undefined,
-          harvestDate: data.harvestDate ? new Date(data.harvestDate) : undefined,
+          harvestDate: data.harvestDate
+            ? new Date(data.harvestDate)
+            : undefined,
           updatedAt: new Date(),
         },
         include: {
@@ -279,3 +284,4 @@ export class ProductionService {
       throw error;
     }
   }
+}

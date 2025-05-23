@@ -1,8 +1,9 @@
-// backend/src/services/AuthService.ts
+// backend/src/services/AuthService.ts (corrigé)
 import { prisma } from "../config/database";
 import { EncryptionService } from "../utils/encryption";
 import { logger } from "../utils/logger";
 import { AuthTokens, JwtPayload } from "../types/api";
+import { Role } from "@prisma/client";
 
 export class AuthService {
   static async login(
@@ -66,7 +67,6 @@ export class AuthService {
     try {
       const tokenRecord = await prisma.refreshToken.findUnique({
         where: { token: refreshToken },
-        include: { user: true },
       });
 
       if (!tokenRecord || tokenRecord.expiresAt < new Date()) {
@@ -79,10 +79,20 @@ export class AuthService {
         return null;
       }
 
+      // Récupérer les informations utilisateur
+      const user = await prisma.user.findUnique({
+        where: { id: tokenRecord.userId },
+        select: { id: true, email: true, role: true },
+      });
+
+      if (!user) {
+        return null;
+      }
+
       const tokenPayload: JwtPayload = {
-        userId: tokenRecord.userId,
-        email: tokenRecord.user.email,
-        role: tokenRecord.user.role,
+        userId: user.id,
+        email: user.email,
+        role: user.role,
       };
 
       const newTokens = EncryptionService.generateTokens(tokenPayload);
@@ -135,8 +145,10 @@ export class AuthService {
 
       const user = await prisma.user.create({
         data: {
-          ...userData,
+          name: userData.name,
+          email: userData.email,
           password: hashedPassword,
+          role: userData.role as Role, // Cast vers l'énumération Role
         },
         select: {
           id: true,

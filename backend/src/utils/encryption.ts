@@ -1,4 +1,4 @@
-// backend/src/utils/encryption.ts
+// backend/src/utils/encryption.ts (corrigé)
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { config } from "../config/environment";

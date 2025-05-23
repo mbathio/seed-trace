@@ -1,4 +1,6 @@
-// backend/src/types/api.ts
+// backend/src/types/api.ts (corrigé)
+import { Role } from "@prisma/client";
+
 export interface ApiResponse<T = any> {
   success: boolean;
   message: string;
@@ -28,7 +30,7 @@ export interface AuthTokens {
 export interface JwtPayload {
   userId: number;
   email: string;
-  role: string;
+  role: Role; // Utiliser l'énumération Prisma
   iat?: number;
   exp?: number;
 }

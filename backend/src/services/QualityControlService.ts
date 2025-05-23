@@ -1,4 +1,4 @@
-// backend/src/services/QualityControlService.ts
+// backend/src/services/QualityControlService.ts (corrigé)
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { CreateQualityControlData } from "../types/entities";
@@ -33,7 +33,7 @@ export class QualityControlService {
           varietyPurity: data.varietyPurity,
           moistureContent: data.moistureContent,
           seedHealth: data.seedHealth,
-          result,
+          result, // Utilise directement la valeur de l'énumération
           observations: data.observations,
           testMethod: data.testMethod,
           inspectorId: data.inspectorId,
@@ -52,7 +52,7 @@ export class QualityControlService {
       });
 
       // Mettre à jour le statut du lot si le test passe
-      if (result === "pass") {
+      if (result === "PASS") {
         await prisma.seedLot.update({
           where: { id: data.lotId },
           data: { status: "CERTIFIED" },
@@ -75,7 +75,8 @@ export class QualityControlService {
     germinationRate: number,
     varietyPurity: number,
     level: string
-  ): "pass" | "fail" {
+  ): "PASS" | "FAIL" {
+    // Correction ici : utiliser les valeurs de l'énumération
     // Seuils minimaux selon le niveau de semence
     const thresholds: {
       [key: string]: { germination: number; purity: number };
@@ -93,8 +94,8 @@ export class QualityControlService {
 
     return germinationRate >= threshold.germination &&
       varietyPurity >= threshold.purity
-      ? "pass"
-      : "fail";
+      ? "PASS" // Correction ici
+      : "FAIL"; // Correction ici
   }
 
   static async getQualityControls(

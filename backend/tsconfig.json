@@ -20,9 +20,18 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false
   },
-  "include": ["src/**/*", "prisma/seed.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "prisma/**/*"
+  ],
   "ts-node": {
-    "esm": true
+    "esm": true,
+    "compilerOptions": {
+      "module": "commonjs"
+    }
   }
 }
