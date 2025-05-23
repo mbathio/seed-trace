@@ -55,12 +55,12 @@ export class QualityControlService {
       if (result === "pass") {
         await prisma.seedLot.update({
           where: { id: data.lotId },
-          data: { status: "certified" },
+          data: { status: "CERTIFIED" },
         });
       } else {
         await prisma.seedLot.update({
           where: { id: data.lotId },
-          data: { status: "rejected" },
+          data: { status: "REJECTED" },
         });
       }
 

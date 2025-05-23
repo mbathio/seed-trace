@@ -1,4 +1,4 @@
-// backend/src/services/UserService.ts
+// backend/src/services/UserService.ts (corrections)
 import { prisma } from "../config/database";
 import { EncryptionService } from "../utils/encryption";
 import { logger } from "../utils/logger";
@@ -153,7 +153,9 @@ export class UserService {
         throw new Error("Un utilisateur avec cet email existe déjà");
       }
 
-      const hashedPassword = await EncryptionService.hashPassword(data.password);
+      const hashedPassword = await EncryptionService.hashPassword(
+        data.password
+      );
 
       const user = await prisma.user.create({
         data: {
@@ -264,7 +266,8 @@ export class UserService {
         throw new Error("Mot de passe actuel incorrect");
       }
 
-      const hashedNewPassword = await EncryptionService.hashPassword(newPassword);
+      const hashedNewPassword =
+        await EncryptionService.hashPassword(newPassword);
 
       await prisma.user.update({
         where: { id },
@@ -275,3 +278,4 @@ export class UserService {
       throw error;
     }
   }
+}

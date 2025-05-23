@@ -1,4 +1,4 @@
-// backend/src/services/SeedLotService.ts
+// backend/src/services/SeedLotService.ts (corrections)
 import { prisma } from "../config/database";
 import { EncryptionService } from "../utils/encryption";
 import { QRCodeService } from "../utils/qrCode";
@@ -13,8 +13,10 @@ export class SeedLotService {
       const lotId = EncryptionService.generateLotId(data.level);
 
       // Vérifier que la variété existe
-      const variety = await prisma.variety.findUnique({
-        where: { id: data.varietyId },
+      const variety = await prisma.variety.findFirst({
+        where: {
+          OR: [{ id: parseInt(data.varietyId) }, { code: data.varietyId }],
+        },
       });
 
       if (!variety) {
@@ -25,7 +27,7 @@ export class SeedLotService {
       const seedLot = await prisma.seedLot.create({
         data: {
           id: lotId,
-          varietyId: data.varietyId,
+          varietyId: variety.id,
           level: data.level as any,
           quantity: data.quantity,
           productionDate: new Date(data.productionDate),
@@ -33,7 +35,7 @@ export class SeedLotService {
           parcelId: data.parcelId,
           parentLotId: data.parentLotId,
           notes: data.notes,
-          status: "pending",
+          status: "PENDING",
         },
         include: {
           variety: true,
@@ -109,11 +111,16 @@ export class SeedLotService {
       }
 
       if (varietyId) {
-        where.varietyId = varietyId;
+        // Gérer à la fois l'ID numérique et le code string
+        if (isNaN(parseInt(varietyId))) {
+          where.variety = { code: varietyId };
+        } else {
+          where.varietyId = parseInt(varietyId);
+        }
       }
 
       if (multiplierId) {
-        where.multiplierId = multiplierId;
+        where.multiplierId = parseInt(multiplierId);
       }
 
       const [lots, total] = await Promise.all([

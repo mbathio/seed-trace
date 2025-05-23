@@ -1,4 +1,4 @@
-// backend/src/services/MultiplierService.ts
+// backend/src/services/MultiplierService.ts (corrections)
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { PaginationQuery } from "../types/api";
@@ -9,7 +9,7 @@ export class MultiplierService {
       const multiplier = await prisma.multiplier.create({
         data: {
           name: data.name,
-          status: data.status || "active",
+          status: data.status || "ACTIVE",
           address: data.address,
           latitude: data.latitude,
           longitude: data.longitude,
@@ -205,10 +205,21 @@ export class MultiplierService {
 
   static async createContract(data: any): Promise<any> {
     try {
+      // Trouver la variété par ID ou code
+      const variety = await prisma.variety.findFirst({
+        where: {
+          OR: [{ id: parseInt(data.varietyId) }, { code: data.varietyId }],
+        },
+      });
+
+      if (!variety) {
+        throw new Error("Variété non trouvée");
+      }
+
       const contract = await prisma.contract.create({
         data: {
           multiplierId: data.multiplierId,
-          varietyId: data.varietyId,
+          varietyId: variety.id,
           startDate: new Date(data.startDate),
           endDate: new Date(data.endDate),
           seedLevel: data.seedLevel,

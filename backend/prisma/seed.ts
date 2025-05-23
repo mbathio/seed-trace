@@ -89,9 +89,10 @@ async function main() {
   const varieties = await Promise.all([
     prisma.variety.create({
       data: {
-        id: "sahel108",
+        id: 1,
+        code: "sahel108",
         name: "Sahel 108",
-        cropType: "rice",
+        cropType: "RICE",
         description:
           "Variété de cycle court (100-110 jours) adaptée aux zones irriguées du Nord",
         maturityDays: 105,
@@ -103,9 +104,10 @@ async function main() {
     }),
     prisma.variety.create({
       data: {
-        id: "sahel202",
+        id: 2,
+        code: "sahel202",
         name: "Sahel 202",
-        cropType: "rice",
+        cropType: "RICE",
         description:
           "Variété améliorée à haut rendement, bien adaptée aux conditions sahéliennes",
         maturityDays: 125,
@@ -117,9 +119,10 @@ async function main() {
     }),
     prisma.variety.create({
       data: {
-        id: "zm309",
+        id: 3,
+        code: "zm309",
         name: "ZM309",
-        cropType: "maize",
+        cropType: "MAIZE",
         description:
           "Variété de maïs tolérante à la sécheresse, adaptée aux zones semi-arides",
         maturityDays: 95,
@@ -131,9 +134,10 @@ async function main() {
     }),
     prisma.variety.create({
       data: {
-        id: "73-33",
+        id: 4,
+        code: "73-33",
         name: "73-33",
-        cropType: "peanut",
+        cropType: "PEANUT",
         description:
           "Variété d'arachide traditionnelle du Sénégal, bien adaptée aux zones sahéliennes",
         maturityDays: 90,
@@ -158,8 +162,8 @@ async function main() {
         latitude: 16.5182,
         longitude: -15.5046,
         yearsExperience: 8,
-        certificationLevel: "expert",
-        specialization: ["rice", "maize"],
+        certificationLevel: "EXPERT",
+        specialization: ["RICE", "MAIZE"],
         phone: "77 123 45 67",
         email: "ibrahima@example.com",
       },
@@ -168,13 +172,13 @@ async function main() {
       data: {
         id: 2,
         name: "Aminata Diallo",
-        status: "active",
+        status: "ACTIVE",
         address: "Podor, Saint-Louis",
         latitude: 16.6518,
         longitude: -14.9592,
         yearsExperience: 5,
-        certificationLevel: "intermediate",
-        specialization: ["rice", "peanut"],
+        certificationLevel: "INTERMEDIATE",
+        specialization: ["RICE", "PEANUT"],
         phone: "77 234 56 78",
         email: "aminata@example.com",
       },
@@ -188,21 +192,21 @@ async function main() {
         latitude: 16.4625,
         longitude: -15.7009,
         yearsExperience: 10,
-        certificationLevel: "expert",
-        specialization: ["rice", "sorghum", "millet"],
+        certificationLevel: "EXPERT",
+        specialization: ["RICE", "SORGHUM", "MILLET"],
       },
     }),
     prisma.multiplier.create({
       data: {
         id: 4,
         name: "Aissatou Ndiaye",
-        status: "active",
+        status: "ACTIVE",
         address: "Matam",
         latitude: 15.6552,
         longitude: -13.2578,
         yearsExperience: 3,
-        certificationLevel: "beginner",
-        specialization: ["maize", "cowpea"],
+        certificationLevel: "BEGINNER",
+        specialization: ["MAIZE", "COWPEA"],
         phone: "77 345 67 89",
       },
     }),
@@ -219,7 +223,7 @@ async function main() {
         area: 5.2,
         latitude: 16.5182,
         longitude: -15.5046,
-        status: "in_use",
+        status: "IN_USE",
         soilType: "Argilo-limoneux",
         irrigationSystem: "Goutte-à-goutte",
         address: "Zone agricole de Dagana, Saint-Louis",
@@ -233,7 +237,7 @@ async function main() {
         area: 3.8,
         latitude: 16.6518,
         longitude: -14.9592,
-        status: "available",
+        status: "AVAILABLE",
         soilType: "Limoneux",
         irrigationSystem: "Aspersion",
         address: "Zone agricole de Podor, Saint-Louis",
@@ -247,7 +251,7 @@ async function main() {
         area: 7.1,
         latitude: 16.4625,
         longitude: -15.7009,
-        status: "resting",
+        status: "RESTING",
         soilType: "Argileux",
         irrigationSystem: "Inondation contrôlée",
         address: "Zone agricole de Richard-Toll, Saint-Louis",
@@ -261,7 +265,7 @@ async function main() {
         area: 2.5,
         latitude: 15.6552,
         longitude: -13.2578,
-        status: "available",
+        status: "AVAILABLE",
         soilType: "Sablo-limoneux",
         irrigationSystem: "Manuel",
         address: "Zone agricole de Matam",
@@ -307,7 +311,7 @@ async function main() {
     prisma.seedLot.create({
       data: {
         id: "SL-GO-2023-001",
-        varietyId: "sahel108",
+        varietyId: 1, // Sahel 108
         level: "GO",
         quantity: 500,
         productionDate: new Date("2023-12-15"),
@@ -323,7 +327,7 @@ async function main() {
     prisma.seedLot.create({
       data: {
         id: "SL-G1-2024-001",
-        varietyId: "sahel108",
+        varietyId: 1, // Sahel 108
         level: "G1",
         quantity: 2500,
         productionDate: new Date("2024-01-20"),
@@ -331,7 +335,7 @@ async function main() {
         multiplierId: 1,
         parcelId: 1,
         parentLotId: "SL-GO-2023-001",
-        status: "certified",
+        status: "CERTIFIED",
         batchNumber: "B-2024-001",
         notes: "Première génération, excellent rendement",
         qrCode: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...",
@@ -340,7 +344,7 @@ async function main() {
     prisma.seedLot.create({
       data: {
         id: "SL-G2-2024-002",
-        varietyId: "sahel202",
+        varietyId: 2, // Sahel 202
         level: "G2",
         quantity: 1800,
         productionDate: new Date("2024-02-10"),
@@ -356,7 +360,7 @@ async function main() {
     prisma.seedLot.create({
       data: {
         id: "SL-R1-2024-003",
-        varietyId: "zm309",
+        varietyId: 3, // ZM309
         level: "R1",
         quantity: 5000,
         productionDate: new Date("2024-03-05"),
@@ -375,34 +379,6 @@ async function main() {
 
   // Créer les contrôles qualité
   await Promise.all([
-    prisma.qualityControl.create({
-      data: {
-        lotId: "SL-GO-2023-001",
-        controlDate: new Date("2023-12-20"),
-        germinationRate: 98.5,
-        varietyPurity: 99.8,
-        moistureContent: 11.2,
-        seedHealth: 99.1,
-        result: "PASS",
-        observations: "Excellente qualité, conforme aux standards GO",
-        testMethod: "ISTA Standard",
-        inspectorId: 4,
-      },
-    }),
-    prisma.qualityControl.create({
-      data: {
-        lotId: "SL-G1-2024-001",
-        controlDate: new Date("2024-01-25"),
-        germinationRate: 96.2,
-        varietyPurity: 99.2,
-        moistureContent: 12.1,
-        seedHealth: 98.5,
-        result: "PASS",
-        observations: "Qualité G1 confirmée, bon potentiel",
-        testMethod: "ISTA Standard",
-        inspectorId: 4,
-      },
-    }),
     prisma.qualityControl.create({
       data: {
         lotId: "SL-R1-2024-003",
@@ -426,13 +402,13 @@ async function main() {
     prisma.contract.create({
       data: {
         multiplierId: 1,
-        varietyId: "sahel108",
+        varietyId: 1, // Sahel 108
         startDate: new Date("2024-01-01"),
         endDate: new Date("2024-12-31"),
         seedLevel: "G1",
         expectedQuantity: 3000,
         actualQuantity: 2500,
-        status: "active",
+        status: "ACTIVE",
         paymentTerms: "50% avance, 50% livraison",
         notes: "Contrat prioritaire pour variété Sahel 108",
       },
@@ -440,13 +416,13 @@ async function main() {
     prisma.contract.create({
       data: {
         multiplierId: 2,
-        varietyId: "sahel202",
+        varietyId: 2, // Sahel 202
         startDate: new Date("2024-02-01"),
         endDate: new Date("2024-11-30"),
         seedLevel: "G2",
         expectedQuantity: 2000,
         actualQuantity: 1800,
-        status: "completed",
+        status: "COMPLETED",
         paymentTerms: "Paiement à 30 jours",
         notes: "Contrat terminé avec succès",
       },
@@ -468,7 +444,7 @@ async function main() {
         harvestDate: new Date("2024-05-15"),
         plannedQuantity: 3000,
         actualYield: 2500,
-        status: "completed",
+        status: "COMPLETED",
         notes: "Production réussie malgré quelques défis climatiques",
         weatherConditions: "Saison pluvieuse normale",
       },
@@ -484,7 +460,7 @@ async function main() {
         harvestDate: new Date("2024-06-05"),
         plannedQuantity: 2000,
         actualYield: 1800,
-        status: "completed",
+        status: "COMPLETED",
         notes: "Rendement légèrement inférieur aux prévisions",
         weatherConditions: "Sécheresse précoce",
       },
@@ -497,7 +473,7 @@ async function main() {
         startDate: new Date("2024-03-01"),
         sowingDate: new Date("2024-03-05"),
         plannedQuantity: 5500,
-        status: "in_progress",
+        status: "IN_PROGRESS",
         notes: "Production en cours, bon développement",
         weatherConditions: "Conditions favorables",
       },
@@ -511,7 +487,7 @@ async function main() {
     prisma.productionActivity.create({
       data: {
         productionId: 1,
-        type: "soil_preparation",
+        type: "SOIL_PREPARATION",
         activityDate: new Date("2024-01-16"),
         description: "Préparation du sol avec labour et hersage",
         personnel: ["Jean Sow", "Marie Diallo"],
@@ -533,7 +509,7 @@ async function main() {
     prisma.productionActivity.create({
       data: {
         productionId: 1,
-        type: "sowing",
+        type: "SOWING",
         activityDate: new Date("2024-01-20"),
         description: "Semis des graines Sahel 108 G1",
         personnel: ["Jean Sow", "Amadou Ba"],
@@ -562,9 +538,9 @@ async function main() {
       data: {
         productionId: 2,
         issueDate: new Date("2024-04-15"),
-        type: "weather",
+        type: "WEATHER",
         description: "Sécheresse prolongée affectant la croissance",
-        severity: "medium",
+        severity: "MEDIUM",
         actions: "Irrigation supplémentaire mise en place",
         resolved: true,
         resolvedDate: new Date("2024-04-20"),
@@ -575,9 +551,9 @@ async function main() {
       data: {
         productionId: 3,
         issueDate: new Date("2024-04-10"),
-        type: "pest",
+        type: "PEST",
         description: "Attaque de chenilles sur jeunes plants",
-        severity: "high",
+        severity: "HIGH",
         actions: "Traitement insecticide bio appliqué",
         resolved: true,
         resolvedDate: new Date("2024-04-12"),
@@ -621,7 +597,7 @@ async function main() {
     prisma.report.create({
       data: {
         title: "Rapport de production Q1 2024",
-        type: "production",
+        type: "PRODUCTION",
         description:
           "Analyse des performances de production du premier trimestre",
         createdById: 3,
@@ -636,7 +612,7 @@ async function main() {
     prisma.report.create({
       data: {
         title: "Contrôle qualité - Bilan mensuel",
-        type: "quality",
+        type: "QUALITY",
         description: "Synthèse des contrôles qualité effectués en mars 2024",
         createdById: 4,
         parameters: {

@@ -1,4 +1,4 @@
-// backend/src/routes/multipliers.ts
+// backend/src/routes/multipliers.ts (corrigé)
 import { Router } from "express";
 import { MultiplierController } from "../controllers/MultiplierController";
 import { validateRequest } from "../middleware/validation";
@@ -13,7 +13,7 @@ const createMultiplierSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   yearsExperience: z.number().min(0),
-  certificationLevel: z.enum(["beginner", "intermediate", "expert"]),
+  certificationLevel: z.enum(["BEGINNER", "INTERMEDIATE", "EXPERT"]),
   specialization: z.array(z.string()),
   phone: z.string().optional(),
   email: z.string().email().optional(),
@@ -23,8 +23,8 @@ const updateMultiplierSchema = createMultiplierSchema.partial();
 
 const contractSchema = z.object({
   varietyId: z.string().min(1),
-  startDate: z.string().refine((date) => !isNaN(Date.parse(date))),
-  endDate: z.string().refine((date) => !isNaN(Date.parse(date))),
+  startDate: z.string().refine((date: string) => !isNaN(Date.parse(date))),
+  endDate: z.string().refine((date: string) => !isNaN(Date.parse(date))),
   seedLevel: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]),
   expectedQuantity: z.number().positive(),
   parcelId: z.number().optional(),
@@ -41,7 +41,7 @@ router.get("/:id", MultiplierController.getMultiplierById);
 // POST /api/multipliers
 router.post(
   "/",
-  requireRole("manager", "admin"),
+  requireRole("MANAGER", "ADMIN"),
   validateRequest({ body: createMultiplierSchema }),
   MultiplierController.createMultiplier
 );
@@ -49,7 +49,7 @@ router.post(
 // PUT /api/multipliers/:id
 router.put(
   "/:id",
-  requireRole("manager", "admin"),
+  requireRole("MANAGER", "ADMIN"),
   validateRequest({ body: updateMultiplierSchema }),
   MultiplierController.updateMultiplier
 );
@@ -57,7 +57,7 @@ router.put(
 // DELETE /api/multipliers/:id
 router.delete(
   "/:id",
-  requireRole("admin"),
+  requireRole("ADMIN"),
   MultiplierController.deleteMultiplier
 );
 
@@ -67,7 +67,7 @@ router.get("/:id/contracts", MultiplierController.getContracts);
 // POST /api/multipliers/:id/contracts
 router.post(
   "/:id/contracts",
-  requireRole("manager", "admin"),
+  requireRole("MANAGER", "ADMIN"),
   validateRequest({ body: contractSchema }),
   MultiplierController.createContract
 );

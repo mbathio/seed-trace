@@ -8,8 +8,15 @@ export class VarietyService {
     try {
       const variety = await prisma.variety.create({
         data: {
-          ...data,
+          code: data.id, // Le code correspond à l'ID du frontend
+          name: data.name,
+          cropType: data.cropType,
+          description: data.description,
+          maturityDays: data.maturityDays,
+          yieldPotential: data.yieldPotential,
           resistances: data.resistances || [],
+          origin: data.origin,
+          releaseYear: data.releaseYear,
         },
       });
 
@@ -90,8 +97,11 @@ export class VarietyService {
 
   static async getVarietyById(id: string): Promise<any> {
     try {
-      const variety = await prisma.variety.findUnique({
-        where: { id, isActive: true },
+      const variety = await prisma.variety.findFirst({
+        where: {
+          OR: [{ id: parseInt(id) }, { code: id }],
+          isActive: true,
+        },
         include: {
           seedLots: {
             where: { isActive: true },
@@ -121,8 +131,10 @@ export class VarietyService {
 
   static async updateVariety(id: string, data: any): Promise<any> {
     try {
-      const variety = await prisma.variety.update({
-        where: { id },
+      const variety = await prisma.variety.updateMany({
+        where: {
+          OR: [{ id: parseInt(id) }, { code: id }],
+        },
         data: {
           ...data,
           updatedAt: new Date(),
@@ -138,8 +150,10 @@ export class VarietyService {
 
   static async deleteVariety(id: string): Promise<void> {
     try {
-      await prisma.variety.update({
-        where: { id },
+      await prisma.variety.updateMany({
+        where: {
+          OR: [{ id: parseInt(id) }, { code: id }],
+        },
         data: { isActive: false },
       });
     } catch (error) {

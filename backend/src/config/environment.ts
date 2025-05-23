@@ -14,7 +14,7 @@ export const config = {
   database: {
     url:
       process.env.DATABASE_URL ||
-      "postgresql://username:password@localhost:5432/isra_seeds",
+      "postgresql://user1:user1@localhost:5432/isra_seeds",
   },
 
   jwt: {

@@ -26,7 +26,7 @@ export function validateRequest(schema: {
     } catch (error) {
       if (error instanceof z.ZodError) {
         const errors = error.errors.map(
-          (err) => `${err.path.join(".")}: ${err.message}`
+          (err: any) => `${err.path.join(".")}: ${err.message}`
         );
         return ResponseHandler.validationError(res, errors);
       }
