@@ -159,16 +159,16 @@ export class ReportService {
           0
         ),
         completedProductions: productions.filter(
-          (p) => p.status === "completed"
+          (p) => p.status === "COMPLETED"
         ).length,
         inProgressProductions: productions.filter(
-          (p) => p.status === "in_progress"
+          (p) => p.status === "IN_PROGRESS"
         ).length,
         averageYield: 0,
       };
 
       const completedWithYield = productions.filter(
-        (p) => p.status === "completed" && p.actualYield
+        (p) => p.status === "COMPLETED" && p.actualYield
       );
 
       if (completedWithYield.length > 0) {
@@ -239,9 +239,9 @@ export class ReportService {
       // Calculer les statistiques
       const stats = {
         totalControls: qualityControls.length,
-        passedControls: qualityControls.filter((qc) => qc.result === "pass")
+        passedControls: qualityControls.filter((qc) => qc.result === "PASS")
           .length,
-        failedControls: qualityControls.filter((qc) => qc.result === "fail")
+        failedControls: qualityControls.filter((qc) => qc.result === "FAIL")
           .length,
         averageGerminationRate: 0,
         averageVarietyPurity: 0,
@@ -345,9 +345,9 @@ export class ReportService {
         acc[lot.level].count++;
         acc[lot.level].totalQuantity += lot.quantity;
 
-        if (lot.status === "certified") acc[lot.level].certified++;
-        else if (lot.status === "pending") acc[lot.level].pending++;
-        else if (lot.status === "rejected") acc[lot.level].rejected++;
+        if (lot.status === "CERTIFIED") acc[lot.level].certified++;
+        else if (lot.status === "PENDING") acc[lot.level].pending++;
+        else if (lot.status === "REJECTED") acc[lot.level].rejected++;
 
         return acc;
       }, {});
@@ -385,12 +385,12 @@ export class ReportService {
           byLevel: statsByLevel,
           byVariety: statsByVariety,
           byStatus: {
-            certified: seedLots.filter((lot) => lot.status === "certified")
+            certified: seedLots.filter((lot) => lot.status === "CERTIFIED")
               .length,
-            pending: seedLots.filter((lot) => lot.status === "pending").length,
-            rejected: seedLots.filter((lot) => lot.status === "rejected")
+            pending: seedLots.filter((lot) => lot.status === "PENDING").length,
+            rejected: seedLots.filter((lot) => lot.status === "REJECTED")
               .length,
-            in_stock: seedLots.filter((lot) => lot.status === "in_stock")
+            in_stock: seedLots.filter((lot) => lot.status === "IN_STOCK")
               .length,
           },
         },
@@ -462,7 +462,7 @@ export class ReportService {
       // Calculer les performances pour chaque multiplicateur
       const performanceData = multipliers.map((multiplier) => {
         const completedProductions = multiplier.productions.filter(
-          (p) => p.status === "completed"
+          (p) => p.status === "COMPLETED"
         );
 
         const qualityControls = multiplier.seedLots.flatMap(
@@ -470,7 +470,7 @@ export class ReportService {
         );
 
         const passedControls = qualityControls.filter(
-          (qc) => qc.result === "pass"
+          (qc) => qc.result === "PASS"
         );
 
         return {
@@ -485,7 +485,7 @@ export class ReportService {
             completedProductions: completedProductions.length,
             totalContracts: multiplier.contracts.length,
             activeContracts: multiplier.contracts.filter(
-              (c) => c.status === "active"
+              (c) => c.status === "ACTIVE"
             ).length,
             totalSeedLots: multiplier.seedLots.length,
             qualityPassRate:

@@ -1,4 +1,4 @@
-// backend/src/services/ProductionService.ts (corrigé)
+// backend/src/services/ProductionService.ts (correction finale)
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { PaginationQuery } from "../types/api";
@@ -6,22 +6,33 @@ import { PaginationQuery } from "../types/api";
 export class ProductionService {
   static async createProduction(data: any): Promise<any> {
     try {
+      // ✅ Construire l'objet de données conditionnellement
+      const createData: any = {
+        lotId: data.lotId,
+        multiplierId: data.multiplierId,
+        parcelId: data.parcelId,
+        startDate: new Date(data.startDate),
+        plannedQuantity: data.plannedQuantity,
+        actualYield: data.actualYield,
+        notes: data.notes,
+        weatherConditions: data.weatherConditions,
+      };
+
+      // ✅ Ajouter les champs optionnels seulement s'ils existent
+      if (data.endDate) {
+        createData.endDate = new Date(data.endDate);
+      }
+
+      if (data.sowingDate) {
+        createData.sowingDate = new Date(data.sowingDate);
+      }
+
+      if (data.harvestDate) {
+        createData.harvestDate = new Date(data.harvestDate);
+      }
+
       const production = await prisma.production.create({
-        data: {
-          lotId: data.lotId,
-          multiplierId: data.multiplierId,
-          parcelId: data.parcelId,
-          startDate: new Date(data.startDate),
-          endDate: data.endDate ? new Date(data.endDate) : undefined,
-          sowingDate: data.sowingDate ? new Date(data.sowingDate) : undefined, // Changé de null à undefined
-          harvestDate: data.harvestDate
-            ? new Date(data.harvestDate)
-            : undefined,
-          plannedQuantity: data.plannedQuantity,
-          actualYield: data.actualYield,
-          notes: data.notes,
-          weatherConditions: data.weatherConditions,
-        },
+        data: createData,
         include: {
           seedLot: {
             include: {
@@ -40,7 +51,6 @@ export class ProductionService {
     }
   }
 
-  // ... (le reste des méthodes reste identique)
   static async getProductions(
     query: PaginationQuery & any
   ): Promise<{ productions: any[]; total: number; meta: any }> {
@@ -172,17 +182,37 @@ export class ProductionService {
 
   static async updateProduction(id: number, data: any): Promise<any> {
     try {
+      // ✅ Même approche pour la mise à jour
+      const updateData: any = {};
+
+      // Copier les champs simples
+      if (data.plannedQuantity !== undefined)
+        updateData.plannedQuantity = data.plannedQuantity;
+      if (data.actualYield !== undefined)
+        updateData.actualYield = data.actualYield;
+      if (data.notes !== undefined) updateData.notes = data.notes;
+      if (data.weatherConditions !== undefined)
+        updateData.weatherConditions = data.weatherConditions;
+      if (data.status !== undefined) updateData.status = data.status;
+
+      // Ajouter les dates seulement si elles existent
+      if (data.endDate) {
+        updateData.endDate = new Date(data.endDate);
+      }
+
+      if (data.sowingDate) {
+        updateData.sowingDate = new Date(data.sowingDate);
+      }
+
+      if (data.harvestDate) {
+        updateData.harvestDate = new Date(data.harvestDate);
+      }
+
+      updateData.updatedAt = new Date();
+
       const production = await prisma.production.update({
         where: { id },
-        data: {
-          ...data,
-          endDate: data.endDate ? new Date(data.endDate) : undefined,
-          sowingDate: data.sowingDate ? new Date(data.sowingDate) : undefined,
-          harvestDate: data.harvestDate
-            ? new Date(data.harvestDate)
-            : undefined,
-          updatedAt: new Date(),
-        },
+        data: updateData,
         include: {
           seedLot: {
             include: {
