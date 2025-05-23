@@ -1,44 +1,45 @@
-
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { MOCK_USERS } from '@/utils/seedTypes';
+// frontend/src/components/auth/LoginForm.tsx (version connectée à l'API)
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useLogin } from "@/hooks/api";
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const loginMutation = useLogin();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    // Simulate login authentication
-    setTimeout(() => {
-      const user = MOCK_USERS.find(user => user.email === email);
-      
-      if (user && password === '12345') {  // Simple password for demo
-        // In a real app, we would store auth token, user data, etc.
-        localStorage.setItem('isra_user', JSON.stringify(user));
-        toast.success('Connexion réussie');
-        navigate('/dashboard');
-      } else {
-        toast.error('Email ou mot de passe incorrect');
+    loginMutation.mutate(
+      { email, password },
+      {
+        onSuccess: () => {
+          navigate("/dashboard");
+        },
       }
-      
-      setIsLoading(false);
-    }, 1000);
+    );
   };
 
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl text-center text-isra-green-dark">Connexion</CardTitle>
+        <CardTitle className="text-2xl text-center text-isra-green-dark">
+          Connexion
+        </CardTitle>
         <CardDescription className="text-center">
           Accédez au système de traçabilité des semences de l'ISRA
         </CardDescription>
@@ -54,6 +55,7 @@ const LoginForm = () => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={loginMutation.isPending}
             />
           </div>
           <div className="space-y-2">
@@ -69,21 +71,24 @@ const LoginForm = () => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={loginMutation.isPending}
             />
           </div>
-          <Button 
-            type="submit" 
+          <Button
+            type="submit"
             className="w-full bg-isra-green hover:bg-isra-green-dark"
-            disabled={isLoading}
+            disabled={loginMutation.isPending}
           >
-            {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+            {loginMutation.isPending ? "Connexion en cours..." : "Se connecter"}
           </Button>
         </form>
       </CardContent>
       <CardFooter className="flex justify-center pt-0">
         <p className="text-sm text-gray-500">
-          Pour les tests, utilisez un des emails suivants avec le mot de passe "12345":<br />
-          adiop@isra.sn, fsy@isra.sn, mkane@isra.sn
+          Comptes de test disponibles avec le mot de passe "12345":
+          <br />
+          adiop@isra.sn, fsy@isra.sn, mkane@isra.sn, ondiaye@isra.sn,
+          admin@isra.sn
         </p>
       </CardFooter>
     </Card>
