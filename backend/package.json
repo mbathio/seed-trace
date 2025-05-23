@@ -17,7 +17,16 @@
     "db:reset": "prisma migrate reset && npm run db:seed",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
-    "format": "prettier --write src/**/*.ts"
+    "format": "prettier --write src/**/*.ts",
+    "postinstall": "npm run db:generate",
+    "docker:build": "docker build -t isra-seeds-backend .",
+    "docker:run": "docker run -p 3001:3001 --env-file .env isra-seeds-backend",
+    "backup:db": "pg_dump $DATABASE_URL > backup_$(date +%Y%m%d_%H%M%S).sql",
+    "restore:db": "psql $DATABASE_URL < backup.sql",
+    "logs": "tail -f logs/combined.log",
+    "logs:error": "tail -f logs/error.log",
+    "health": "curl -f http://localhost:3001/health || exit 1",
+    "setup": "npm install && npm run db:generate && npm run db:migrate && npm run db:seed"
   },
   "keywords": [
     "agriculture",
