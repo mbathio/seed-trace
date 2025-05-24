@@ -131,18 +131,22 @@ export type SeedLotStatus =
 // Seed lot interface - mise à jour avec tous les champs nécessaires
 export interface SeedLot {
   id: string;
-  cropType: CropType;
-  variety: string;
-  varietyId: string;
+  varietyId: number;
   level: SeedLevel;
   quantity: number;
-  productionDate: string; // ISO date string
-  expiryDate?: string; // ISO date string
-  multiplier?: number; // ID of the multiplier
-  status: SeedLotStatus;
+  productionDate: string;
+  expiryDate?: string;
+  multiplierId?: number;
   parcelId?: number;
+  status: SeedLotStatus;
   batchNumber?: string;
-  parentLotId?: string; // For traceability
+  parentLotId?: string;
+  notes?: string; //  Ajouter
+  qrCode?: string; // Ajouter
+
+  // Relations virtuelles (populated par l'API)
+  variety?: Variety;
+  multiplier?: Multiplier;
 }
 
 // Quality control interface - mise à jour avec tous les champs nécessaires

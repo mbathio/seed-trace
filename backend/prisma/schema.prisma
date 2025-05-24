@@ -12,13 +12,13 @@ datasource db {
 
 // Énumérations correspondant aux types du frontend
 enum Role {
-  ADMIN
-  MANAGER
-  INSPECTOR
-  MULTIPLIER
-  GUEST
-  TECHNICIAN
-  RESEARCHER
+  admin
+  manager
+  inspector
+  multiplier
+  guest
+  technician
+  researcher
 }
 
 enum SeedLevel {
@@ -32,18 +32,18 @@ enum SeedLevel {
 }
 
 enum CropType {
-  RICE
-  MAIZE
-  PEANUT
-  SORGHUM
-  COWPEA
-  MILLET
+  rice
+  maize
+  peanut
+  sorghum
+  cowpea
+  millet
 }
 
 enum ParcelStatus {
-  AVAILABLE
-  IN_USE
-  RESTING
+  available
+  in_use
+  resting
 }
 
 enum LotStatus {
