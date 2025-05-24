@@ -336,6 +336,9 @@ model SeedLot {
   @@index([level], map: "idx_seed_lots_level")
   @@index([productionDate], map: "idx_seed_lots_production_date")
   @@index([parentLotId], map: "idx_seed_lots_parent")
+    @@index([varietyId, level, status], map: "idx_seed_lots_variety_level_status")
+  @@index([productionDate, level], map: "idx_seed_lots_production_level")
+  @@index([multiplierId, status, productionDate], map: "idx_seed_lots_multiplier_complete")
   @@map("seed_lots")
 }
 

@@ -1,32 +1,43 @@
+# ===== Dockerfile corrigé =====
+# Utiliser une image Node.js plus récente et sécurisée
+FROM node:20-alpine3.18
 
-
-FROM node:18-alpine
+# Créer un utilisateur non-root pour la sécurité
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S isra -u 1001
 
 WORKDIR /app
 
-# Install dependencies
+# Copier les fichiers de dépendances
 COPY package*.json ./
-RUN npm ci --only=production
-
-# Copy prisma schema
 COPY prisma ./prisma/
+
+# Installer les dépendances
+RUN npm ci --only=production && npm cache clean --force
+
+# Générer le client Prisma
 RUN npx prisma generate
 
-# Copy source code
-COPY . .
+# Copier le code source
+COPY --chown=isra:nodejs . .
 
-# Build the application
+# Construire l'application
 RUN npm run build
 
-# Create logs directory
-RUN mkdir -p logs
+# Créer le dossier logs avec les bonnes permissions
+RUN mkdir -p logs && chown -R isra:nodejs logs
 
-# Expose port
+# Passer à l'utilisateur non-root
+USER isra
+
+# Exposer le port
 EXPOSE 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3001/health || exit 1
+  CMD node -e "require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })" || exit 1
 
-# Start the application
+# Démarrer l'application
 CMD ["npm", "start"]
+
+# ===== docker-compose.yml corrigé =====
