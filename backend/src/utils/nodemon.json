@@ -1,9 +1,11 @@
 {
   "watch": ["src"],
   "ext": "ts,json",
-  "ignore": ["src/**/*.test.ts", "src/**/*.spec.ts"],
+  "ignore": ["src/**/*.test.ts", "src/**/*.spec.ts", "dist", "node_modules"],
   "exec": "ts-node src/server.ts",
   "env": {
     "NODE_ENV": "development"
-  }
+  },
+  "legacyWatch": true,
+  "delay": 1000
 }

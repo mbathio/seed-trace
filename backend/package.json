@@ -6,9 +6,9 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/server.js",
-    "dev": "nodemon --exec ts-node --esm src/server.ts",
-    "dev:alt": "nodemon --exec \"ts-node -r tsconfig-paths/register src/server.ts\"",
-    "dev:simple": "ts-node src/server.ts",
+    "dev": "nodemon src/server.ts",
+    "dev:ts-node": "ts-node src/server.ts",
+    "dev:debug": "nodemon --inspect src/server.ts",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -59,7 +59,7 @@
     "pdfkit": "^0.17.1",
     "qrcode": "^1.5.3",
     "winston": "^3.17.0",
-    "xlsx": "^0.18.5",
+    "xlsx": "^0.19.3",
     "zod": "^3.25.23"
   },
   "devDependencies": {
