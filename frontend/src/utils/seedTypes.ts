@@ -1,3 +1,5 @@
+// frontend/src/utils/seedTypes.ts - Version mise à jour avec tous les types nécessaires
+
 // Define user roles
 export type UserRole =
   | "admin"
@@ -5,7 +7,8 @@ export type UserRole =
   | "inspector"
   | "multiplier"
   | "guest"
-  | "technician";
+  | "technician"
+  | "researcher"; // Ajout du rôle researcher
 
 // User interface
 export interface User {
@@ -31,7 +34,7 @@ export type CropType =
 // Define parcel status
 export type ParcelStatus = "available" | "in-use" | "resting";
 
-// Parcel interface
+// Parcel interface - mise à jour avec tous les champs nécessaires
 export interface Parcel {
   id: number;
   name?: string;
@@ -75,15 +78,15 @@ export interface Contract {
   status: ContractStatus;
   parcelId?: number;
   paymentTerms?: string;
-  varietyId?: string; // Added varietyId
-  quantity?: number; // Added quantity
+  varietyId?: string;
+  quantity?: number;
 }
 
 // Production history item
 export interface ProductionHistoryItem {
   contractId: number;
   cropType: CropType;
-  seedLevel: SeedLevel; // Explicitly define seedLevel
+  seedLevel: SeedLevel;
   level?: SeedLevel; // Add level for backward compatibility
   season: string;
   year: number;
@@ -95,7 +98,7 @@ export interface ProductionHistoryItem {
 // Certification level for multipliers
 export type CertificationLevel = "beginner" | "intermediate" | "expert";
 
-// Multiplier interface
+// Multiplier interface - mise à jour avec tous les champs nécessaires
 export interface Multiplier {
   id: number;
   name: string;
@@ -125,7 +128,7 @@ export type SeedLotStatus =
   | "active"
   | "distributed";
 
-// Seed lot interface
+// Seed lot interface - mise à jour avec tous les champs nécessaires
 export interface SeedLot {
   id: string;
   cropType: CropType;
@@ -142,7 +145,7 @@ export interface SeedLot {
   parentLotId?: string; // For traceability
 }
 
-// Quality control interface
+// Quality control interface - mise à jour avec tous les champs nécessaires
 export interface QualityControl {
   id: number;
   lotId: string;
@@ -154,6 +157,7 @@ export interface QualityControl {
   inspectorId: number;
   moistureContent?: number;
   seedHealth?: number;
+  testMethod?: string;
 }
 
 // Activity type
@@ -208,7 +212,7 @@ export type ProductionStatus =
   | "completed"
   | "cancelled";
 
-// Production interface
+// Production interface - mise à jour avec tous les champs nécessaires
 export interface Production {
   id: number;
   lotId: string;
@@ -304,11 +308,11 @@ export interface Report {
     | "custom";
   creationDate: string;
   createdBy: number;
-  data?: ReportData; // Remplace any par ReportData
+  data?: ReportData;
   fileName?: string;
 }
 
-// Variety interface
+// Variety interface - mise à jour avec tous les champs nécessaires
 export interface Variety {
   id: string;
   name: string;

@@ -1,5 +1,17 @@
-// frontend/src/lib/api.ts - Version avec typage strict
+// frontend/src/lib/api.ts - Version corrigée avec typage cohérent
 import axios, { AxiosResponse } from "axios";
+import {
+  SeedLot,
+  QualityControl,
+  Multiplier,
+  Parcel,
+  Production,
+  Variety,
+  User,
+  UserRole,
+  SeedLevel,
+  SeedLotStatus,
+} from "@/utils/seedTypes";
 
 const API_BASE_URL = "http://localhost:3001/api";
 
@@ -25,21 +37,19 @@ export const apiClient = axios.create({
   },
 });
 
-// Types pour l'authentification
+// Types pour l'authentification - utilisent les types de seedTypes.ts
 interface AuthTokens {
   accessToken: string;
   refreshToken: string;
 }
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-}
-
 interface AuthResponse {
-  user: User;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: UserRole; // Utilise UserRole de seedTypes.ts
+  };
   tokens: AuthTokens;
 }
 
@@ -108,13 +118,13 @@ export const authAPI = {
     } as RefreshTokenRequest),
 };
 
-// Types pour les seed lots
+// Types pour les seed lots - utilisent les types de seedTypes.ts
 interface SeedLotParams {
   page?: number;
   pageSize?: number;
   search?: string;
-  level?: string;
-  status?: string;
+  level?: SeedLevel;
+  status?: SeedLotStatus;
   varietyId?: string;
   multiplierId?: number;
   sortBy?: string;
@@ -123,7 +133,7 @@ interface SeedLotParams {
 
 interface CreateSeedLotData {
   varietyId: string;
-  level: string;
+  level: SeedLevel;
   quantity: number;
   productionDate: string;
   multiplierId?: number;
@@ -134,19 +144,9 @@ interface CreateSeedLotData {
 
 interface UpdateSeedLotData {
   quantity?: number;
-  status?: string;
+  status?: SeedLotStatus;
   notes?: string;
   expiryDate?: string;
-}
-
-interface SeedLot {
-  id: string;
-  varietyId: string;
-  level: string;
-  quantity: number;
-  productionDate: string;
-  status: string;
-  // ... autres propriétés
 }
 
 export const seedLotsAPI = {
@@ -172,8 +172,24 @@ export const seedLotsAPI = {
   delete: (id: string): Promise<AxiosResponse<ApiResponse<null>>> =>
     apiClient.delete<ApiResponse<null>>(`/seed-lots/${id}`),
 
-  getGenealogy: (id: string): Promise<AxiosResponse<ApiResponse<unknown>>> =>
-    apiClient.get<ApiResponse<unknown>>(`/seed-lots/${id}/genealogy`),
+  getGenealogy: (
+    id: string
+  ): Promise<
+    AxiosResponse<
+      ApiResponse<{
+        currentLot: SeedLot;
+        ancestors: SeedLot[];
+        descendants: SeedLot[];
+      }>
+    >
+  > =>
+    apiClient.get<
+      ApiResponse<{
+        currentLot: SeedLot;
+        ancestors: SeedLot[];
+        descendants: SeedLot[];
+      }>
+    >(`/seed-lots/${id}/genealogy`),
 
   getQRCode: (
     id: string
@@ -181,7 +197,7 @@ export const seedLotsAPI = {
     apiClient.get<ApiResponse<{ qrCode: string }>>(`/seed-lots/${id}/qr-code`),
 };
 
-// Types pour les contrôles qualité
+// Types pour les contrôles qualité - utilisent les types de seedTypes.ts
 interface QualityControlParams {
   page?: number;
   pageSize?: number;
@@ -202,16 +218,6 @@ interface CreateQualityControlData {
   seedHealth?: number;
   observations?: string;
   testMethod?: string;
-}
-
-interface QualityControl {
-  id: number;
-  lotId: string;
-  controlDate: string;
-  germinationRate: number;
-  varietyPurity: number;
-  result: string;
-  // ... autres propriétés
 }
 
 export const qualityControlsAPI = {
@@ -243,13 +249,6 @@ interface BaseParams {
   sortOrder?: string;
 }
 
-interface Multiplier {
-  id: number;
-  name: string;
-  status: string;
-  // ... autres propriétés
-}
-
 interface MultiplierParams extends BaseParams {
   status?: string;
   certificationLevel?: string;
@@ -276,14 +275,6 @@ export const multipliersAPI = {
     apiClient.put<ApiResponse<Multiplier>>(`/multipliers/${id}`, data),
 };
 
-interface Parcel {
-  id: number;
-  name?: string;
-  area: number;
-  status: string;
-  // ... autres propriétés
-}
-
 interface ParcelParams extends BaseParams {
   status?: string;
   multiplierId?: number;
@@ -309,13 +300,6 @@ export const parcelsAPI = {
   ): Promise<AxiosResponse<ApiResponse<Parcel>>> =>
     apiClient.put<ApiResponse<Parcel>>(`/parcels/${id}`, data),
 };
-
-interface Production {
-  id: number;
-  lotId: string;
-  status: string;
-  // ... autres propriétés
-}
 
 interface ProductionParams extends BaseParams {
   status?: string;
@@ -370,13 +354,6 @@ export const reportsAPI = {
   ): Promise<AxiosResponse<ApiResponse<unknown>>> =>
     apiClient.get<ApiResponse<unknown>>("/reports/inventory", { params }),
 };
-
-interface Variety {
-  id: string;
-  name: string;
-  cropType: string;
-  // ... autres propriétés
-}
 
 interface VarietyParams extends BaseParams {
   cropType?: string;

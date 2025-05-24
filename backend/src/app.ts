@@ -56,6 +56,32 @@ if (config.environment !== "test") {
   app.use(morgan("combined"));
 }
 
+// 🆕 Route racine - Ajouter cette route
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "🌾 API ISRA Seed Traceability System",
+    data: {
+      version: "1.0.0",
+      environment: config.environment,
+      timestamp: new Date().toISOString(),
+      documentation: "/api/docs",
+      health: "/health",
+      endpoints: {
+        auth: "/api/auth",
+        users: "/api/users",
+        varieties: "/api/varieties",
+        parcels: "/api/parcels",
+        multipliers: "/api/multipliers",
+        seedLots: "/api/seed-lots",
+        qualityControls: "/api/quality-controls",
+        productions: "/api/productions",
+        reports: "/api/reports",
+      },
+    },
+  });
+});
+
 // Health check
 app.get("/health", (req, res) => {
   res.status(200).json({
@@ -63,6 +89,9 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     service: "ISRA Seed Traceability System",
     version: "1.0.0",
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    environment: config.environment,
   });
 });
 
@@ -84,6 +113,19 @@ app.use("*", (req, res) => {
     message: "Endpoint non trouvé",
     data: null,
     errors: [`Route ${req.method} ${req.originalUrl} non trouvée`],
+    availableEndpoints: [
+      "GET /",
+      "GET /health",
+      "POST /api/auth/login",
+      "GET /api/auth/me",
+      "GET /api/varieties",
+      "GET /api/seed-lots",
+      "GET /api/multipliers",
+      "GET /api/parcels",
+      "GET /api/productions",
+      "GET /api/quality-controls",
+      "GET /api/reports",
+    ],
   });
 });
 

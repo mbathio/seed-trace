@@ -1,4 +1,4 @@
-// frontend/src/hooks/api.ts - Version avec typage strict
+// frontend/src/hooks/api.ts - Version corrigée avec typage cohérent
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   authAPI,
@@ -12,6 +12,8 @@ import {
   usersAPI,
 } from "@/lib/api";
 import { toast } from "sonner";
+
+// Importation des types depuis seedTypes.ts pour éviter les conflits
 import {
   SeedLot,
   QualityControl,
@@ -22,9 +24,10 @@ import {
   User,
   SeedLevel,
   SeedLotStatus,
+  UserRole,
 } from "@/utils/seedTypes";
 
-// Types pour les réponses API
+// Types pour les réponses API - utilisent les types de seedTypes.ts
 interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -37,8 +40,14 @@ interface ApiResponse<T> {
   };
 }
 
+// Interface AuthResponse mise à jour pour utiliser User de seedTypes.ts
 interface AuthResponse {
-  user: User;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: UserRole; // Utilise UserRole de seedTypes.ts
+  };
   tokens: {
     accessToken: string;
     refreshToken: string;
