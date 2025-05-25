@@ -1,4 +1,5 @@
-// backend/src/routes/multipliers.ts (corrigé)
+// backend/src/routes/multipliers.ts - Version corrigée
+
 import { Router } from "express";
 import { MultiplierController } from "../controllers/MultiplierController";
 import { validateRequest } from "../middleware/validation";
@@ -13,7 +14,7 @@ const createMultiplierSchema = z.object({
   latitude: z.number(),
   longitude: z.number(),
   yearsExperience: z.number().min(0),
-  certificationLevel: z.enum(["BEGINNER", "INTERMEDIATE", "EXPERT"]),
+  certificationLevel: z.enum(["BEGINNER", "INTERMEDIATE", "EXPERT"]), // ✅ Majuscules
   specialization: z.array(z.string()),
   phone: z.string().optional(),
   email: z.string().email().optional(),
@@ -22,7 +23,7 @@ const createMultiplierSchema = z.object({
 const updateMultiplierSchema = createMultiplierSchema.partial();
 
 const contractSchema = z.object({
-  varietyId: z.string().min(1),
+  varietyId: z.number().positive(), // ✅ Corrigé: number au lieu de string
   startDate: z.string().refine((date: string) => !isNaN(Date.parse(date))),
   endDate: z.string().refine((date: string) => !isNaN(Date.parse(date))),
   seedLevel: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]),

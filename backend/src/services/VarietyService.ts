@@ -1,4 +1,5 @@
-// backend/src/services/VarietyService.ts
+// backend/src/services/VarietyService.ts - Version corrigée
+
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { PaginationQuery } from "../types/api";
@@ -8,7 +9,7 @@ export class VarietyService {
     try {
       const variety = await prisma.variety.create({
         data: {
-          code: data.id, // Le code correspond à l'ID du frontend
+          code: data.code, // ✅ Utiliser le code fourni
           name: data.name,
           cropType: data.cropType,
           description: data.description,
@@ -49,6 +50,7 @@ export class VarietyService {
       if (search) {
         where.OR = [
           { name: { contains: search, mode: "insensitive" } },
+          { code: { contains: search, mode: "insensitive" } }, // ✅ Recherche par code
           { description: { contains: search, mode: "insensitive" } },
           { origin: { contains: search, mode: "insensitive" } },
         ];
@@ -97,9 +99,10 @@ export class VarietyService {
 
   static async getVarietyById(id: string): Promise<any> {
     try {
+      // ✅ Recherche par ID numérique ou par code
       const variety = await prisma.variety.findFirst({
         where: {
-          OR: [{ id: parseInt(id) }, { code: id }],
+          OR: [{ id: isNaN(parseInt(id)) ? -1 : parseInt(id) }, { code: id }],
           isActive: true,
         },
         include: {
@@ -133,7 +136,7 @@ export class VarietyService {
     try {
       const variety = await prisma.variety.updateMany({
         where: {
-          OR: [{ id: parseInt(id) }, { code: id }],
+          OR: [{ id: isNaN(parseInt(id)) ? -1 : parseInt(id) }, { code: id }],
         },
         data: {
           ...data,
@@ -152,7 +155,7 @@ export class VarietyService {
     try {
       await prisma.variety.updateMany({
         where: {
-          OR: [{ id: parseInt(id) }, { code: id }],
+          OR: [{ id: isNaN(parseInt(id)) ? -1 : parseInt(id) }, { code: id }],
         },
         data: { isActive: false },
       });

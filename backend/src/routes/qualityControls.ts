@@ -1,4 +1,5 @@
-// backend/src/routes/qualityControls.ts
+// backend/src/routes/qualityControls.ts - Version corrigée
+
 import { Router } from "express";
 import { QualityControlController } from "../controllers/QualityControlController";
 import { validateRequest } from "../middleware/validation";
@@ -19,7 +20,7 @@ router.get("/:id", QualityControlController.getQualityControlById);
 // POST /api/quality-controls
 router.post(
   "/",
-  requireRole("technician", "inspector", "admin"),
+  requireRole("TECHNICIAN", "INSPECTOR", "ADMIN"), // ✅ Majuscules
   validateRequest({ body: createQualityControlSchema }),
   QualityControlController.createQualityControl
 );
@@ -27,7 +28,7 @@ router.post(
 // PUT /api/quality-controls/:id
 router.put(
   "/:id",
-  requireRole("technician", "inspector", "admin"),
+  requireRole("TECHNICIAN", "INSPECTOR", "ADMIN"),
   validateRequest({ body: updateQualityControlSchema }),
   QualityControlController.updateQualityControl
 );
@@ -35,7 +36,7 @@ router.put(
 // DELETE /api/quality-controls/:id
 router.delete(
   "/:id",
-  requireRole("admin"),
+  requireRole("ADMIN"),
   QualityControlController.deleteQualityControl
 );
 

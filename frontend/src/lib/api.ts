@@ -1,4 +1,5 @@
-// frontend/src/lib/api.ts - Version corrigée avec typage cohérent
+// frontend/src/lib/api.ts - Version corrigée avec cohérence backend
+
 import axios, { AxiosResponse } from "axios";
 import {
   SeedLot,
@@ -11,22 +12,12 @@ import {
   UserRole,
   SeedLevel,
   SeedLotStatus,
+  ApiResponse,
+  convertStatusToBackend,
+  convertUserRoleToBackend,
 } from "@/utils/seedTypes";
 
 const API_BASE_URL = "http://localhost:3001/api";
-
-// Types pour les réponses API
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  meta?: {
-    page: number;
-    pageSize: number;
-    totalCount: number;
-    totalPages: number;
-  };
-}
 
 // Configuration du client Axios
 export const apiClient = axios.create({
@@ -37,7 +28,7 @@ export const apiClient = axios.create({
   },
 });
 
-// Types pour l'authentification - utilisent les types de seedTypes.ts
+// Types pour l'authentification
 interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -48,7 +39,7 @@ interface AuthResponse {
     id: number;
     name: string;
     email: string;
-    role: UserRole; // Utilise UserRole de seedTypes.ts
+    role: string; // Backend envoie string lowercase
   };
   tokens: AuthTokens;
 }
@@ -88,7 +79,6 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expiré ou invalide
       localStorage.removeItem("isra_user");
       window.location.href = "/login";
     }
@@ -96,7 +86,7 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Services API avec typage strict
+// Services API avec adaptation des données
 export const authAPI = {
   login: (
     email: string,
@@ -118,21 +108,21 @@ export const authAPI = {
     } as RefreshTokenRequest),
 };
 
-// Types pour les seed lots - utilisent les types de seedTypes.ts
+// Types pour les seed lots
 interface SeedLotParams {
   page?: number;
   pageSize?: number;
   search?: string;
   level?: SeedLevel;
   status?: SeedLotStatus;
-  varietyId?: string;
+  varietyId?: number; // Corrigé: number au lieu de string
   multiplierId?: number;
   sortBy?: string;
   sortOrder?: string;
 }
 
 interface CreateSeedLotData {
-  varietyId: string;
+  varietyId: number; // Corrigé: number au lieu de string
   level: SeedLevel;
   quantity: number;
   productionDate: string;
@@ -152,22 +142,49 @@ interface UpdateSeedLotData {
 export const seedLotsAPI = {
   getAll: (
     params?: SeedLotParams
-  ): Promise<AxiosResponse<ApiResponse<SeedLot[]>>> =>
-    apiClient.get<ApiResponse<SeedLot[]>>("/seed-lots", { params }),
+  ): Promise<AxiosResponse<ApiResponse<SeedLot[]>>> => {
+    // Conversion des paramètres pour le backend
+    const backendParams = params
+      ? {
+          ...params,
+          status: params.status
+            ? convertStatusToBackend(params.status)
+            : undefined,
+        }
+      : undefined;
+
+    return apiClient.get<ApiResponse<SeedLot[]>>("/seed-lots", {
+      params: backendParams,
+    });
+  },
 
   getById: (id: string): Promise<AxiosResponse<ApiResponse<SeedLot>>> =>
     apiClient.get<ApiResponse<SeedLot>>(`/seed-lots/${id}`),
 
   create: (
     data: CreateSeedLotData
-  ): Promise<AxiosResponse<ApiResponse<SeedLot>>> =>
-    apiClient.post<ApiResponse<SeedLot>>("/seed-lots", data),
+  ): Promise<AxiosResponse<ApiResponse<SeedLot>>> => {
+    // Adaptation des données pour le backend
+    const backendData = {
+      ...data,
+      varietyId: Number(data.varietyId), // S'assurer que c'est un number
+    };
+
+    return apiClient.post<ApiResponse<SeedLot>>("/seed-lots", backendData);
+  },
 
   update: (
     id: string,
     data: UpdateSeedLotData
-  ): Promise<AxiosResponse<ApiResponse<SeedLot>>> =>
-    apiClient.put<ApiResponse<SeedLot>>(`/seed-lots/${id}`, data),
+  ): Promise<AxiosResponse<ApiResponse<SeedLot>>> => {
+    // Conversion du statut si nécessaire
+    const backendData = {
+      ...data,
+      status: data.status ? convertStatusToBackend(data.status) : undefined,
+    };
+
+    return apiClient.put<ApiResponse<SeedLot>>(`/seed-lots/${id}`, backendData);
+  },
 
   delete: (id: string): Promise<AxiosResponse<ApiResponse<null>>> =>
     apiClient.delete<ApiResponse<null>>(`/seed-lots/${id}`),
@@ -197,7 +214,7 @@ export const seedLotsAPI = {
     apiClient.get<ApiResponse<{ qrCode: string }>>(`/seed-lots/${id}/qr-code`),
 };
 
-// Types pour les contrôles qualité - utilisent les types de seedTypes.ts
+// Types pour les contrôles qualité
 interface QualityControlParams {
   page?: number;
   pageSize?: number;
@@ -240,18 +257,15 @@ export const qualityControlsAPI = {
     apiClient.put<ApiResponse<QualityControl>>(`/quality-controls/${id}`, data),
 };
 
-// Types génériques pour les autres entités
-interface BaseParams {
+// Types pour les multiplicateurs
+interface MultiplierParams {
   page?: number;
   pageSize?: number;
   search?: string;
-  sortBy?: string;
-  sortOrder?: string;
-}
-
-interface MultiplierParams extends BaseParams {
   status?: string;
   certificationLevel?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 export const multipliersAPI = {
@@ -265,19 +279,44 @@ export const multipliersAPI = {
 
   create: (
     data: Partial<Multiplier>
-  ): Promise<AxiosResponse<ApiResponse<Multiplier>>> =>
-    apiClient.post<ApiResponse<Multiplier>>("/multipliers", data),
+  ): Promise<AxiosResponse<ApiResponse<Multiplier>>> => {
+    // Adaptation des données pour le backend
+    const backendData = {
+      ...data,
+      // Le backend attend des champs séparés pour les coordonnées
+      latitude: data.latitude,
+      longitude: data.longitude,
+    };
+
+    return apiClient.post<ApiResponse<Multiplier>>("/multipliers", backendData);
+  },
 
   update: (
     id: number,
     data: Partial<Multiplier>
-  ): Promise<AxiosResponse<ApiResponse<Multiplier>>> =>
-    apiClient.put<ApiResponse<Multiplier>>(`/multipliers/${id}`, data),
+  ): Promise<AxiosResponse<ApiResponse<Multiplier>>> => {
+    const backendData = {
+      ...data,
+      latitude: data.latitude,
+      longitude: data.longitude,
+    };
+
+    return apiClient.put<ApiResponse<Multiplier>>(
+      `/multipliers/${id}`,
+      backendData
+    );
+  },
 };
 
-interface ParcelParams extends BaseParams {
+// Types pour les parcelles
+interface ParcelParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
   status?: string;
   multiplierId?: number;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 export const parcelsAPI = {
@@ -291,19 +330,54 @@ export const parcelsAPI = {
 
   create: (
     data: Partial<Parcel>
-  ): Promise<AxiosResponse<ApiResponse<Parcel>>> =>
-    apiClient.post<ApiResponse<Parcel>>("/parcels", data),
+  ): Promise<AxiosResponse<ApiResponse<Parcel>>> => {
+    // Le backend attend latitude/longitude séparément
+    const backendData = {
+      ...data,
+      latitude: data.latitude,
+      longitude: data.longitude,
+    };
+
+    return apiClient.post<ApiResponse<Parcel>>("/parcels", backendData);
+  },
 
   update: (
     id: number,
     data: Partial<Parcel>
-  ): Promise<AxiosResponse<ApiResponse<Parcel>>> =>
-    apiClient.put<ApiResponse<Parcel>>(`/parcels/${id}`, data),
+  ): Promise<AxiosResponse<ApiResponse<Parcel>>> => {
+    const backendData = {
+      ...data,
+      latitude: data.latitude,
+      longitude: data.longitude,
+    };
+
+    return apiClient.put<ApiResponse<Parcel>>(`/parcels/${id}`, backendData);
+  },
+
+  addSoilAnalysis: (
+    id: number,
+    data: {
+      analysisDate: string;
+      pH?: number;
+      organicMatter?: number;
+      nitrogen?: number;
+      phosphorus?: number;
+      potassium?: number;
+      notes?: string;
+    }
+  ): Promise<AxiosResponse<ApiResponse<unknown>>> =>
+    apiClient.post<ApiResponse<unknown>>(`/parcels/${id}/soil-analysis`, data),
 };
 
-interface ProductionParams extends BaseParams {
+// Types pour les productions
+interface ProductionParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
   status?: string;
   multiplierId?: number;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 export const productionsAPI = {
@@ -320,23 +394,71 @@ export const productionsAPI = {
   ): Promise<AxiosResponse<ApiResponse<Production>>> =>
     apiClient.post<ApiResponse<Production>>("/productions", data),
 
+  update: (
+    id: number,
+    data: Partial<Production>
+  ): Promise<AxiosResponse<ApiResponse<Production>>> =>
+    apiClient.put<ApiResponse<Production>>(`/productions/${id}`, data),
+
   addActivity: (
     id: number,
-    data: Record<string, unknown>
+    data: {
+      type: string;
+      activityDate: string;
+      description: string;
+      personnel?: string[];
+      notes?: string;
+      inputs?: Array<{
+        name: string;
+        quantity: string;
+        unit: string;
+        cost?: number;
+      }>;
+    }
   ): Promise<AxiosResponse<ApiResponse<unknown>>> =>
     apiClient.post<ApiResponse<unknown>>(`/productions/${id}/activities`, data),
 
   addIssue: (
     id: number,
-    data: Record<string, unknown>
+    data: {
+      issueDate: string;
+      type: string;
+      description: string;
+      severity: string;
+      actions: string;
+      cost?: number;
+    }
   ): Promise<AxiosResponse<ApiResponse<unknown>>> =>
     apiClient.post<ApiResponse<unknown>>(`/productions/${id}/issues`, data),
+
+  addWeatherData: (
+    id: number,
+    data: {
+      recordDate: string;
+      temperature: number;
+      rainfall: number;
+      humidity: number;
+      windSpeed?: number;
+      notes?: string;
+      source?: string;
+    }
+  ): Promise<AxiosResponse<ApiResponse<unknown>>> =>
+    apiClient.post<ApiResponse<unknown>>(
+      `/productions/${id}/weather-data`,
+      data
+    ),
 };
 
+// API pour les rapports
 export const reportsAPI = {
-  getAll: (
-    params?: BaseParams
-  ): Promise<AxiosResponse<ApiResponse<unknown[]>>> =>
+  getAll: (params?: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    type?: string;
+    sortBy?: string;
+    sortOrder?: string;
+  }): Promise<AxiosResponse<ApiResponse<unknown[]>>> =>
     apiClient.get<ApiResponse<unknown[]>>("/reports", { params }),
 
   getProduction: (
@@ -353,10 +475,23 @@ export const reportsAPI = {
     params?: Record<string, unknown>
   ): Promise<AxiosResponse<ApiResponse<unknown>>> =>
     apiClient.get<ApiResponse<unknown>>("/reports/inventory", { params }),
+
+  getMultiplierPerformance: (
+    params?: Record<string, unknown>
+  ): Promise<AxiosResponse<ApiResponse<unknown>>> =>
+    apiClient.get<ApiResponse<unknown>>("/reports/multiplier-performance", {
+      params,
+    }),
 };
 
-interface VarietyParams extends BaseParams {
+// API pour les variétés
+interface VarietyParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
   cropType?: string;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 export const varietiesAPI = {
@@ -367,26 +502,129 @@ export const varietiesAPI = {
 
   getById: (id: string): Promise<AxiosResponse<ApiResponse<Variety>>> =>
     apiClient.get<ApiResponse<Variety>>(`/varieties/${id}`),
+
+  create: (
+    data: Partial<Variety>
+  ): Promise<AxiosResponse<ApiResponse<Variety>>> =>
+    apiClient.post<ApiResponse<Variety>>("/varieties", data),
+
+  update: (
+    id: string,
+    data: Partial<Variety>
+  ): Promise<AxiosResponse<ApiResponse<Variety>>> =>
+    apiClient.put<ApiResponse<Variety>>(`/varieties/${id}`, data),
 };
 
-interface UserParams extends BaseParams {
+// API pour les utilisateurs
+interface UserParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
   role?: string;
   isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: string;
 }
 
 export const usersAPI = {
-  getAll: (params?: UserParams): Promise<AxiosResponse<ApiResponse<User[]>>> =>
-    apiClient.get<ApiResponse<User[]>>("/users", { params }),
+  getAll: (
+    params?: UserParams
+  ): Promise<AxiosResponse<ApiResponse<User[]>>> => {
+    // Conversion du rôle pour le backend si nécessaire
+    const backendParams = params
+      ? {
+          ...params,
+          role:
+            params.role && typeof params.role === "string"
+              ? convertUserRoleToBackend(params.role as UserRole)
+              : params.role,
+        }
+      : undefined;
+
+    return apiClient.get<ApiResponse<User[]>>("/users", {
+      params: backendParams,
+    });
+  },
 
   getById: (id: number): Promise<AxiosResponse<ApiResponse<User>>> =>
     apiClient.get<ApiResponse<User>>(`/users/${id}`),
 
-  create: (data: Partial<User>): Promise<AxiosResponse<ApiResponse<User>>> =>
-    apiClient.post<ApiResponse<User>>("/users", data),
+  create: (data: Partial<User>): Promise<AxiosResponse<ApiResponse<User>>> => {
+    // Conversion du rôle pour le backend
+    const backendData = {
+      ...data,
+      role: data.role ? convertUserRoleToBackend(data.role) : undefined,
+    };
+
+    return apiClient.post<ApiResponse<User>>("/users", backendData);
+  },
 
   update: (
     id: number,
     data: Partial<User>
-  ): Promise<AxiosResponse<ApiResponse<User>>> =>
-    apiClient.put<ApiResponse<User>>(`/users/${id}`, data),
+  ): Promise<AxiosResponse<ApiResponse<User>>> => {
+    const backendData = {
+      ...data,
+      role: data.role ? convertUserRoleToBackend(data.role) : undefined,
+    };
+
+    return apiClient.put<ApiResponse<User>>(`/users/${id}`, backendData);
+  },
+
+  updatePassword: (
+    id: number,
+    data: {
+      currentPassword: string;
+      newPassword: string;
+    }
+  ): Promise<AxiosResponse<ApiResponse<null>>> =>
+    apiClient.put<ApiResponse<null>>(`/users/${id}/password`, data),
+};
+
+// API pour les statistiques
+export const statisticsAPI = {
+  getDashboard: (): Promise<AxiosResponse<ApiResponse<unknown>>> =>
+    apiClient.get<ApiResponse<unknown>>("/statistics/dashboard"),
+
+  getTrends: (months?: number): Promise<AxiosResponse<ApiResponse<unknown>>> =>
+    apiClient.get<ApiResponse<unknown>>(
+      `/statistics/trends?months=${months || 12}`
+    ),
+};
+
+// API pour l'export
+export const exportAPI = {
+  seedLots: (params?: {
+    format?: "csv" | "json";
+    level?: SeedLevel;
+    status?: SeedLotStatus;
+    varietyId?: number;
+    multiplierId?: number;
+  }): Promise<AxiosResponse<string | ApiResponse<unknown>>> => {
+    const backendParams = params
+      ? {
+          ...params,
+          status: params.status
+            ? convertStatusToBackend(params.status)
+            : undefined,
+        }
+      : undefined;
+
+    return apiClient.get("/export/seed-lots", {
+      params: backendParams,
+      responseType: params?.format === "csv" ? "text" : "json",
+    });
+  },
+
+  qualityReport: (params?: {
+    format?: "html" | "json";
+    startDate?: string;
+    endDate?: string;
+    result?: string;
+    varietyId?: number;
+  }): Promise<AxiosResponse<string | ApiResponse<unknown>>> =>
+    apiClient.get("/export/quality-report", {
+      params,
+      responseType: params?.format === "html" ? "text" : "json",
+    }),
 };

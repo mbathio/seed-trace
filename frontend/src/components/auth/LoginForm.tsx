@@ -1,4 +1,5 @@
-// frontend/src/components/auth/LoginForm.tsx (version connectée à l'API)
+// frontend/src/components/auth/LoginForm.tsx - Version corrigée
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -84,11 +85,13 @@ const LoginForm = () => {
         </form>
       </CardContent>
       <CardFooter className="flex justify-center pt-0">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 text-center">
           Comptes de test disponibles avec le mot de passe "12345":
           <br />
-          adiop@isra.sn, fsy@isra.sn, mkane@isra.sn, ondiaye@isra.sn,
-          admin@isra.sn
+          <span className="font-mono text-xs">
+            adiop@isra.sn, fsy@isra.sn, mkane@isra.sn, ondiaye@isra.sn,
+            admin@isra.sn
+          </span>
         </p>
       </CardFooter>
     </Card>

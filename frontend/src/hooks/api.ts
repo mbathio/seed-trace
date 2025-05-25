@@ -1,4 +1,5 @@
-// frontend/src/hooks/api.ts - Version corrigée avec typage cohérent
+// frontend/src/hooks/api.ts - Version corrigée avec cohérence backend
+
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   authAPI,
@@ -13,7 +14,7 @@ import {
 } from "@/lib/api";
 import { toast } from "sonner";
 
-// Importation des types depuis seedTypes.ts pour éviter les conflits
+// Import des types corrigés
 import {
   SeedLot,
   QualityControl,
@@ -25,28 +26,27 @@ import {
   SeedLevel,
   SeedLotStatus,
   UserRole,
+  ApiResponse,
+  PaginationParams,
+  SeedLotParams,
+  QualityControlParams,
+  MultiplierParams,
+  ParcelParams,
+  ProductionParams,
+  CreateSeedLotData,
+  UpdateSeedLotData,
+  CreateQualityControlData,
+  convertUserRoleFromBackend,
+  convertStatusFromBackend,
 } from "@/utils/seedTypes";
 
-// Types pour les réponses API - utilisent les types de seedTypes.ts
-interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  meta?: {
-    page: number;
-    pageSize: number;
-    totalCount: number;
-    totalPages: number;
-  };
-}
-
-// Interface AuthResponse mise à jour pour utiliser User de seedTypes.ts
+// Interface AuthResponse mise à jour
 interface AuthResponse {
   user: {
     id: number;
     name: string;
     email: string;
-    role: UserRole; // Utilise UserRole de seedTypes.ts
+    role: string; // Backend envoie string, on convertit côté frontend
   };
   tokens: {
     accessToken: string;
@@ -59,101 +59,25 @@ interface LoginCredentials {
   password: string;
 }
 
-// Types pour les paramètres de requête
-interface PaginationParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-}
-
-interface SeedLotParams extends PaginationParams {
-  level?: SeedLevel;
-  status?: SeedLotStatus;
-  varietyId?: string;
-  multiplierId?: number;
-}
-
-interface QualityControlParams extends PaginationParams {
-  result?: "pass" | "fail";
-  lotId?: string;
-  inspectorId?: number;
-}
-
-interface MultiplierParams extends PaginationParams {
-  status?: "active" | "inactive";
-  certificationLevel?: "beginner" | "intermediate" | "expert";
-}
-
-interface ParcelParams extends PaginationParams {
-  status?: "available" | "in-use" | "resting";
-  multiplierId?: number;
-}
-
-interface ProductionParams extends PaginationParams {
-  status?: "planned" | "in-progress" | "completed" | "cancelled";
-  multiplierId?: number;
-}
-
-interface ReportParams extends PaginationParams {
-  type?:
-    | "production"
-    | "quality"
-    | "inventory"
-    | "multiplier_performance"
-    | "custom";
-}
-
-interface VarietyParams extends PaginationParams {
-  cropType?: string;
-}
-
-interface UserParams extends PaginationParams {
-  role?: string;
-  isActive?: boolean;
-}
-
-// Types pour la création/mise à jour
-interface CreateSeedLotData {
-  varietyId: string;
-  level: SeedLevel;
-  quantity: number;
-  productionDate: string;
-  multiplierId?: number;
-  parcelId?: number;
-  parentLotId?: string;
-  notes?: string;
-}
-
-interface UpdateSeedLotData {
-  quantity?: number;
-  status?: SeedLotStatus;
-  notes?: string;
-  expiryDate?: string;
-}
-
-interface CreateQualityControlData {
-  lotId: string;
-  controlDate: string;
-  germinationRate: number;
-  varietyPurity: number;
-  moistureContent?: number;
-  seedHealth?: number;
-  observations?: string;
-  testMethod?: string;
-}
-
-// Auth hooks
+// Auth hooks avec conversion des types
 export const useLogin = () => {
   return useMutation<ApiResponse<AuthResponse>, Error, LoginCredentials>({
     mutationFn: ({ email, password }) =>
       authAPI.login(email, password).then((res) => res.data),
     onSuccess: (response) => {
       const { user, tokens } = response.data;
+
+      // Conversion du rôle backend vers frontend
+      const convertedUser = {
+        ...user,
+        role: convertUserRoleFromBackend(user.role),
+        isActive: true,
+        createdAt: new Date().toISOString(),
+      };
+
       localStorage.setItem(
         "isra_user",
-        JSON.stringify({ ...user, token: tokens.accessToken })
+        JSON.stringify({ ...convertedUser, token: tokens.accessToken })
       );
       toast.success("Connexion réussie");
     },
@@ -166,24 +90,56 @@ export const useLogin = () => {
 export const useCurrentUser = () => {
   return useQuery<ApiResponse<User>, Error>({
     queryKey: ["currentUser"],
-    queryFn: () => authAPI.getCurrentUser().then((res) => res.data),
+    queryFn: () =>
+      authAPI.getCurrentUser().then((res) => {
+        // Conversion du rôle si nécessaire
+        const userData = res.data.data;
+        if (typeof userData.role === "string") {
+          userData.role = convertUserRoleFromBackend(userData.role);
+        }
+        return res.data;
+      }),
     enabled: !!localStorage.getItem("isra_user"),
     retry: false,
   });
 };
 
-// Seed Lots hooks
+// Seed Lots hooks avec conversion des données
 export const useSeedLots = (params?: SeedLotParams) => {
   return useQuery<ApiResponse<SeedLot[]>, Error>({
     queryKey: ["seedLots", params],
-    queryFn: () => seedLotsAPI.getAll(params).then((res) => res.data),
+    queryFn: () =>
+      seedLotsAPI.getAll(params).then((res) => {
+        // Conversion des statuts et autres données si nécessaire
+        const lots = res.data.data.map((lot) => ({
+          ...lot,
+          status:
+            typeof lot.status === "string"
+              ? convertStatusFromBackend(lot.status)
+              : lot.status,
+        }));
+
+        return {
+          ...res.data,
+          data: lots,
+        };
+      }),
   });
 };
 
 export const useSeedLot = (id: string) => {
   return useQuery<ApiResponse<SeedLot>, Error>({
     queryKey: ["seedLot", id],
-    queryFn: () => seedLotsAPI.getById(id).then((res) => res.data),
+    queryFn: () =>
+      seedLotsAPI.getById(id).then((res) => {
+        // Conversion des données si nécessaire
+        const lot = res.data.data;
+        if (typeof lot.status === "string") {
+          lot.status = convertStatusFromBackend(lot.status);
+        }
+
+        return res.data;
+      }),
     enabled: !!id,
   });
 };
@@ -207,7 +163,15 @@ export const useCreateSeedLot = () => {
   const queryClient = useQueryClient();
 
   return useMutation<ApiResponse<SeedLot>, Error, CreateSeedLotData>({
-    mutationFn: (data) => seedLotsAPI.create(data).then((res) => res.data),
+    mutationFn: (data) => {
+      // Validation des données avant envoi
+      const validatedData = {
+        ...data,
+        varietyId: Number(data.varietyId), // S'assurer que c'est un number
+      };
+
+      return seedLotsAPI.create(validatedData).then((res) => res.data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seedLots"] });
       toast.success("Lot créé avec succès");
@@ -230,6 +194,7 @@ export const useUpdateSeedLot = () => {
       seedLotsAPI.update(id, data).then((res) => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seedLots"] });
+      queryClient.invalidateQueries({ queryKey: ["seedLot"] });
       toast.success("Lot mis à jour avec succès");
     },
     onError: (error: Error) => {
@@ -258,6 +223,7 @@ export const useCreateQualityControl = () => {
       qualityControlsAPI.create(data).then((res) => res.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["qualityControls"] });
+      queryClient.invalidateQueries({ queryKey: ["seedLots"] });
       toast.success("Contrôle qualité enregistré avec succès");
     },
     onError: (error: Error) => {
@@ -317,7 +283,17 @@ export const useCreateParcel = () => {
   const queryClient = useQueryClient();
 
   return useMutation<ApiResponse<Parcel>, Error, Partial<Parcel>>({
-    mutationFn: (data) => parcelsAPI.create(data).then((res) => res.data),
+    mutationFn: (data) => {
+      // Adaptation des données pour le backend
+      const adaptedData = {
+        ...data,
+        // Le backend attend latitude/longitude séparément
+        latitude: data.latitude,
+        longitude: data.longitude,
+      };
+
+      return parcelsAPI.create(adaptedData).then((res) => res.data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parcels"] });
       toast.success("Parcelle créée avec succès");
@@ -360,7 +336,14 @@ export const useCreateProduction = () => {
 };
 
 // Varieties hooks
-export const useVarieties = (params?: VarietyParams) => {
+export const useVarieties = (params?: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  cropType?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}) => {
   return useQuery<ApiResponse<Variety[]>, Error>({
     queryKey: ["varieties", params],
     queryFn: () => varietiesAPI.getAll(params).then((res) => res.data),
@@ -376,7 +359,14 @@ export const useVariety = (id: string) => {
 };
 
 // Reports hooks
-export const useReports = (params?: ReportParams) => {
+export const useReports = (params?: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  type?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}) => {
   return useQuery<ApiResponse<unknown[]>, Error>({
     queryKey: ["reports", params],
     queryFn: () => reportsAPI.getAll(params).then((res) => res.data),
@@ -400,17 +390,78 @@ export const useQualityReport = (params?: Record<string, unknown>) => {
 };
 
 // Users hooks
-export const useUsers = (params?: UserParams) => {
+export const useUsers = (params?: {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  role?: string;
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}) => {
   return useQuery<ApiResponse<User[]>, Error>({
     queryKey: ["users", params],
-    queryFn: () => usersAPI.getAll(params).then((res) => res.data),
+    queryFn: () =>
+      usersAPI.getAll(params).then((res) => {
+        // Conversion des rôles pour tous les utilisateurs
+        const users = res.data.data.map((user) => ({
+          ...user,
+          role:
+            typeof user.role === "string"
+              ? convertUserRoleFromBackend(user.role)
+              : user.role,
+        }));
+
+        return {
+          ...res.data,
+          data: users,
+        };
+      }),
   });
 };
 
 export const useUser = (id: number) => {
   return useQuery<ApiResponse<User>, Error>({
     queryKey: ["user", id],
-    queryFn: () => usersAPI.getById(id).then((res) => res.data),
+    queryFn: () =>
+      usersAPI.getById(id).then((res) => {
+        // Conversion du rôle utilisateur
+        const userData = res.data.data;
+        if (typeof userData.role === "string") {
+          userData.role = convertUserRoleFromBackend(userData.role);
+        }
+        return res.data;
+      }),
     enabled: !!id,
+  });
+};
+
+// Hook pour les statistiques du dashboard
+export const useDashboardStats = () => {
+  return useQuery<ApiResponse<unknown>, Error>({
+    queryKey: ["dashboardStats"],
+    queryFn: () =>
+      fetch("/api/statistics/dashboard", {
+        headers: {
+          Authorization: `Bearer ${
+            JSON.parse(localStorage.getItem("isra_user") || "{}").token
+          }`,
+        },
+      }).then((res) => res.json()),
+  });
+};
+
+// Hook pour les tendances mensuelles
+export const useMonthlyTrends = (months: number = 12) => {
+  return useQuery<ApiResponse<unknown>, Error>({
+    queryKey: ["monthlyTrends", months],
+    queryFn: () =>
+      fetch(`/api/statistics/trends?months=${months}`, {
+        headers: {
+          Authorization: `Bearer ${
+            JSON.parse(localStorage.getItem("isra_user") || "{}").token
+          }`,
+        },
+      }).then((res) => res.json()),
   });
 };

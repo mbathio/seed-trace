@@ -1,4 +1,5 @@
-// backend/src/routes/productions.ts
+// backend/src/routes/productions.ts - Version corrigée
+
 import { Router } from "express";
 import { ProductionController } from "../controllers/ProductionController";
 import { validateRequest } from "../middleware/validation";
@@ -37,14 +38,14 @@ const updateProductionSchema = createProductionSchema.partial().omit({
 
 const activitySchema = z.object({
   type: z.enum([
-    "soil_preparation",
-    "sowing",
-    "fertilization",
-    "irrigation",
-    "weeding",
-    "pest_control",
-    "harvest",
-    "other",
+    "SOIL_PREPARATION", // ✅ Majuscules cohérentes
+    "SOWING",
+    "FERTILIZATION",
+    "IRRIGATION",
+    "WEEDING",
+    "PEST_CONTROL",
+    "HARVEST",
+    "OTHER",
   ]),
   activityDate: z.string().refine((date) => !isNaN(Date.parse(date))),
   description: z.string().min(1),
@@ -64,9 +65,9 @@ const activitySchema = z.object({
 
 const issueSchema = z.object({
   issueDate: z.string().refine((date) => !isNaN(Date.parse(date))),
-  type: z.enum(["disease", "pest", "weather", "management", "other"]),
+  type: z.enum(["DISEASE", "PEST", "WEATHER", "MANAGEMENT", "OTHER"]), // ✅ Majuscules
   description: z.string().min(1),
-  severity: z.enum(["low", "medium", "high"]),
+  severity: z.enum(["LOW", "MEDIUM", "HIGH"]), // ✅ Majuscules
   actions: z.string().min(1),
   cost: z.number().optional(),
 });
@@ -90,7 +91,7 @@ router.get("/:id", ProductionController.getProductionById);
 // POST /api/productions
 router.post(
   "/",
-  requireRole("technician", "manager", "admin"),
+  requireRole("TECHNICIAN", "MANAGER", "ADMIN"), // ✅ Majuscules
   validateRequest({ body: createProductionSchema }),
   ProductionController.createProduction
 );
@@ -98,7 +99,7 @@ router.post(
 // PUT /api/productions/:id
 router.put(
   "/:id",
-  requireRole("technician", "manager", "admin"),
+  requireRole("TECHNICIAN", "MANAGER", "ADMIN"),
   validateRequest({ body: updateProductionSchema }),
   ProductionController.updateProduction
 );
@@ -106,14 +107,14 @@ router.put(
 // DELETE /api/productions/:id
 router.delete(
   "/:id",
-  requireRole("admin"),
+  requireRole("ADMIN"),
   ProductionController.deleteProduction
 );
 
 // POST /api/productions/:id/activities
 router.post(
   "/:id/activities",
-  requireRole("technician", "manager", "admin"),
+  requireRole("TECHNICIAN", "MANAGER", "ADMIN"),
   validateRequest({ body: activitySchema }),
   ProductionController.addActivity
 );
@@ -121,7 +122,7 @@ router.post(
 // POST /api/productions/:id/issues
 router.post(
   "/:id/issues",
-  requireRole("technician", "manager", "admin"),
+  requireRole("TECHNICIAN", "MANAGER", "ADMIN"),
   validateRequest({ body: issueSchema }),
   ProductionController.addIssue
 );
@@ -129,7 +130,7 @@ router.post(
 // POST /api/productions/:id/weather-data
 router.post(
   "/:id/weather-data",
-  requireRole("technician", "manager", "admin"),
+  requireRole("TECHNICIAN", "MANAGER", "ADMIN"),
   validateRequest({ body: weatherDataSchema }),
   ProductionController.addWeatherData
 );

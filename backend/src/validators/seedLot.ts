@@ -1,8 +1,9 @@
-// backend/src/validators/seedLot.ts
+// backend/src/validators/seedLot.ts - Version corrigée
+
 import { z } from "zod";
 
 export const createSeedLotSchema = z.object({
-  varietyId: z.number().positive(), //  Corriger en number
+  varietyId: z.number().positive(), // ✅ Corrigé: number au lieu de string
   level: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]),
   quantity: z.number().positive("La quantité doit être positive"),
   productionDate: z
@@ -18,13 +19,13 @@ export const updateSeedLotSchema = z.object({
   quantity: z.number().positive().optional(),
   status: z
     .enum([
-      "pending",
-      "certified",
-      "rejected",
-      "in_stock",
-      "sold",
-      "active",
-      "distributed",
+      "PENDING",
+      "CERTIFIED",
+      "REJECTED",
+      "IN_STOCK",
+      "SOLD",
+      "ACTIVE",
+      "DISTRIBUTED",
     ])
     .optional(),
   notes: z.string().optional(),
@@ -49,16 +50,16 @@ export const seedLotQuerySchema = z.object({
   level: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]).optional(),
   status: z
     .enum([
-      "pending",
-      "certified",
-      "rejected",
-      "in_stock",
-      "sold",
-      "active",
-      "distributed",
+      "PENDING",
+      "CERTIFIED",
+      "REJECTED",
+      "IN_STOCK",
+      "SOLD",
+      "ACTIVE",
+      "DISTRIBUTED",
     ])
     .optional(),
-  varietyId: z.string().optional(),
+  varietyId: z.string().transform(Number).optional(), // ✅ Accepte string et convertit en number
   multiplierId: z.string().transform(Number).optional(),
   sortBy: z.enum(["productionDate", "quantity", "level", "status"]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),

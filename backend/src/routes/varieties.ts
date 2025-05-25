@@ -1,4 +1,5 @@
-// backend/src/routes/varieties.ts
+// backend/src/routes/varieties.ts - Version corrigée
+
 import { Router } from "express";
 import { VarietyController } from "../controllers/VarietyController";
 import { validateRequest } from "../middleware/validation";
@@ -8,9 +9,9 @@ import { z } from "zod";
 const router = Router();
 
 const createVarietySchema = z.object({
-  id: z.string().min(1),
+  code: z.string().min(1), // ✅ Ajouté le champ code
   name: z.string().min(1),
-  cropType: z.enum(["rice", "maize", "peanut", "sorghum", "cowpea", "millet"]),
+  cropType: z.enum(["RICE", "MAIZE", "PEANUT", "SORGHUM", "COWPEA", "MILLET"]), // ✅ Majuscules
   description: z.string().optional(),
   maturityDays: z.number().positive(),
   yieldPotential: z.number().positive().optional(),
@@ -19,7 +20,7 @@ const createVarietySchema = z.object({
   releaseYear: z.number().optional(),
 });
 
-const updateVarietySchema = createVarietySchema.partial().omit({ id: true });
+const updateVarietySchema = createVarietySchema.partial().omit({ code: true }); // ✅ Code non modifiable
 
 // GET /api/varieties
 router.get("/", VarietyController.getVarieties);
@@ -30,7 +31,7 @@ router.get("/:id", VarietyController.getVarietyById);
 // POST /api/varieties
 router.post(
   "/",
-  requireRole("researcher", "admin"),
+  requireRole("RESEARCHER", "ADMIN"), // ✅ Majuscules
   validateRequest({ body: createVarietySchema }),
   VarietyController.createVariety
 );
@@ -38,12 +39,12 @@ router.post(
 // PUT /api/varieties/:id
 router.put(
   "/:id",
-  requireRole("researcher", "admin"),
+  requireRole("RESEARCHER", "ADMIN"),
   validateRequest({ body: updateVarietySchema }),
   VarietyController.updateVariety
 );
 
 // DELETE /api/varieties/:id
-router.delete("/:id", requireRole("admin"), VarietyController.deleteVariety);
+router.delete("/:id", requireRole("ADMIN"), VarietyController.deleteVariety);
 
 export default router;

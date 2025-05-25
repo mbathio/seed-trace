@@ -1,324 +1,66 @@
-// frontend/src/utils/seedTypes.ts - Version mise à jour avec tous les types nécessaires
+// frontend/src/utils/seedTypes.ts - Version corrigée pour cohérence avec backend
 
-// Define user roles
+// Types de base corrigés pour correspondre au backend
 export type UserRole =
-  | "admin"
-  | "manager"
-  | "inspector"
-  | "multiplier"
-  | "guest"
-  | "technician"
-  | "researcher"; // Ajout du rôle researcher
+  | "ADMIN"
+  | "MANAGER"
+  | "INSPECTOR"
+  | "MULTIPLIER"
+  | "GUEST"
+  | "TECHNICIAN"
+  | "RESEARCHER";
 
-// User interface
+export type SeedLevel = "GO" | "G1" | "G2" | "G3" | "G4" | "R1" | "R2";
+
+export type SeedLotStatus =
+  | "PENDING"
+  | "CERTIFIED"
+  | "REJECTED"
+  | "IN_STOCK"
+  | "SOLD"
+  | "ACTIVE"
+  | "DISTRIBUTED";
+
+export type ParcelStatus = "AVAILABLE" | "IN_USE" | "RESTING";
+
+export type ProductionStatus =
+  | "PLANNED"
+  | "IN_PROGRESS"
+  | "COMPLETED"
+  | "CANCELLED";
+
+export type QualityControlResult = "PASS" | "FAIL";
+
+export type MultiplierStatus = "ACTIVE" | "INACTIVE";
+
+export type CertificationLevel = "BEGINNER" | "INTERMEDIATE" | "EXPERT";
+
+export type ContractStatus = "DRAFT" | "ACTIVE" | "COMPLETED" | "CANCELLED";
+
+export type CropType =
+  | "RICE"
+  | "MAIZE"
+  | "PEANUT"
+  | "SORGHUM"
+  | "COWPEA"
+  | "MILLET";
+
+// Interface User corrigée
 export interface User {
   id: number;
   name: string;
-  role: UserRole;
   email: string;
+  role: UserRole;
   avatar?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
 }
 
-// Seed levels
-export type SeedLevel = "GO" | "G1" | "G2" | "G3" | "G4" | "R1" | "R2";
-
-// Crop types
-export type CropType =
-  | "rice"
-  | "maize"
-  | "peanut"
-  | "sorghum"
-  | "cowpea"
-  | "millet";
-
-// Define parcel status
-export type ParcelStatus = "available" | "in-use" | "resting";
-
-// Parcel interface - mise à jour avec tous les champs nécessaires
-export interface Parcel {
-  id: number;
-  name?: string;
-  area: number;
-  location: {
-    lat: number;
-    lng: number;
-  };
-  status: ParcelStatus;
-  soilType?: string;
-  irrigationSystem?: string;
-  address?: string;
-  multiplier?: number; // ID of the multiplier who owns/manages the parcel
-  soilAnalysis?: {
-    date: Date;
-    pH: string;
-    organicMatter: string;
-    nitrogen: string;
-    phosphorus: string;
-    potassium: string;
-  };
-  previousCrops?: {
-    crop: string;
-    year: number;
-    season: string;
-  }[];
-}
-
-// Contract status
-export type ContractStatus = "draft" | "active" | "completed" | "cancelled";
-
-// Contract interface
-export interface Contract {
-  id: number;
-  multiplierId: number;
-  startDate: Date;
-  endDate: Date;
-  cropType: CropType;
-  seedLevel: SeedLevel;
-  expectedQuantity: number;
-  status: ContractStatus;
-  parcelId?: number;
-  paymentTerms?: string;
-  varietyId?: string;
-  quantity?: number;
-}
-
-// Production history item
-export interface ProductionHistoryItem {
-  contractId: number;
-  cropType: CropType;
-  seedLevel: SeedLevel;
-  level?: SeedLevel; // Add level for backward compatibility
-  season: string;
-  year: number;
-  quantity: number;
-  qualityScore?: number;
-  varietyId: string;
-}
-
-// Certification level for multipliers
-export type CertificationLevel = "beginner" | "intermediate" | "expert";
-
-// Multiplier interface - mise à jour avec tous les champs nécessaires
-export interface Multiplier {
-  id: number;
-  name: string;
-  status: "active" | "inactive";
-  address: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
-  yearsExperience: number;
-  certificationLevel: CertificationLevel;
-  specialization: string[];
-  phone?: string;
-  email?: string;
-  parcels?: number[]; // IDs of parcels managed by this multiplier
-  contracts?: Contract[];
-  history?: ProductionHistoryItem[];
-}
-
-// Seed lot status
-export type SeedLotStatus =
-  | "pending"
-  | "certified"
-  | "rejected"
-  | "in-stock"
-  | "sold"
-  | "active"
-  | "distributed";
-
-// Seed lot interface - mise à jour avec tous les champs nécessaires
-export interface SeedLot {
-  id: string;
-  varietyId: number;
-  level: SeedLevel;
-  quantity: number;
-  productionDate: string;
-  expiryDate?: string;
-  multiplierId?: number;
-  parcelId?: number;
-  status: SeedLotStatus;
-  batchNumber?: string;
-  parentLotId?: string;
-  notes?: string; //  Ajouter
-  qrCode?: string; // Ajouter
-
-  // Relations virtuelles (populated par l'API)
-  variety?: Variety;
-  multiplier?: Multiplier;
-}
-
-// Quality control interface - mise à jour avec tous les champs nécessaires
-export interface QualityControl {
-  id: number;
-  lotId: string;
-  controlDate: Date;
-  germinationRate: number;
-  varietyPurity: number;
-  result: "pass" | "fail";
-  observations?: string;
-  inspectorId: number;
-  moistureContent?: number;
-  seedHealth?: number;
-  testMethod?: string;
-}
-
-// Activity type
-export type ActivityType =
-  | "soil_preparation"
-  | "sowing"
-  | "fertilization"
-  | "irrigation"
-  | "weeding"
-  | "pest_control"
-  | "harvest"
-  | "other";
-
-// Issue type
-export type IssueType = "disease" | "pest" | "weather" | "management" | "other";
-
-// Issue severity
-export type IssueSeverity = "low" | "medium" | "high";
-
-// Activity interface
-export interface Activity {
-  type: ActivityType;
-  date: string;
-  description: string;
-  personnel?: string[];
-  inputs?: { name: string; quantity: string; unit: string }[];
-  notes?: string;
-}
-
-// Issue interface
-export interface Issue {
-  date: string;
-  type: IssueType;
-  description: string;
-  severity: IssueSeverity;
-  actions: string;
-  resolved: boolean;
-}
-
-// Weather data interface
-export interface WeatherData {
-  date: string;
-  temperature: string;
-  rainfall: string;
-  humidity: string;
-}
-
-// Production status
-export type ProductionStatus =
-  | "planned"
-  | "in-progress"
-  | "completed"
-  | "cancelled";
-
-// Production interface - mise à jour avec tous les champs nécessaires
-export interface Production {
-  id: number;
-  lotId: string;
-  startDate: Date;
-  endDate?: Date;
-  multiplier: number;
-  parcelId: number;
-  status: ProductionStatus;
-  yield?: number;
-  notes?: string;
-  sowingDate?: Date;
-  harvestDate?: Date;
-  plannedQuantity?: number;
-  activities?: Activity[];
-  issues?: Issue[];
-  weatherData?: WeatherData[];
-}
-
-// Report interface
-// Définir des types spécifiques pour les données de rapport
-export interface ProductionReportData {
-  totalProduction: number;
-  totalSurface: number;
-  averageYield: number;
-  productionByRegion: {
-    region: string;
-    production: number;
-    surface: number;
-  }[];
-  productionByCrop: {
-    crop: string;
-    production: number;
-  }[];
-}
-
-export interface QualityReportData {
-  totalTests: number;
-  passRate: number;
-  averageGerminationRate: number;
-  averageVarietyPurity: number;
-  qualityByLevel: {
-    level: SeedLevel;
-    passRate: number;
-    averageGermination: number;
-  }[];
-}
-
-export interface InventoryReportData {
-  totalLots: number;
-  totalQuantity: number;
-  lotsByLevel: {
-    level: SeedLevel;
-    count: number;
-    quantity: number;
-  }[];
-  lotsByCrop: {
-    crop: CropType;
-    count: number;
-    quantity: number;
-  }[];
-}
-
-export interface MultiplierPerformanceData {
-  totalMultipliers: number;
-  activeMultipliers: number;
-  averageExperience: number;
-  performanceByMultiplier: {
-    multiplierId: number;
-    name: string;
-    totalProduction: number;
-    averageQuality: number;
-    contractsCompleted: number;
-  }[];
-}
-
-// Union type pour tous les types de données de rapport
-export type ReportData =
-  | ProductionReportData
-  | QualityReportData
-  | InventoryReportData
-  | MultiplierPerformanceData
-  | Record<string, unknown>; // Pour les rapports personnalisés
-
-// Interface Report mise à jour
-export interface Report {
-  id: number;
-  title: string;
-  type:
-    | "production"
-    | "quality"
-    | "inventory"
-    | "multiplier_performance"
-    | "custom";
-  creationDate: string;
-  createdBy: number;
-  data?: ReportData;
-  fileName?: string;
-}
-
-// Variety interface - mise à jour avec tous les champs nécessaires
+// Interface Variety corrigée pour correspondre au backend
 export interface Variety {
-  id: string;
+  id: number; // Backend utilise integer ID
+  code: string; // Backend a un champ code séparé
   name: string;
   cropType: CropType;
   description?: string;
@@ -327,527 +69,518 @@ export interface Variety {
   resistances?: string[];
   origin?: string;
   releaseYear?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
 }
 
-// Mock data for users
+// Interface SeedLot corrigée
+export interface SeedLot {
+  id: string;
+  varietyId: number; // Correspond au backend
+  level: SeedLevel;
+  quantity: number;
+  productionDate: string;
+  expiryDate?: string;
+  multiplierId?: number;
+  parcelId?: number;
+  parentLotId?: string;
+  status: SeedLotStatus;
+  notes?: string;
+  qrCode?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+
+  // Relations (populated par l'API)
+  variety?: Variety;
+  multiplier?: Multiplier;
+  parcel?: Parcel;
+  parentLot?: SeedLot;
+  childLots?: SeedLot[];
+}
+
+// Interface QualityControl corrigée
+export interface QualityControl {
+  id: number;
+  lotId: string;
+  controlDate: string; // Backend envoie string ISO
+  germinationRate: number;
+  varietyPurity: number;
+  moistureContent?: number;
+  seedHealth?: number;
+  result: QualityControlResult;
+  observations?: string;
+  testMethod?: string;
+  inspectorId: number;
+  createdAt: string;
+  updatedAt?: string;
+
+  // Relations
+  seedLot?: SeedLot;
+  inspector?: User;
+}
+
+// Interface Multiplier corrigée
+export interface Multiplier {
+  id: number;
+  name: string;
+  status: MultiplierStatus;
+  address: string;
+  latitude: number;
+  longitude: number;
+  yearsExperience: number;
+  certificationLevel: CertificationLevel;
+  specialization: string[];
+  phone?: string;
+  email?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+
+  // Relations
+  parcels?: Parcel[];
+  contracts?: Contract[];
+  seedLots?: SeedLot[];
+  productions?: Production[];
+  history?: MultiplierHistory[];
+}
+
+// Interface Parcel corrigée
+export interface Parcel {
+  id: number;
+  name?: string;
+  area: number;
+  latitude: number;
+  longitude: number;
+  status: ParcelStatus;
+  soilType?: string;
+  irrigationSystem?: string;
+  address?: string;
+  multiplierId?: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt?: string;
+
+  // Relations
+  multiplier?: Multiplier;
+  soilAnalyses?: SoilAnalysis[];
+  previousCrops?: PreviousCrop[];
+  seedLots?: SeedLot[];
+  productions?: Production[];
+}
+
+// Interface Production corrigée
+export interface Production {
+  id: number;
+  lotId: string;
+  multiplierId: number;
+  parcelId: number;
+  startDate: string;
+  endDate?: string;
+  sowingDate?: string;
+  harvestDate?: string;
+  plannedQuantity?: number;
+  actualYield?: number;
+  status: ProductionStatus;
+  notes?: string;
+  weatherConditions?: string;
+  createdAt: string;
+  updatedAt?: string;
+
+  // Relations
+  seedLot?: SeedLot;
+  multiplier?: Multiplier;
+  parcel?: Parcel;
+  activities?: ProductionActivity[];
+  issues?: ProductionIssue[];
+  weatherData?: WeatherData[];
+}
+
+// Interfaces complémentaires pour correspondre au backend
+export interface SoilAnalysis {
+  id: number;
+  parcelId: number;
+  analysisDate: string;
+  pH?: number;
+  organicMatter?: number;
+  nitrogen?: number;
+  phosphorus?: number;
+  potassium?: number;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface PreviousCrop {
+  id: number;
+  parcelId: number;
+  crop: string;
+  year: number;
+  season: string;
+  createdAt: string;
+}
+
+export interface Contract {
+  id: number;
+  multiplierId: number;
+  varietyId: number;
+  startDate: string;
+  endDate: string;
+  seedLevel: SeedLevel;
+  expectedQuantity: number;
+  parcelId?: number;
+  paymentTerms?: string;
+  notes?: string;
+  status: ContractStatus;
+  createdAt: string;
+
+  // Relations
+  multiplier?: Multiplier;
+  variety?: Variety;
+  parcel?: Parcel;
+}
+
+export interface MultiplierHistory {
+  id: number;
+  multiplierId: number;
+  year: number;
+  season: string;
+  varietyId: number;
+  level: SeedLevel;
+  quantity: number;
+  qualityScore: number;
+  createdAt: string;
+
+  // Relations
+  variety?: Variety;
+}
+
+export interface ProductionActivity {
+  id: number;
+  productionId: number;
+  type: string;
+  activityDate: string;
+  description: string;
+  personnel?: string[];
+  notes?: string;
+  userId?: number;
+  createdAt: string;
+
+  // Relations
+  user?: User;
+  inputs?: ActivityInput[];
+}
+
+export interface ActivityInput {
+  id: number;
+  activityId: number;
+  name: string;
+  quantity: string;
+  unit: string;
+  cost?: number;
+}
+
+export interface ProductionIssue {
+  id: number;
+  productionId: number;
+  issueDate: string;
+  type: string;
+  description: string;
+  severity: string;
+  actions: string;
+  cost?: number;
+  resolved: boolean;
+  createdAt: string;
+}
+
+export interface WeatherData {
+  id: number;
+  productionId: number;
+  recordDate: string;
+  temperature: number;
+  rainfall: number;
+  humidity: number;
+  windSpeed?: number;
+  notes?: string;
+  source?: string;
+  createdAt: string;
+}
+
+export interface Report {
+  id: number;
+  title: string;
+  type: string;
+  description?: string;
+  createdById: number;
+  parameters?: any;
+  data?: any;
+  isPublic: boolean;
+  createdAt: string;
+
+  // Relations
+  createdBy?: User;
+}
+
+// Correction des données mock pour correspondre aux nouveaux types
 export const MOCK_USERS: User[] = [
   {
     id: 1,
-    name: "Admin User",
-    role: "admin",
-    email: "admin@isra.sn",
-    avatar: "/avatars/admin.png",
+    name: "Amadou Diop",
+    email: "adiop@isra.sn",
+    role: "RESEARCHER",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 2,
-    name: "Amadou Diallo",
-    role: "manager",
-    email: "amadou@isra.sn",
-    avatar: "/avatars/manager.png",
+    name: "Fatou Sy",
+    email: "fsy@isra.sn",
+    role: "INSPECTOR",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 3,
-    name: "Marie Faye",
-    role: "manager",
-    email: "marie@isra.sn",
+    name: "Moussa Kane",
+    email: "mkane@isra.sn",
+    role: "TECHNICIAN",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 4,
     name: "Ousmane Ndiaye",
-    role: "inspector",
-    email: "ousmane@isra.sn",
+    email: "ondiaye@isra.sn",
+    role: "MANAGER",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
   },
   {
     id: 5,
-    name: "Fatou Sow",
-    role: "multiplier",
-    email: "fatou@gmail.com",
+    name: "Admin User",
+    email: "admin@isra.sn",
+    role: "ADMIN",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
   },
 ];
 
-// Mock data for parcels
-export const MOCK_PARCELS: Parcel[] = [
-  {
-    id: 1,
-    name: "Parcelle Dagana 01",
-    area: 5.2,
-    location: {
-      lat: 16.5182,
-      lng: -15.5046,
-    },
-    status: "in-use",
-    soilType: "Argilo-limoneux",
-    irrigationSystem: "Goutte-à-goutte",
-    address: "Zone agricole de Dagana, Saint-Louis",
-    multiplier: 5,
-    soilAnalysis: {
-      date: new Date("2023-01-15"),
-      pH: "6.8",
-      organicMatter: "3.2",
-      nitrogen: "0.15",
-      phosphorus: "32",
-      potassium: "180",
-    },
-    previousCrops: [
-      {
-        crop: "Riz",
-        year: 2022,
-        season: "Hivernage",
-      },
-      {
-        crop: "Maïs",
-        year: 2022,
-        season: "Contre-saison chaude",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Parcelle Podor 02",
-    area: 3.8,
-    location: {
-      lat: 16.6518,
-      lng: -14.9592,
-    },
-    status: "available",
-    soilType: "Sableux",
-    irrigationSystem: "Aspersion",
-    address: "Périmètre irrigué de Podor",
-    multiplier: 3,
-    previousCrops: [
-      {
-        crop: "Niébé",
-        year: 2022,
-        season: "Contre-saison froide",
-      },
-    ],
-  },
-  {
-    id: 3,
-    name: "Parcelle Richard-Toll 03",
-    area: 7.5,
-    location: {
-      lat: 16.4625,
-      lng: -15.7009,
-    },
-    status: "resting",
-    soilType: "Limono-sableux",
-    irrigationSystem: "Gravitaire",
-    address: "Compagnie Sucrière Sénégalaise, Richard-Toll",
-  },
-  {
-    id: 4,
-    name: "Parcelle Matam 04",
-    area: 4.2,
-    location: {
-      lat: 15.6552,
-      lng: -13.2578,
-    },
-    status: "in-use",
-    soilType: "Argilo-sableux",
-    irrigationSystem: "Goutte-à-goutte",
-    address: "Zone agricole de Matam",
-  },
-];
-
-// Mock data for multipliers
-export const MOCK_MULTIPLIERS: Multiplier[] = [
-  {
-    id: 1,
-    name: "Ibrahima Ba",
-    status: "active",
-    address: "Dagana, Saint-Louis",
-    location: {
-      lat: 16.5182,
-      lng: -15.5046,
-    },
-    yearsExperience: 8,
-    certificationLevel: "expert",
-    specialization: ["rice", "maize"],
-    phone: "77 123 45 67",
-    email: "ibrahima@example.com",
-    parcels: [1],
-    contracts: [
-      {
-        id: 101,
-        multiplierId: 1,
-        startDate: new Date("2023-01-10"),
-        endDate: new Date("2023-06-30"),
-        cropType: "rice",
-        seedLevel: "G1",
-        expectedQuantity: 5000,
-        status: "active",
-        parcelId: 1,
-      },
-    ],
-    history: [
-      {
-        contractId: 98,
-        cropType: "rice",
-        seedLevel: "G1",
-        level: "G1",
-        season: "Hivernage",
-        year: 2022,
-        quantity: 4800,
-        qualityScore: 92,
-        varietyId: "Sahel 202",
-      },
-      {
-        contractId: 87,
-        cropType: "maize",
-        seedLevel: "G2",
-        level: "G2",
-        season: "Contre-saison",
-        year: 2022,
-        quantity: 3200,
-        qualityScore: 88,
-        varietyId: "ZM309",
-      },
-    ],
-  },
-  {
-    id: 2,
-    name: "Aminata Diallo",
-    status: "active",
-    address: "Podor, Saint-Louis",
-    location: {
-      lat: 16.6518,
-      lng: -14.9592,
-    },
-    yearsExperience: 5,
-    certificationLevel: "intermediate",
-    specialization: ["rice", "peanut"],
-    phone: "77 234 56 78",
-    email: "aminata@example.com",
-    parcels: [2],
-  },
-  {
-    id: 3,
-    name: "Mamadou Sow",
-    status: "inactive",
-    address: "Richard-Toll, Saint-Louis",
-    location: {
-      lat: 16.4625,
-      lng: -15.7009,
-    },
-    yearsExperience: 10,
-    certificationLevel: "expert",
-    specialization: ["rice", "sorghum", "millet"],
-    parcels: [3],
-  },
-  {
-    id: 4,
-    name: "Aissatou Ndiaye",
-    status: "active",
-    address: "Matam",
-    location: {
-      lat: 15.6552,
-      lng: -13.2578,
-    },
-    yearsExperience: 3,
-    certificationLevel: "beginner",
-    specialization: ["maize", "cowpea"],
-    phone: "77 345 67 89",
-    parcels: [4],
-  },
-];
-
-// Mock data for seed lots
-export const MOCK_SEED_LOTS: SeedLot[] = [
-  {
-    id: "SL-GO-2023-001",
-    cropType: "rice",
-    variety: "Sahel 108",
-    varietyId: "sahel108",
-    level: "GO",
-    quantity: 500,
-    productionDate: "2023-01-15",
-    expiryDate: "2024-01-15",
-    multiplier: 1,
-    status: "certified",
-    parcelId: 1,
-    batchNumber: "BATCH-001",
-  },
-  {
-    id: "SL-G1-2023-001",
-    cropType: "rice",
-    variety: "Sahel 108",
-    varietyId: "sahel108",
-    level: "G1",
-    quantity: 1500,
-    productionDate: "2023-02-20",
-    expiryDate: "2024-02-20",
-    multiplier: 1,
-    status: "in-stock",
-    parcelId: 1,
-    batchNumber: "BATCH-002",
-    parentLotId: "SL-GO-2023-001",
-  },
-  {
-    id: "SL-G2-2023-001",
-    cropType: "rice",
-    variety: "Sahel 202",
-    varietyId: "sahel202",
-    level: "G2",
-    quantity: 3000,
-    productionDate: "2023-03-10",
-    expiryDate: "2024-03-10",
-    multiplier: 2,
-    status: "in-stock",
-    parcelId: 2,
-    batchNumber: "BATCH-003",
-  },
-  {
-    id: "SL-GO-2023-002",
-    cropType: "maize",
-    variety: "ZM309",
-    varietyId: "zm309",
-    level: "GO",
-    quantity: 300,
-    productionDate: "2023-04-05",
-    expiryDate: "2024-04-05",
-    multiplier: 3,
-    status: "certified",
-    parcelId: 3,
-    batchNumber: "BATCH-004",
-  },
-];
-
-// Mock data for varieties
 export const MOCK_VARIETIES: Variety[] = [
   {
-    id: "sahel108",
+    id: 1,
+    code: "SAHEL108",
     name: "Sahel 108",
-    cropType: "rice",
-    description:
-      "Variété de cycle court (100-110 jours) adaptée aux zones irriguées du Nord",
+    cropType: "RICE",
+    description: "Variété de riz adaptée aux zones irriguées",
     maturityDays: 105,
     yieldPotential: 9.5,
-    resistances: ["Blast", "Virus de la panachure jaune"],
+    resistances: ["Blast", "Virus panachure jaune"],
     origin: "AfricaRice",
     releaseYear: 1994,
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
   },
   {
-    id: "sahel202",
+    id: 2,
+    code: "SAHEL202",
     name: "Sahel 202",
-    cropType: "rice",
-    description:
-      "Variété améliorée à haut rendement, bien adaptée aux conditions sahéliennes",
+    cropType: "RICE",
+    description: "Variété améliorée à haut rendement",
     maturityDays: 125,
-    yieldPotential: 10,
+    yieldPotential: 10.0,
     resistances: ["Blast", "Pyriculariose"],
     origin: "ISRA/AfricaRice",
     releaseYear: 2007,
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
   },
   {
-    id: "zm309",
+    id: 3,
+    code: "ZM309",
     name: "ZM309",
-    cropType: "maize",
-    description:
-      "Variété de maïs tolérante à la sécheresse, adaptée aux zones semi-arides",
+    cropType: "MAIZE",
+    description: "Variété de maïs tolérante à la sécheresse",
     maturityDays: 95,
     yieldPotential: 7.2,
     resistances: ["Streak", "Rouille"],
     origin: "IITA",
     releaseYear: 2012,
-  },
-  {
-    id: "73-33",
-    name: "73-33",
-    cropType: "peanut",
-    description:
-      "Variété d'arachide traditionnelle du Sénégal, bien adaptée aux zones sahéliennes",
-    maturityDays: 90,
-    yieldPotential: 3.5,
-    origin: "ISRA",
-    releaseYear: 1973,
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
   },
 ];
 
-// Mock quality controls
-export const MOCK_QUALITY_CONTROLS: QualityControl[] = [
+export const MOCK_SEED_LOTS: SeedLot[] = [
   {
-    id: 1,
-    lotId: "SL-GO-2023-001",
-    controlDate: new Date("2023-01-20"),
-    germinationRate: 95,
-    varietyPurity: 99.8,
-    result: "pass",
-    inspectorId: 4,
-    moistureContent: 12.5,
-    seedHealth: 98,
-  },
-  {
-    id: 2,
-    lotId: "SL-G1-2023-001",
-    controlDate: new Date("2023-02-25"),
-    germinationRate: 92,
-    varietyPurity: 98.5,
-    result: "pass",
-    inspectorId: 4,
-    moistureContent: 13.0,
-    seedHealth: 96,
-  },
-  {
-    id: 3,
-    lotId: "SL-G2-2023-001",
-    controlDate: new Date("2023-03-15"),
-    germinationRate: 88,
-    varietyPurity: 96.0,
-    result: "pass",
-    inspectorId: 4,
-    moistureContent: 13.8,
-  },
-  {
-    id: 4,
-    lotId: "SL-GO-2023-002",
-    controlDate: new Date("2023-04-10"),
-    germinationRate: 78,
-    varietyPurity: 94.5,
-    result: "fail",
-    observations: "Taux de germination insuffisant",
-    inspectorId: 4,
-    moistureContent: 14.2,
-  },
-];
-
-// Sample activities data
-const sampleActivities: Activity[] = [
-  {
-    type: "soil_preparation",
-    date: "2023-03-01",
-    description: "Labour profond et préparation du sol",
-    personnel: ["Jean Diop", "Amadou Ndiaye"],
-    inputs: [
-      { name: "Tracteur", quantity: "4", unit: "heures" },
-      { name: "Carburant", quantity: "25", unit: "litres" },
-    ],
-    notes: "Sol en bon état, bonne structure",
-  },
-  {
-    type: "sowing",
-    date: "2023-03-15",
-    description: "Semis du lot G1",
-    personnel: ["Aminata Sow", "Ibrahima Fall"],
-    inputs: [
-      { name: "Semences GO", quantity: "50", unit: "kg" },
-      { name: "Engrais de fond NPK", quantity: "100", unit: "kg" },
-    ],
-  },
-];
-
-// Sample issues data
-const sampleIssues: Issue[] = [
-  {
-    date: "2023-04-10",
-    type: "pest",
-    description: "Présence importante de foreurs de tiges",
-    severity: "medium",
-    actions: "Application de biopesticide à base de neem",
-    resolved: true,
-  },
-];
-
-// Sample weather data
-const sampleWeatherData: WeatherData[] = [
-  {
-    date: "2023-03-01",
-    temperature: "32",
-    rainfall: "0",
-    humidity: "45",
-  },
-  {
-    date: "2023-03-15",
-    temperature: "34",
-    rainfall: "12",
-    humidity: "65",
-  },
-];
-
-// Mock production data
-export const MOCK_PRODUCTIONS: Production[] = [
-  {
-    id: 1,
-    lotId: "SL-G1-2023-001",
-    startDate: new Date("2023-03-01"),
-    endDate: new Date("2023-07-15"),
-    multiplier: 1,
+    id: "SL-GO-2023-001",
+    varietyId: 1,
+    level: "GO",
+    quantity: 500,
+    productionDate: "2023-01-15",
+    expiryDate: "2024-01-15",
+    multiplierId: 1,
     parcelId: 1,
-    status: "completed",
-    yield: 4.8,
-    notes: "Bonne production malgré un épisode de sécheresse en mai",
-    sowingDate: new Date("2023-03-01"),
-    harvestDate: new Date("2023-07-15"),
-    plannedQuantity: 5000,
-    activities: sampleActivities,
-    issues: sampleIssues,
-    weatherData: sampleWeatherData,
+    status: "CERTIFIED",
+    notes: "Lot de base excellent",
+    isActive: true,
+    createdAt: "2023-01-15T00:00:00Z",
   },
   {
-    id: 2,
-    lotId: "SL-G2-2023-001",
-    startDate: new Date("2023-03-20"),
-    multiplier: 2,
+    id: "SL-G1-2023-001",
+    varietyId: 1,
+    level: "G1",
+    quantity: 1500,
+    productionDate: "2023-06-20",
+    expiryDate: "2024-06-20",
+    multiplierId: 1,
+    parcelId: 1,
+    parentLotId: "SL-GO-2023-001",
+    status: "ACTIVE",
+    notes: "Production de G1 à partir du lot GO",
+    isActive: true,
+    createdAt: "2023-06-20T00:00:00Z",
+  },
+  {
+    id: "SL-G2-2023-001",
+    varietyId: 2,
+    level: "G2",
+    quantity: 3000,
+    productionDate: "2023-11-15",
+    expiryDate: "2024-11-15",
+    multiplierId: 2,
     parcelId: 2,
-    status: "in-progress",
-    notes: "Retard dans le semis dû aux pluies tardives",
-    sowingDate: new Date("2023-03-20"),
-    plannedQuantity: 3000,
-    activities: [],
-    issues: [],
-    weatherData: [],
-  },
-  {
-    id: 3,
-    lotId: "SL-GO-2023-002",
-    startDate: new Date("2023-05-01"),
-    endDate: new Date("2023-08-10"),
-    multiplier: 3,
-    parcelId: 3,
-    status: "completed",
-    yield: 3.9,
-    notes: "Production affectée par une attaque de chenilles en juin",
-    sowingDate: new Date("2023-05-01"),
-    harvestDate: new Date("2023-08-10"),
-    plannedQuantity: 2500,
-    activities: [],
-    issues: [],
-    weatherData: [],
+    status: "DISTRIBUTED",
+    notes: "Lot G2 distribué aux multiplicateurs",
+    isActive: true,
+    createdAt: "2023-11-15T00:00:00Z",
   },
 ];
 
-// Mock reports
-export const MOCK_REPORTS: Report[] = [
-  {
-    id: 1,
-    title: "Rapport de production 2023 - T1",
-    type: "production",
-    creationDate: "2023-04-01",
-    createdBy: 2,
-    fileName: "production_rapport_t1_2023.pdf",
-  },
-  {
-    id: 2,
-    title: "Analyse qualité des semences G1",
-    type: "quality",
-    creationDate: "2023-03-15",
-    createdBy: 4,
-    fileName: "qualite_g1_2023.pdf",
-  },
-  {
-    id: 3,
-    title: "Performance multiplicateurs région Nord",
-    type: "multiplier_performance",
-    creationDate: "2023-02-28",
-    createdBy: 2,
-    fileName: "perf_multiplicateurs_nord_2023.xlsx",
-  },
-  {
-    id: 4,
-    title: "Rapport qualité - Riz Sahel",
-    type: "quality",
-    creationDate: "2023-05-10",
-    createdBy: 4,
-    fileName: "qualite_riz_sahel.pdf",
-  },
-];
+// Correction des interfaces utilisées dans les hooks API
+export interface CreateSeedLotData {
+  varietyId: number; // Correction: number au lieu de string
+  level: SeedLevel;
+  quantity: number;
+  productionDate: string;
+  multiplierId?: number;
+  parcelId?: number;
+  parentLotId?: string;
+  notes?: string;
+}
+
+export interface UpdateSeedLotData {
+  quantity?: number;
+  status?: SeedLotStatus;
+  notes?: string;
+  expiryDate?: string;
+}
+
+export interface CreateQualityControlData {
+  lotId: string;
+  controlDate: string;
+  germinationRate: number;
+  varietyPurity: number;
+  moistureContent?: number;
+  seedHealth?: number;
+  observations?: string;
+  testMethod?: string;
+}
+
+// Interface pour les réponses API
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  meta?: {
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+  };
+}
+
+// Interface pour les paramètres de pagination
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+// Interfaces spécifiques pour les paramètres de filtrage
+export interface SeedLotParams extends PaginationParams {
+  level?: SeedLevel;
+  status?: SeedLotStatus;
+  varietyId?: number;
+  multiplierId?: number;
+}
+
+export interface QualityControlParams extends PaginationParams {
+  result?: QualityControlResult;
+  lotId?: string;
+  inspectorId?: number;
+}
+
+export interface MultiplierParams extends PaginationParams {
+  status?: MultiplierStatus;
+  certificationLevel?: CertificationLevel;
+}
+
+export interface ParcelParams extends PaginationParams {
+  status?: ParcelStatus;
+  multiplierId?: number;
+}
+
+export interface ProductionParams extends PaginationParams {
+  status?: ProductionStatus;
+  multiplierId?: number;
+}
+
+// Fonctions utilitaires pour la conversion des types
+export const convertUserRoleFromBackend = (backendRole: string): UserRole => {
+  const roleMap: Record<string, UserRole> = {
+    admin: "ADMIN",
+    manager: "MANAGER",
+    inspector: "INSPECTOR",
+    multiplier: "MULTIPLIER",
+    guest: "GUEST",
+    technician: "TECHNICIAN",
+    researcher: "RESEARCHER",
+  };
+  return roleMap[backendRole.toLowerCase()] || "GUEST";
+};
+
+export const convertUserRoleToBackend = (frontendRole: UserRole): string => {
+  return frontendRole.toLowerCase();
+};
+
+export const convertStatusFromBackend = (
+  backendStatus: string
+): SeedLotStatus => {
+  const statusMap: Record<string, SeedLotStatus> = {
+    pending: "PENDING",
+    certified: "CERTIFIED",
+    rejected: "REJECTED",
+    in_stock: "IN_STOCK",
+    sold: "SOLD",
+    active: "ACTIVE",
+    distributed: "DISTRIBUTED",
+  };
+  return statusMap[backendStatus] || "PENDING";
+};
+
+export const convertStatusToBackend = (
+  frontendStatus: SeedLotStatus
+): string => {
+  const statusMap: Record<SeedLotStatus, string> = {
+    PENDING: "pending",
+    CERTIFIED: "certified",
+    REJECTED: "rejected",
+    IN_STOCK: "in_stock",
+    SOLD: "sold",
+    ACTIVE: "active",
+    DISTRIBUTED: "distributed",
+  };
+  return statusMap[frontendStatus] || "pending";
+};

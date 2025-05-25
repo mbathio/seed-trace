@@ -1,4 +1,5 @@
-// backend/src/routes/users.ts
+// backend/src/routes/users.ts - Version corrigée avec énumérations
+
 import { Router } from "express";
 import { UserController } from "../controllers/UserController";
 import { validateRequest } from "../middleware/validation";
@@ -14,14 +15,14 @@ const createUserSchema = z.object({
     .string()
     .min(6, "Le mot de passe doit contenir au moins 6 caractères"),
   role: z.enum([
-    "admin",
-    "manager",
-    "inspector",
-    "multiplier",
-    "guest",
-    "technician",
-    "researcher",
-  ]),
+    "ADMIN",
+    "MANAGER",
+    "INSPECTOR",
+    "MULTIPLIER",
+    "GUEST",
+    "TECHNICIAN",
+    "RESEARCHER",
+  ]), // ✅ Majuscules cohérentes
   avatar: z.string().optional(),
   isActive: z.boolean().optional(),
 });
@@ -31,14 +32,14 @@ const updateUserSchema = z.object({
   email: z.string().email().optional(),
   role: z
     .enum([
-      "admin",
-      "manager",
-      "inspector",
-      "multiplier",
-      "guest",
-      "technician",
-      "researcher",
-    ])
+      "ADMIN",
+      "MANAGER",
+      "INSPECTOR",
+      "MULTIPLIER",
+      "GUEST",
+      "TECHNICIAN",
+      "RESEARCHER",
+    ]) // ✅ Majuscules cohérentes
     .optional(),
   avatar: z.string().optional(),
   isActive: z.boolean().optional(),
@@ -52,7 +53,7 @@ const updatePasswordSchema = z.object({
 });
 
 // GET /api/users
-router.get("/", requireRole("manager", "admin"), UserController.getUsers);
+router.get("/", requireRole("MANAGER", "ADMIN"), UserController.getUsers);
 
 // GET /api/users/:id
 router.get("/:id", UserController.getUserById);
@@ -60,7 +61,7 @@ router.get("/:id", UserController.getUserById);
 // POST /api/users
 router.post(
   "/",
-  requireRole("admin"),
+  requireRole("ADMIN"),
   validateRequest({ body: createUserSchema }),
   UserController.createUser
 );
@@ -68,13 +69,13 @@ router.post(
 // PUT /api/users/:id
 router.put(
   "/:id",
-  requireRole("manager", "admin"),
+  requireRole("MANAGER", "ADMIN"),
   validateRequest({ body: updateUserSchema }),
   UserController.updateUser
 );
 
 // DELETE /api/users/:id
-router.delete("/:id", requireRole("admin"), UserController.deleteUser);
+router.delete("/:id", requireRole("ADMIN"), UserController.deleteUser);
 
 // PUT /api/users/:id/password
 router.put(
