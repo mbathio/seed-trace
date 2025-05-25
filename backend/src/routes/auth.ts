@@ -2,6 +2,7 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/AuthController";
 import { validateRequest } from "../middleware/validation";
+import { authMiddleware } from "../middleware/auth";
 import {
   loginSchema,
   registerSchema,

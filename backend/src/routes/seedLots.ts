@@ -38,12 +38,12 @@ router.post(
 // PUT /api/seed-lots/:id
 router.put(
   "/:id",
-  requireRole("researcher", "technician", "admin"),
+  requireRole("RESEARCHER", "TECHNICIAN", "ADMIN"),
   validateRequest({ body: updateSeedLotSchema }),
   SeedLotController.updateSeedLot
 );
 
 // DELETE /api/seed-lots/:id
-router.delete("/:id", requireRole("admin"), SeedLotController.deleteSeedLot);
+router.delete("/:id", requireRole("ADMIN"), SeedLotController.deleteSeedLot);
 
 export default router;

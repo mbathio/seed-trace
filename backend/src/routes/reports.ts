@@ -31,7 +31,7 @@ router.get("/:id", ReportController.getReportById);
 // POST /api/reports
 router.post(
   "/",
-  requireRole("manager", "admin"),
+  requireRole("MANAGER", "ADMIN"),
   validateRequest({ body: createReportSchema }),
   ReportController.createReport
 );

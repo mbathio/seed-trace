@@ -164,10 +164,11 @@ export const useCreateSeedLot = () => {
 
   return useMutation<ApiResponse<SeedLot>, Error, CreateSeedLotData>({
     mutationFn: (data) => {
-      // Validation des données avant envoi
+      // Validation et transformation des données avant envoi
       const validatedData = {
         ...data,
         varietyId: Number(data.varietyId), // S'assurer que c'est un number
+        level: data.level.toUpperCase() as SeedLevel, // S'assurer du format
       };
 
       return seedLotsAPI.create(validatedData).then((res) => res.data);

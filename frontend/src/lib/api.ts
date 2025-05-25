@@ -78,11 +78,13 @@ apiClient.interceptors.response.use(
   (response) => {
     // Transformation des données si nécessaire
     if (response.data && response.data.data) {
-      // Conversion des dates string en objets Date si nécessaire
+      // Conversion des rôles utilisateurs depuis le backend
       if (Array.isArray(response.data.data)) {
-        response.data.data = response.data.data.map(transformDates);
+        response.data.data = response.data.data.map((item) =>
+          transformItemFromBackend(item)
+        );
       } else {
-        response.data.data = transformDates(response.data.data);
+        response.data.data = transformItemFromBackend(response.data.data);
       }
     }
     return response;
@@ -101,6 +103,44 @@ apiClient.interceptors.response.use(
     throw new Error(error.message || "Erreur de communication avec le serveur");
   }
 );
+
+function transformItemFromBackend(
+  item: Record<string, unknown>
+): Record<string, unknown> {
+  if (!item || typeof item !== "object") return item;
+
+  // Conversion des rôles utilisateurs
+  if (item.role && typeof item.role === "string") {
+    item.role = convertUserRoleFromBackend(item.role);
+  }
+
+  // Conversion des statuts de lots
+  if (item.status && typeof item.status === "string") {
+    item.status = convertStatusFromBackend(item.status);
+  }
+
+  // Conversion des dates si nécessaire
+  const dateFields = [
+    "createdAt",
+    "updatedAt",
+    "productionDate",
+    "expiryDate",
+    "controlDate",
+    "startDate",
+    "endDate",
+  ];
+
+  for (const [key, value] of Object.entries(item)) {
+    if (dateFields.includes(key) && typeof value === "string") {
+      // Garder comme string pour cohérence avec le backend
+      item[key] = value;
+    } else if (typeof value === "object" && value !== null) {
+      item[key] = transformItemFromBackend(value as Record<string, unknown>);
+    }
+  }
+
+  return item;
+}
 
 function transformDates(obj: Record<string, unknown>): Record<string, unknown> {
   if (!obj || typeof obj !== "object") return obj;
@@ -208,6 +248,7 @@ export const seedLotsAPI = {
     const backendData = {
       ...data,
       varietyId: Number(data.varietyId), // S'assurer que c'est un number
+      level: data.level.toUpperCase(), // S'assurer du format majuscule
     };
 
     return apiClient.post<ApiResponse<SeedLot>>("/seed-lots", backendData);
