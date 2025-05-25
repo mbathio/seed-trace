@@ -3,7 +3,7 @@
 import { z } from "zod";
 
 export const createSeedLotSchema = z.object({
-  varietyId: z.number().positive(), // ✅ Corrigé: number au lieu de string
+  varietyId: z.number().positive(), // Correction: number au lieu de string
   level: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]),
   quantity: z.number().positive("La quantité doit être positive"),
   productionDate: z

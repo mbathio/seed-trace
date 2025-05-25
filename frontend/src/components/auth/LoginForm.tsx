@@ -19,17 +19,47 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {}
+  );
 
   const loginMutation = useLogin();
 
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {};
+
+    if (!email) {
+      newErrors.email = "Email requis";
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Email invalide";
+    }
+
+    if (!password) {
+      newErrors.password = "Mot de passe requis";
+    } else if (password.length < 6) {
+      newErrors.password =
+        "Le mot de passe doit contenir au moins 6 caractères";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
 
     loginMutation.mutate(
       { email, password },
       {
         onSuccess: () => {
           navigate("/dashboard");
+        },
+        onError: (error: Error) => {
+          setErrors({ password: error.message });
         },
       }
     );

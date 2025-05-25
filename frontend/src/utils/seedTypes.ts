@@ -77,10 +77,10 @@ export interface Variety {
 // Interface SeedLot corrigée
 export interface SeedLot {
   id: string;
-  varietyId: number; // Correspond au backend
+  varietyId: number; // Backend utilise number
   level: SeedLevel;
   quantity: number;
-  productionDate: string;
+  productionDate: string; // Format ISO string
   expiryDate?: string;
   multiplierId?: number;
   parcelId?: number;
@@ -121,6 +121,20 @@ export interface QualityControl {
   inspector?: User;
 }
 
+export type ActivityType =
+  | "SOIL_PREPARATION"
+  | "SOWING"
+  | "FERTILIZATION"
+  | "IRRIGATION"
+  | "WEEDING"
+  | "PEST_CONTROL"
+  | "HARVEST"
+  | "OTHER";
+
+export type IssueType = "DISEASE" | "PEST" | "WEATHER" | "MANAGEMENT" | "OTHER";
+
+export type IssueSeverity = "LOW" | "MEDIUM" | "HIGH";
+
 // Interface Multiplier corrigée
 export interface Multiplier {
   id: number;
@@ -151,7 +165,7 @@ export interface Parcel {
   id: number;
   name?: string;
   area: number;
-  latitude: number;
+  latitude: number; // Backend utilise des champs séparés
   longitude: number;
   status: ParcelStatus;
   soilType?: string;
@@ -312,8 +326,8 @@ export interface Report {
   type: string;
   description?: string;
   createdById: number;
-  parameters?: any;
-  data?: any;
+  parameters?: unknown;
+  data?: unknown;
   isPublic: boolean;
   createdAt: string;
 

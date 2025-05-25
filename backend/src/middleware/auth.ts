@@ -50,6 +50,7 @@ export async function authMiddleware(
       return ResponseHandler.unauthorized(res, "Token invalide ou expiré");
     }
   } catch (error) {
+    logger.error("Erreur dans authMiddleware:", error);
     next(error);
   }
 }

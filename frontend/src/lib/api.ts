@@ -22,7 +22,7 @@ const API_BASE_URL = "http://localhost:3001/api";
 // Configuration du client Axios
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -65,26 +65,66 @@ apiClient.interceptors.request.use(
         }
       } catch (error) {
         console.error("Erreur lors du parsing des données utilisateur:", error);
+        localStorage.removeItem("isra_user");
       }
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 // Intercepteur pour gérer les erreurs d'authentification
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Transformation des données si nécessaire
+    if (response.data && response.data.data) {
+      // Conversion des dates string en objets Date si nécessaire
+      if (Array.isArray(response.data.data)) {
+        response.data.data = response.data.data.map(transformDates);
+      } else {
+        response.data.data = transformDates(response.data.data);
+      }
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("isra_user");
       window.location.href = "/login";
     }
-    return Promise.reject(error);
+
+    // Gestion des erreurs avec messages plus spécifiques
+    if (error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+
+    throw new Error(error.message || "Erreur de communication avec le serveur");
   }
 );
+
+function transformDates(obj: Record<string, unknown>): Record<string, unknown> {
+  if (!obj || typeof obj !== "object") return obj;
+
+  const dateFields = [
+    "createdAt",
+    "updatedAt",
+    "productionDate",
+    "expiryDate",
+    "controlDate",
+    "startDate",
+    "endDate",
+  ];
+
+  for (const [key, value] of Object.entries(obj)) {
+    if (dateFields.includes(key) && typeof value === "string") {
+      obj[key] = value; // Garder comme string pour cohérence
+    } else if (typeof value === "object" && value !== null) {
+      obj[key] = transformDates(value as Record<string, unknown>);
+    }
+  }
+
+  return obj;
+}
 
 // Services API avec adaptation des données
 export const authAPI = {

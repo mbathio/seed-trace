@@ -30,7 +30,7 @@ router.get("/:id/qr-code", SeedLotController.getQRCode);
 // POST /api/seed-lots
 router.post(
   "/",
-  requireRole("researcher", "technician", "admin"),
+  requireRole("RESEARCHER", "TECHNICIAN", "ADMIN"), // Majuscules cohérentes
   validateRequest({ body: createSeedLotSchema }),
   SeedLotController.createSeedLot
 );

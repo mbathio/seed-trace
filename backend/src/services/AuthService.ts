@@ -143,12 +143,15 @@ export class AuthService {
         userData.password
       );
 
+      // Conversion du rôle vers l'énumération Prisma
+      const roleEnum = userData.role.toUpperCase() as Role;
+
       const user = await prisma.user.create({
         data: {
           name: userData.name,
           email: userData.email,
           password: hashedPassword,
-          role: userData.role as Role, // Cast vers l'énumération Role
+          role: roleEnum,
         },
         select: {
           id: true,
