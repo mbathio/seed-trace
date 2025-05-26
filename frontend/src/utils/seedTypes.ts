@@ -929,6 +929,63 @@ export const MOCK_PRODUCTIONS: Production[] = [
   },
 ];
 
+// Ajoutez ces lignes dans frontend/src/utils/seedTypes.ts après MOCK_PRODUCTIONS et avant MOCK_REPORTS
+
+export const MOCK_QUALITY_CONTROLS: QualityControl[] = [
+  {
+    id: 1,
+    lotId: "SL-GO-2023-001",
+    controlDate: "2023-02-10",
+    germinationRate: 95,
+    varietyPurity: 98,
+    result: "PASS",
+    observations: "Excellente qualité, conforme aux normes",
+    inspectorId: 4,
+    moistureContent: 11.5,
+    seedHealth: 97,
+    createdAt: "2023-02-10T00:00:00Z",
+  },
+  {
+    id: 2,
+    lotId: "SL-G1-2023-001",
+    controlDate: "2023-07-15",
+    germinationRate: 92,
+    varietyPurity: 97,
+    result: "PASS",
+    observations: "Qualité satisfaisante pour G1",
+    inspectorId: 4,
+    moistureContent: 12.0,
+    seedHealth: 95,
+    createdAt: "2023-07-15T00:00:00Z",
+  },
+  {
+    id: 3,
+    lotId: "SL-G2-2023-001",
+    controlDate: "2023-12-05",
+    germinationRate: 88,
+    varietyPurity: 95,
+    result: "PASS",
+    observations: "Qualité acceptable mais à surveiller",
+    inspectorId: 4,
+    moistureContent: 12.5,
+    seedHealth: 92,
+    createdAt: "2023-12-05T00:00:00Z",
+  },
+  {
+    id: 4,
+    lotId: "SL-G1-2023-001",
+    controlDate: "2023-08-20",
+    germinationRate: 85,
+    varietyPurity: 93,
+    result: "FAIL",
+    observations: "Taux de germination en dessous du seuil minimal requis",
+    inspectorId: 4,
+    moistureContent: 13.2,
+    seedHealth: 88,
+    createdAt: "2023-08-20T00:00:00Z",
+  },
+];
+
 export const MOCK_REPORTS: Report[] = [
   {
     id: 1,
