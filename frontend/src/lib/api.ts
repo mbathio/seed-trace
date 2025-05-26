@@ -140,34 +140,18 @@ function transformItemFromBackend(
 ): Record<string, unknown> {
   if (!item || typeof item !== "object") return item;
 
-  // Conversion des rôles utilisateurs
-  if (item.role && typeof item.role === "string") {
-    item.role = convertUserRoleFromBackend(item.role);
-  }
-
-  // Conversion des statuts de lots
-  if (item.status && typeof item.status === "string") {
-    item.status = convertStatusFromBackend(item.status);
-  }
-
-  // Conversion des dates si nécessaire
-  const dateFields = [
-    "createdAt",
-    "updatedAt",
-    "productionDate",
-    "expiryDate",
-    "controlDate",
-    "startDate",
-    "endDate",
-  ];
-
-  for (const [key, value] of Object.entries(item)) {
-    if (dateFields.includes(key) && typeof value === "string") {
-      // Garder comme string pour cohérence avec le backend
-      item[key] = value;
-    } else if (typeof value === "object" && value !== null) {
-      item[key] = transformItemFromBackend(value as Record<string, unknown>);
+  try {
+    // Conversion des rôles utilisateurs
+    if (item.role && typeof item.role === "string") {
+      item.role = convertUserRoleFromBackend(item.role);
     }
+
+    // Conversion des statuts de lots
+    if (item.status && typeof item.status === "string") {
+      item.status = convertStatusFromBackend(item.status);
+    }
+  } catch (error) {
+    console.warn("Erreur transformation données:", error);
   }
 
   return item;
