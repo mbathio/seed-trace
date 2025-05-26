@@ -1,4 +1,4 @@
-// frontend/src/utils/seedTypes.ts - Version corrigée pour cohérence avec backend
+// frontend/src/utils/seedTypes.ts - Version complète avec toutes les fonctions
 
 // Types de base corrigés pour correspondre au backend
 export type UserRole =
@@ -45,6 +45,20 @@ export type CropType =
   | "COWPEA"
   | "MILLET";
 
+export type ActivityType =
+  | "SOIL_PREPARATION"
+  | "SOWING"
+  | "FERTILIZATION"
+  | "IRRIGATION"
+  | "WEEDING"
+  | "PEST_CONTROL"
+  | "HARVEST"
+  | "OTHER";
+
+export type IssueType = "DISEASE" | "PEST" | "WEATHER" | "MANAGEMENT" | "OTHER";
+
+export type IssueSeverity = "LOW" | "MEDIUM" | "HIGH";
+
 // Interface User corrigée
 export interface User {
   id: number;
@@ -59,8 +73,8 @@ export interface User {
 
 // Interface Variety corrigée pour correspondre au backend
 export interface Variety {
-  id: number; // Backend utilise integer ID
-  code: string; // Backend a un champ code séparé
+  id: number;
+  code: string;
   name: string;
   cropType: CropType;
   description?: string;
@@ -77,10 +91,10 @@ export interface Variety {
 // Interface SeedLot corrigée
 export interface SeedLot {
   id: string;
-  varietyId: number; // Backend utilise number
+  varietyId: number;
   level: SeedLevel;
   quantity: number;
-  productionDate: string; // Format ISO string
+  productionDate: string;
   expiryDate?: string;
   multiplierId?: number;
   parcelId?: number;
@@ -104,7 +118,7 @@ export interface SeedLot {
 export interface QualityControl {
   id: number;
   lotId: string;
-  controlDate: string; // Backend envoie string ISO
+  controlDate: string;
   germinationRate: number;
   varietyPurity: number;
   moistureContent?: number;
@@ -120,20 +134,6 @@ export interface QualityControl {
   seedLot?: SeedLot;
   inspector?: User;
 }
-
-export type ActivityType =
-  | "SOIL_PREPARATION"
-  | "SOWING"
-  | "FERTILIZATION"
-  | "IRRIGATION"
-  | "WEEDING"
-  | "PEST_CONTROL"
-  | "HARVEST"
-  | "OTHER";
-
-export type IssueType = "DISEASE" | "PEST" | "WEATHER" | "MANAGEMENT" | "OTHER";
-
-export type IssueSeverity = "LOW" | "MEDIUM" | "HIGH";
 
 // Interface Multiplier corrigée
 export interface Multiplier {
@@ -165,7 +165,7 @@ export interface Parcel {
   id: number;
   name?: string;
   area: number;
-  latitude: number; // Backend utilise des champs séparés
+  latitude: number;
   longitude: number;
   status: ParcelStatus;
   soilType?: string;
@@ -182,6 +182,7 @@ export interface Parcel {
   previousCrops?: PreviousCrop[];
   seedLots?: SeedLot[];
   productions?: Production[];
+  soilAnalysis?: SoilAnalysis; // Pour compatibilité avec le code existant
 }
 
 // Interface Production corrigée
@@ -209,9 +210,10 @@ export interface Production {
   activities?: ProductionActivity[];
   issues?: ProductionIssue[];
   weatherData?: WeatherData[];
+  yield?: number; // Pour compatibilité avec le code existant
 }
 
-// Interfaces complémentaires pour correspondre au backend
+// Interfaces complémentaires
 export interface SoilAnalysis {
   id: number;
   parcelId: number;
@@ -223,6 +225,7 @@ export interface SoilAnalysis {
   potassium?: number;
   notes?: string;
   createdAt: string;
+  date?: Date; // Pour compatibilité avec le code existant
 }
 
 export interface PreviousCrop {
@@ -252,6 +255,7 @@ export interface Contract {
   multiplier?: Multiplier;
   variety?: Variety;
   parcel?: Parcel;
+  quantity?: number; // Pour compatibilité avec le code existant
 }
 
 export interface MultiplierHistory {
@@ -283,6 +287,7 @@ export interface ProductionActivity {
   // Relations
   user?: User;
   inputs?: ActivityInput[];
+  date: Date; // Pour compatibilité avec le code existant
 }
 
 export interface ActivityInput {
@@ -305,6 +310,7 @@ export interface ProductionIssue {
   cost?: number;
   resolved: boolean;
   createdAt: string;
+  date: Date; // Pour compatibilité avec le code existant
 }
 
 export interface WeatherData {
@@ -318,6 +324,7 @@ export interface WeatherData {
   notes?: string;
   source?: string;
   createdAt: string;
+  date: Date; // Pour compatibilité avec le code existant
 }
 
 export interface Report {
@@ -333,9 +340,204 @@ export interface Report {
 
   // Relations
   createdBy?: User;
+  creationDate: Date; // Pour compatibilité avec le code existant
 }
 
-// Correction des données mock pour correspondre aux nouveaux types
+// Interface pour les réponses API
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  meta?: {
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+  };
+}
+
+// Interface pour les paramètres de pagination
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+// Interfaces spécifiques pour les paramètres de filtrage
+export interface SeedLotParams extends PaginationParams {
+  level?: SeedLevel;
+  status?: SeedLotStatus;
+  varietyId?: number;
+  multiplierId?: number;
+}
+
+export interface QualityControlParams extends PaginationParams {
+  result?: QualityControlResult;
+  lotId?: string;
+  inspectorId?: number;
+}
+
+export interface MultiplierParams extends PaginationParams {
+  status?: MultiplierStatus;
+  certificationLevel?: CertificationLevel;
+}
+
+export interface ParcelParams extends PaginationParams {
+  status?: ParcelStatus;
+  multiplierId?: number;
+}
+
+export interface ProductionParams extends PaginationParams {
+  status?: ProductionStatus;
+  multiplierId?: number;
+}
+
+// Interfaces pour les données de création/mise à jour
+export interface CreateSeedLotData {
+  varietyId: number;
+  level: SeedLevel;
+  quantity: number;
+  productionDate: string;
+  multiplierId?: number;
+  parcelId?: number;
+  parentLotId?: string;
+  notes?: string;
+}
+
+export interface UpdateSeedLotData {
+  quantity?: number;
+  status?: SeedLotStatus;
+  notes?: string;
+  expiryDate?: string;
+}
+
+export interface CreateQualityControlData {
+  lotId: string;
+  controlDate: string;
+  germinationRate: number;
+  varietyPurity: number;
+  moistureContent?: number;
+  seedHealth?: number;
+  observations?: string;
+  testMethod?: string;
+}
+
+// Fonctions utilitaires pour la validation des données
+export const validateCreateSeedLotData = (
+  data: CreateSeedLotData
+): CreateSeedLotData => {
+  return {
+    ...data,
+    varietyId: Number(data.varietyId),
+    level: data.level.toUpperCase() as SeedLevel,
+    quantity: Number(data.quantity),
+  };
+};
+
+// Fonction pour valider les rôles utilisateur
+export const isValidUserRole = (role: string): role is UserRole => {
+  const validRoles: UserRole[] = [
+    "ADMIN",
+    "MANAGER",
+    "INSPECTOR",
+    "MULTIPLIER",
+    "GUEST",
+    "TECHNICIAN",
+    "RESEARCHER",
+  ];
+  return validRoles.includes(role.toUpperCase() as UserRole);
+};
+
+// Fonction pour valider les niveaux de semence
+export const isValidSeedLevel = (level: string): level is SeedLevel => {
+  const validLevels: SeedLevel[] = ["GO", "G1", "G2", "G3", "G4", "R1", "R2"];
+  return validLevels.includes(level.toUpperCase() as SeedLevel);
+};
+
+// Fonction pour valider les statuts de lots
+export const isValidSeedLotStatus = (
+  status: string
+): status is SeedLotStatus => {
+  const validStatuses: SeedLotStatus[] = [
+    "PENDING",
+    "CERTIFIED",
+    "REJECTED",
+    "IN_STOCK",
+    "SOLD",
+    "ACTIVE",
+    "DISTRIBUTED",
+  ];
+  return validStatuses.includes(status.toUpperCase() as SeedLotStatus);
+};
+
+// Fonctions de conversion améliorées
+export const convertUserRoleFromBackend = (backendRole: string): UserRole => {
+  const normalizedRole = backendRole.toUpperCase();
+
+  if (isValidUserRole(normalizedRole)) {
+    return normalizedRole;
+  }
+
+  // Fallback mapping pour les anciens formats
+  const roleMap: Record<string, UserRole> = {
+    ADMIN: "ADMIN",
+    MANAGER: "MANAGER",
+    INSPECTOR: "INSPECTOR",
+    MULTIPLIER: "MULTIPLIER",
+    GUEST: "GUEST",
+    TECHNICIAN: "TECHNICIAN",
+    RESEARCHER: "RESEARCHER",
+  };
+
+  return roleMap[normalizedRole] || "GUEST";
+};
+
+export const convertUserRoleToBackend = (frontendRole: UserRole): string => {
+  // Backend accepte maintenant les majuscules
+  return frontendRole;
+};
+
+export const convertStatusFromBackend = (
+  backendStatus: string
+): SeedLotStatus => {
+  const normalizedStatus = backendStatus.toUpperCase();
+
+  if (isValidSeedLotStatus(normalizedStatus)) {
+    return normalizedStatus;
+  }
+
+  // Fallback mapping pour les anciens formats
+  const statusMap: Record<string, SeedLotStatus> = {
+    PENDING: "PENDING",
+    CERTIFIED: "CERTIFIED",
+    REJECTED: "REJECTED",
+    IN_STOCK: "IN_STOCK",
+    SOLD: "SOLD",
+    ACTIVE: "ACTIVE",
+    DISTRIBUTED: "DISTRIBUTED",
+    // Anciens formats lowercase
+    pending: "PENDING",
+    certified: "CERTIFIED",
+    rejected: "REJECTED",
+    in_stock: "IN_STOCK",
+    sold: "SOLD",
+    active: "ACTIVE",
+    distributed: "DISTRIBUTED",
+  };
+
+  return statusMap[normalizedStatus] || statusMap[backendStatus] || "PENDING";
+};
+
+export const convertStatusToBackend = (
+  frontendStatus: SeedLotStatus
+): string => {
+  // Backend accepte maintenant les majuscules
+  return frontendStatus;
+};
+
+// Données mock corrigées pour correspondre exactement au backend
 export const MOCK_USERS: User[] = [
   {
     id: 1,
@@ -470,131 +672,282 @@ export const MOCK_SEED_LOTS: SeedLot[] = [
   },
 ];
 
-// Correction des interfaces utilisées dans les hooks API
-export interface CreateSeedLotData {
-  varietyId: number; // Correction: number au lieu de string
-  level: SeedLevel;
-  quantity: number;
-  productionDate: string;
-  multiplierId?: number;
-  parcelId?: number;
-  parentLotId?: string;
-  notes?: string;
-}
+export const MOCK_PARCELS: Parcel[] = [
+  {
+    id: 1,
+    name: "Parcelle Nord A1",
+    area: 2.5,
+    latitude: 16.0321,
+    longitude: -16.4857,
+    status: "AVAILABLE",
+    soilType: "Argilo-limoneux",
+    irrigationSystem: "Goutte à goutte",
+    address: "Zone Nord, Saint-Louis",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    previousCrops: [
+      {
+        id: 1,
+        parcelId: 1,
+        crop: "Riz",
+        year: 2022,
+        season: "Hivernage",
+        createdAt: "2023-01-01T00:00:00Z",
+      },
+    ],
+    soilAnalysis: {
+      id: 1,
+      parcelId: 1,
+      analysisDate: "2023-01-15T00:00:00Z",
+      pH: 6.8,
+      organicMatter: 3.2,
+      nitrogen: 0.15,
+      phosphorus: 25,
+      potassium: 180,
+      createdAt: "2023-01-15T00:00:00Z",
+      date: new Date("2023-01-15"),
+    },
+  },
+  {
+    id: 2,
+    name: "Parcelle Sud B2",
+    area: 1.8,
+    latitude: 15.9876,
+    longitude: -16.5123,
+    status: "IN_USE",
+    soilType: "Sablo-argileux",
+    irrigationSystem: "Aspersion",
+    address: "Zone Sud, Saint-Louis",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    previousCrops: [
+      {
+        id: 2,
+        parcelId: 2,
+        crop: "Maïs",
+        year: 2022,
+        season: "Saison sèche",
+        createdAt: "2023-01-01T00:00:00Z",
+      },
+    ],
+  },
+];
 
-export interface UpdateSeedLotData {
-  quantity?: number;
-  status?: SeedLotStatus;
-  notes?: string;
-  expiryDate?: string;
-}
+export const MOCK_MULTIPLIERS: Multiplier[] = [
+  {
+    id: 1,
+    name: "Coopérative Walo",
+    status: "ACTIVE",
+    address: "Richard-Toll, Saint-Louis",
+    latitude: 16.4625,
+    longitude: -15.7081,
+    yearsExperience: 12,
+    certificationLevel: "EXPERT",
+    specialization: ["Riz", "Maïs"],
+    phone: "+221 77 123 45 67",
+    email: "walo@coop.sn",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    contracts: [
+      {
+        id: 1,
+        multiplierId: 1,
+        varietyId: 1,
+        startDate: "2023-01-01",
+        endDate: "2023-12-31",
+        seedLevel: "G1",
+        expectedQuantity: 2000,
+        status: "ACTIVE",
+        createdAt: "2023-01-01T00:00:00Z",
+        quantity: 2000,
+      },
+    ],
+    history: [
+      {
+        id: 1,
+        multiplierId: 1,
+        year: 2022,
+        season: "Hivernage",
+        varietyId: 1,
+        level: "G1",
+        quantity: 1800,
+        qualityScore: 92,
+        createdAt: "2023-01-01T00:00:00Z",
+      },
+    ],
+    parcels: [
+      {
+        id: 1,
+        name: "Parcelle Nord A1",
+        area: 2.5,
+        latitude: 16.0321,
+        longitude: -16.4857,
+        status: "AVAILABLE",
+        soilType: "Argilo-limoneux",
+        irrigationSystem: "Goutte à goutte",
+        address: "Zone Nord, Saint-Louis",
+        isActive: true,
+        createdAt: "2023-01-01T00:00:00Z",
+        previousCrops: [
+          {
+            id: 1,
+            parcelId: 1,
+            crop: "Riz",
+            year: 2022,
+            season: "Hivernage",
+            createdAt: "2023-01-01T00:00:00Z",
+          },
+        ],
+        soilAnalysis: {
+          id: 1,
+          parcelId: 1,
+          analysisDate: "2023-01-15T00:00:00Z",
+          pH: 6.8,
+          organicMatter: 3.2,
+          nitrogen: 0.15,
+          phosphorus: 25,
+          potassium: 180,
+          createdAt: "2023-01-15T00:00:00Z",
+          date: new Date("2023-01-15"),
+        },
+      },
+    ],
+  },
+  {
+    id: 2,
+    name: "GIE Ndiareme",
+    status: "ACTIVE",
+    address: "Dagana, Saint-Louis",
+    latitude: 16.5125,
+    longitude: -15.5089,
+    yearsExperience: 8,
+    certificationLevel: "INTERMEDIATE",
+    specialization: ["Riz"],
+    phone: "+221 76 987 65 43",
+    email: "ndiareme@gie.sn",
+    isActive: true,
+    createdAt: "2023-01-01T00:00:00Z",
+    contracts: [],
+    history: [],
+    parcels: [
+      {
+        id: 2,
+        name: "Parcelle Sud B2",
+        area: 1.8,
+        latitude: 15.9876,
+        longitude: -16.5123,
+        status: "IN_USE",
+        soilType: "Sablo-argileux",
+        irrigationSystem: "Aspersion",
+        address: "Zone Sud, Saint-Louis",
+        isActive: true,
+        createdAt: "2023-01-01T00:00:00Z",
+        previousCrops: [
+          {
+            id: 2,
+            parcelId: 2,
+            crop: "Maïs",
+            year: 2022,
+            season: "Saison sèche",
+            createdAt: "2023-01-01T00:00:00Z",
+          },
+        ],
+      },
+    ],
+  },
+];
 
-export interface CreateQualityControlData {
-  lotId: string;
-  controlDate: string;
-  germinationRate: number;
-  varietyPurity: number;
-  moistureContent?: number;
-  seedHealth?: number;
-  observations?: string;
-  testMethod?: string;
-}
+export const MOCK_PRODUCTIONS: Production[] = [
+  {
+    id: 1,
+    lotId: "SL-G1-2023-001",
+    multiplierId: 1,
+    parcelId: 1,
+    startDate: "2023-06-01",
+    endDate: "2023-11-30",
+    sowingDate: "2023-06-15",
+    harvestDate: "2023-11-15",
+    plannedQuantity: 1500,
+    actualYield: 1650,
+    status: "COMPLETED",
+    notes: "Excellent rendement cette saison",
+    createdAt: "2023-06-01T00:00:00Z",
+    yield: 1650,
+    activities: [
+      {
+        id: 1,
+        productionId: 1,
+        type: "SOIL_PREPARATION",
+        activityDate: "2023-06-01",
+        description: "Préparation du sol avec labour profond",
+        personnel: ["Amadou Diop", "Moussa Kane"],
+        notes: "Conditions météo favorables",
+        createdAt: "2023-06-01T00:00:00Z",
+        date: new Date("2023-06-01"),
+        inputs: [
+          {
+            id: 1,
+            activityId: 1,
+            name: "Diesel",
+            quantity: "50",
+            unit: "litres",
+            cost: 75000,
+          },
+        ],
+      },
+    ],
+    issues: [
+      {
+        id: 1,
+        productionId: 1,
+        issueDate: "2023-08-15",
+        type: "PEST",
+        description: "Attaque légère de criquets",
+        severity: "LOW",
+        actions: "Traitement biologique appliqué",
+        cost: 25000,
+        resolved: true,
+        createdAt: "2023-08-15T00:00:00Z",
+        date: new Date("2023-08-15"),
+      },
+    ],
+    weatherData: [
+      {
+        id: 1,
+        productionId: 1,
+        recordDate: "2023-07-01",
+        temperature: 32.5,
+        rainfall: 45.2,
+        humidity: 78,
+        windSpeed: 12,
+        notes: "Bonnes conditions pour la croissance",
+        source: "Station météo locale",
+        createdAt: "2023-07-01T00:00:00Z",
+        date: new Date("2023-07-01"),
+      },
+    ],
+  },
+];
 
-// Interface pour les réponses API
-export interface ApiResponse<T> {
-  success: boolean;
-  message: string;
-  data: T;
-  meta?: {
-    page: number;
-    pageSize: number;
-    totalCount: number;
-    totalPages: number;
-  };
-}
-
-// Interface pour les paramètres de pagination
-export interface PaginationParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-}
-
-// Interfaces spécifiques pour les paramètres de filtrage
-export interface SeedLotParams extends PaginationParams {
-  level?: SeedLevel;
-  status?: SeedLotStatus;
-  varietyId?: number;
-  multiplierId?: number;
-}
-
-export interface QualityControlParams extends PaginationParams {
-  result?: QualityControlResult;
-  lotId?: string;
-  inspectorId?: number;
-}
-
-export interface MultiplierParams extends PaginationParams {
-  status?: MultiplierStatus;
-  certificationLevel?: CertificationLevel;
-}
-
-export interface ParcelParams extends PaginationParams {
-  status?: ParcelStatus;
-  multiplierId?: number;
-}
-
-export interface ProductionParams extends PaginationParams {
-  status?: ProductionStatus;
-  multiplierId?: number;
-}
-
-// Fonctions utilitaires pour la conversion des types
-export const convertUserRoleFromBackend = (backendRole: string): UserRole => {
-  const roleMap: Record<string, UserRole> = {
-    admin: "ADMIN",
-    manager: "MANAGER",
-    inspector: "INSPECTOR",
-    multiplier: "MULTIPLIER",
-    guest: "GUEST",
-    technician: "TECHNICIAN",
-    researcher: "RESEARCHER",
-  };
-  return roleMap[backendRole.toLowerCase()] || "GUEST";
-};
-
-export const convertUserRoleToBackend = (frontendRole: UserRole): string => {
-  return frontendRole.toLowerCase();
-};
-
-export const convertStatusFromBackend = (
-  backendStatus: string
-): SeedLotStatus => {
-  const statusMap: Record<string, SeedLotStatus> = {
-    pending: "PENDING",
-    certified: "CERTIFIED",
-    rejected: "REJECTED",
-    in_stock: "IN_STOCK",
-    sold: "SOLD",
-    active: "ACTIVE",
-    distributed: "DISTRIBUTED",
-  };
-  return statusMap[backendStatus] || "PENDING";
-};
-
-export const convertStatusToBackend = (
-  frontendStatus: SeedLotStatus
-): string => {
-  const statusMap: Record<SeedLotStatus, string> = {
-    PENDING: "pending",
-    CERTIFIED: "certified",
-    REJECTED: "rejected",
-    IN_STOCK: "in_stock",
-    SOLD: "sold",
-    ACTIVE: "active",
-    DISTRIBUTED: "distributed",
-  };
-  return statusMap[frontendStatus] || "pending";
-};
+export const MOCK_REPORTS: Report[] = [
+  {
+    id: 1,
+    title: "Rapport de production Q3 2023",
+    type: "production",
+    description: "Analyse de la production du troisième trimestre",
+    createdById: 4,
+    isPublic: true,
+    createdAt: "2023-10-01T00:00:00Z",
+    creationDate: new Date("2023-10-01"),
+  },
+  {
+    id: 2,
+    title: "Contrôle qualité - Octobre 2023",
+    type: "quality",
+    description: "Résultats des tests de qualité d'octobre",
+    createdById: 2,
+    isPublic: false,
+    createdAt: "2023-11-01T00:00:00Z",
+    creationDate: new Date("2023-11-01"),
+  },
+];

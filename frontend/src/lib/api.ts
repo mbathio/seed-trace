@@ -1,4 +1,4 @@
-// frontend/src/lib/api.ts - Version corrigée avec cohérence backend
+// frontend/src/lib/api.ts - Version corrigée avec toutes les fonctions nécessaires
 
 import axios, { AxiosResponse } from "axios";
 import {
@@ -53,6 +53,37 @@ interface RefreshTokenRequest {
   refreshToken: string;
 }
 
+// Fonctions utilitaires pour la conversion des données
+const convertUserRoleFromBackend = (backendRole: string): UserRole => {
+  const normalizedRole = backendRole.toUpperCase();
+  const roleMap: Record<string, UserRole> = {
+    ADMIN: "ADMIN",
+    MANAGER: "MANAGER",
+    INSPECTOR: "INSPECTOR",
+    MULTIPLIER: "MULTIPLIER",
+    GUEST: "GUEST",
+    TECHNICIAN: "TECHNICIAN",
+    RESEARCHER: "RESEARCHER",
+  };
+
+  return roleMap[normalizedRole] || "GUEST";
+};
+
+const convertStatusFromBackend = (backendStatus: string): SeedLotStatus => {
+  const normalizedStatus = backendStatus.toUpperCase();
+  const statusMap: Record<string, SeedLotStatus> = {
+    PENDING: "PENDING",
+    CERTIFIED: "CERTIFIED",
+    REJECTED: "REJECTED",
+    IN_STOCK: "IN_STOCK",
+    SOLD: "SOLD",
+    ACTIVE: "ACTIVE",
+    DISTRIBUTED: "DISTRIBUTED",
+  };
+
+  return statusMap[normalizedStatus] || "PENDING";
+};
+
 // Intercepteur pour ajouter le token d'authentification
 apiClient.interceptors.request.use(
   (config) => {
@@ -78,7 +109,7 @@ apiClient.interceptors.response.use(
   (response) => {
     // Transformation des données si nécessaire
     if (response.data && response.data.data) {
-      // Conversion des rôles utilisateurs depuis le backend
+      // Conversion des données depuis le backend
       if (Array.isArray(response.data.data)) {
         response.data.data = response.data.data.map((item) =>
           transformItemFromBackend(item)
@@ -140,30 +171,6 @@ function transformItemFromBackend(
   }
 
   return item;
-}
-
-function transformDates(obj: Record<string, unknown>): Record<string, unknown> {
-  if (!obj || typeof obj !== "object") return obj;
-
-  const dateFields = [
-    "createdAt",
-    "updatedAt",
-    "productionDate",
-    "expiryDate",
-    "controlDate",
-    "startDate",
-    "endDate",
-  ];
-
-  for (const [key, value] of Object.entries(obj)) {
-    if (dateFields.includes(key) && typeof value === "string") {
-      obj[key] = value; // Garder comme string pour cohérence
-    } else if (typeof value === "object" && value !== null) {
-      obj[key] = transformDates(value as Record<string, unknown>);
-    }
-  }
-
-  return obj;
 }
 
 // Services API avec adaptation des données
