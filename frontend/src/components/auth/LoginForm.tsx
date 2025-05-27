@@ -1,6 +1,6 @@
-// frontend/src/components/auth/LoginForm.tsx - Version corrigée
+// frontend/src/components/auth/LoginForm.tsx - Version modifiée pour demo
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,16 +14,26 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useLogin } from "@/hooks/api";
+import { MOCK_USERS } from "@/utils/seedTypes";
 
 const LoginForm = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("adiop@isra.sn"); // Email pré-rempli
+  const [password, setPassword] = useState("12345"); // Mot de passe pré-rempli
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {}
   );
 
   const loginMutation = useLogin();
+
+  // Auto-connexion pour la démo (optionnel - décommentez si vous voulez une connexion automatique)
+  useEffect(() => {
+    // Vérifier si l'utilisateur est déjà connecté
+    const storedUser = localStorage.getItem("isra_user");
+    if (storedUser) {
+      navigate("/dashboard");
+    }
+  }, [navigate]);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -36,9 +46,6 @@ const LoginForm = () => {
 
     if (!password) {
       newErrors.password = "Mot de passe requis";
-    } else if (password.length < 6) {
-      newErrors.password =
-        "Le mot de passe doit contenir au moins 6 caractères";
     }
 
     setErrors(newErrors);
@@ -65,17 +72,57 @@ const LoginForm = () => {
     );
   };
 
+  // Fonction pour connexion rapide
+  const handleQuickLogin = (userEmail: string) => {
+    setEmail(userEmail);
+    setPassword("12345");
+
+    // Auto-submit après un petit délai
+    setTimeout(() => {
+      loginMutation.mutate(
+        { email: userEmail, password: "12345" },
+        {
+          onSuccess: () => {
+            navigate("/dashboard");
+          },
+        }
+      );
+    }, 100);
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl text-center text-isra-green-dark">
-          Connexion
+          Connexion - Mode Démo
         </CardTitle>
         <CardDescription className="text-center">
-          Accédez au système de traçabilité des semences de l'ISRA
+          Système de traçabilité des semences de l'ISRA (Mode présentation)
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {/* Boutons de connexion rapide pour la démo */}
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          <h3 className="text-sm font-medium mb-3 text-blue-800">
+            🚀 Connexion rapide pour la démo :
+          </h3>
+          <div className="grid grid-cols-1 gap-2">
+            {MOCK_USERS.slice(0, 5).map((user) => (
+              <Button
+                key={user.id}
+                variant="outline"
+                size="sm"
+                onClick={() => handleQuickLogin(user.email)}
+                className="text-left justify-start text-xs"
+                disabled={loginMutation.isPending}
+              >
+                <span className="font-medium">{user.name}</span>
+                <span className="ml-2 text-gray-500">({user.role})</span>
+              </Button>
+            ))}
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -83,27 +130,28 @@ const LoginForm = () => {
               id="email"
               type="email"
               placeholder="exemple@isra.sn"
-              required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loginMutation.isPending}
             />
+            {errors.email && (
+              <p className="text-sm text-red-600">{errors.email}</p>
+            )}
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Mot de passe</Label>
-              <a href="#" className="text-sm text-isra-green hover:underline">
-                Mot de passe oublié?
-              </a>
             </div>
             <Input
               id="password"
               type="password"
-              required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={loginMutation.isPending}
             />
+            {errors.password && (
+              <p className="text-sm text-red-600">{errors.password}</p>
+            )}
           </div>
           <Button
             type="submit"
@@ -115,14 +163,15 @@ const LoginForm = () => {
         </form>
       </CardContent>
       <CardFooter className="flex justify-center pt-0">
-        <p className="text-sm text-gray-500 text-center">
-          Comptes de test disponibles avec le mot de passe "12345":
-          <br />
-          <span className="font-mono text-xs">
-            adiop@isra.sn, fsy@isra.sn, mkane@isra.sn, ondiaye@isra.sn,
-            admin@isra.sn
-          </span>
-        </p>
+        <div className="text-center">
+          <p className="text-sm text-green-600 font-medium mb-2">
+            ✅ Mode démo - Tous les comptes utilisent le mot de passe "12345"
+          </p>
+          <p className="text-xs text-gray-500">
+            Utilisez les boutons rapides ci-dessus ou saisissez manuellement les
+            informations
+          </p>
+        </div>
       </CardFooter>
     </Card>
   );
