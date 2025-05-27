@@ -15,13 +15,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { UserRole, MOCK_USERS, MOCK_MULTIPLIERS } from "@/utils/seedTypes";
 
-type MultiplierStatus = "active" | "inactive";
-type CertificationLevel = "beginner" | "intermediate" | "expert";
+type MultiplierStatus = "ACTIVE" | "INACTIVE";
+type CertificationLevel = "BEGINNER" | "INTERMEDIATE" | "EXPERT";
 
 const StatusBadge = ({ status }: { status: MultiplierStatus }) => {
   const statusConfig = {
-    active: { label: "Actif", className: "bg-green-500" },
-    inactive: { label: "Inactif", className: "bg-gray-500" },
+    ACTIVE: { label: "Actif", className: "bg-green-500" },
+    INACTIVE: { label: "Inactif", className: "bg-gray-500" },
   };
 
   return (
@@ -33,9 +33,9 @@ const StatusBadge = ({ status }: { status: MultiplierStatus }) => {
 
 const CertificationBadge = ({ level }: { level: CertificationLevel }) => {
   const levelConfig = {
-    beginner: { label: "Débutant", className: "bg-blue-500" },
-    intermediate: { label: "Intermédiaire", className: "bg-yellow-500" },
-    expert: { label: "Expert", className: "bg-purple-500" },
+    BEGINNER: { label: "Débutant", className: "bg-blue-500" },
+    INTERMEDIATE: { label: "Intermédiaire", className: "bg-yellow-500" },
+    EXPERT: { label: "Expert", className: "bg-purple-500" },
   };
 
   return (
@@ -99,9 +99,9 @@ const Multipliers = () => {
               className="w-full md:w-auto"
             >
               <TabsList>
-                <TabsTrigger value="all">Tous</TabsTrigger>
-                <TabsTrigger value="active">Actifs</TabsTrigger>
-                <TabsTrigger value="inactive">Inactifs</TabsTrigger>
+                <TabsTrigger value="ALL">Tous</TabsTrigger>
+                <TabsTrigger value="ACTIVE">Actifs</TabsTrigger>
+                <TabsTrigger value="INACTIVE">Inactifs</TabsTrigger>
               </TabsList>
             </Tabs>
 

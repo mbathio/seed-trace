@@ -62,6 +62,7 @@ import {
 
 const ProductionDetail = () => {
   const { id } = useParams();
+
   const productionId = parseInt(id || "1");
   const production = MOCK_PRODUCTIONS.find((p) => p.id === productionId);
 
@@ -84,11 +85,11 @@ const ProductionDetail = () => {
   const userName =
     MOCK_USERS.find((user) => user.role === userRole)?.name || "";
 
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("OVERVIEW");
 
   // State for adding a new activity
   const [newActivity, setNewActivity] = useState({
-    type: "soil_preparation" as ActivityType,
+    type: "SOIL_PREPARATION" as ActivityType,
     date: new Date().toISOString().split("T")[0],
     description: "",
     personnel: [] as string[],
@@ -99,9 +100,9 @@ const ProductionDetail = () => {
   // State for adding a new issue
   const [newIssue, setNewIssue] = useState({
     date: new Date().toISOString().split("T")[0],
-    type: "disease" as IssueType,
+    type: "DISEASE" as IssueType,
     description: "",
-    severity: "medium" as IssueSeverity,
+    severity: "MEDIUM" as IssueSeverity,
     actions: "",
     resolved: false,
   });
@@ -118,6 +119,17 @@ const ProductionDetail = () => {
   const handleActivityChange = (field: string, value: any) => {
     setNewActivity((prev) => ({ ...prev, [field]: value }));
   };
+
+  const formatDate = (dateString: string | undefined) => {
+    return dateString
+      ? new Date(dateString).toLocaleDateString()
+      : "Non définie";
+  };
+
+  // Utilisation:
+  <span className="text-xl font-bold">
+    {formatDate(production.sowingDate)}
+  </span>;
 
   // Handle input change for activity inputs
   const handleInputChange = (index: number, field: string, value: string) => {
@@ -165,7 +177,7 @@ const ProductionDetail = () => {
     toast.success("Activité enregistrée avec succès");
     // Reset form
     setNewActivity({
-      type: "soil_preparation" as ActivityType,
+      type: "SOIL_PREPARATION" as ActivityType,
       date: new Date().toISOString().split("T")[0],
       description: "",
       personnel: [],
@@ -185,9 +197,9 @@ const ProductionDetail = () => {
     // Reset form
     setNewIssue({
       date: new Date().toISOString().split("T")[0],
-      type: "disease" as IssueType,
+      type: "DISEASE" as IssueType,
       description: "",
-      severity: "medium" as IssueSeverity,
+      severity: "MEDIUM" as IssueSeverity,
       actions: "",
       resolved: false,
     });
@@ -322,7 +334,7 @@ const ProductionDetail = () => {
                   <Calendar className="h-5 w-5 mr-2 text-isra-green" />
                   <span className="text-xl font-bold">
                     {production.sowingDate
-                      ? production.sowingDate.toLocaleDateString()
+                      ? new Date(production.sowingDate).toLocaleDateString()
                       : "Non définie"}
                   </span>
                 </div>
@@ -404,7 +416,9 @@ const ProductionDetail = () => {
                         <span className="text-gray-600">Date de semis</span>
                         <span className="font-medium">
                           {production.sowingDate
-                            ? production.sowingDate.toLocaleDateString()
+                            ? new Date(
+                                production.sowingDate
+                              ).toLocaleDateString()
                             : "Non définie"}
                         </span>
                       </div>

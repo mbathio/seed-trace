@@ -151,6 +151,10 @@ export interface Multiplier {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
 
   // Relations
   parcels?: Parcel[];
@@ -175,6 +179,10 @@ export interface Parcel {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
 
   // Relations
   multiplier?: Multiplier;
@@ -679,6 +687,8 @@ export const MOCK_PARCELS: Parcel[] = [
     area: 2.5,
     latitude: 16.0321,
     longitude: -16.4857,
+    location: { lat: 16.4625, lng: -15.7081 }, // Ajout pour compatibilité
+
     status: "AVAILABLE",
     soilType: "Argilo-limoneux",
     irrigationSystem: "Goutte à goutte",
@@ -714,6 +724,8 @@ export const MOCK_PARCELS: Parcel[] = [
     area: 1.8,
     latitude: 15.9876,
     longitude: -16.5123,
+    location: { lat: 15.9876, lng: -16.5123 }, // Ajout pour compatibilité
+
     status: "IN_USE",
     soilType: "Sablo-argileux",
     irrigationSystem: "Aspersion",
@@ -782,6 +794,8 @@ export const MOCK_MULTIPLIERS: Multiplier[] = [
         area: 2.5,
         latitude: 16.0321,
         longitude: -16.4857,
+        location: { lat: 16.0321, lng: -16.4857 }, // Ajout pour compatibilité
+
         status: "AVAILABLE",
         soilType: "Argilo-limoneux",
         irrigationSystem: "Goutte à goutte",
@@ -836,6 +850,8 @@ export const MOCK_MULTIPLIERS: Multiplier[] = [
         area: 1.8,
         latitude: 15.9876,
         longitude: -16.5123,
+        location: { lat: 15.9876, lng: -16.5123 }, // Ajout pour compatibilité
+
         status: "IN_USE",
         soilType: "Sablo-argileux",
         irrigationSystem: "Aspersion",

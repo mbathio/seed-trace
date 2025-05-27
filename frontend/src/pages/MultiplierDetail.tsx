@@ -110,7 +110,14 @@ const MultiplierDetail = () => {
 
   // Find parcels associated with this multiplier
   const multiplierParcels = multiplier.parcels
-    ? MOCK_PARCELS.filter((p) => multiplier.parcels?.includes(p.id))
+    ? MOCK_PARCELS.filter((p) => {
+        if (!multiplier.parcels) return false;
+        return multiplier.parcels.some((parcelRef) =>
+          typeof parcelRef === "number"
+            ? parcelRef === p.id
+            : parcelRef.id === p.id
+        );
+      })
     : [];
 
   return (
@@ -126,8 +133,8 @@ const MultiplierDetail = () => {
             <div>
               <h1 className="text-2xl font-bold">{multiplier.name}</h1>
               <p className="text-gray-600">
-                ID: {multiplier.id} • {multiplier.location.lat.toFixed(4)},{" "}
-                {multiplier.location.lng.toFixed(4)}
+                ID: {multiplier.id} • {multiplier.latitude.toFixed(4)},{" "}
+                {multiplier.longitude.toFixed(4)}
               </p>
             </div>
             <div className="ml-auto flex gap-2">
