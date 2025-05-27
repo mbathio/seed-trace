@@ -1,23 +1,34 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import ParcelMap from "@/components/parcels/ParcelMap";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Parcel, UserRole, MOCK_USERS, MOCK_PARCELS } from "@/utils/seedTypes";
 import { MapPin, Ruler, Crop } from "lucide-react";
 
 const ParcelStatusBadge = ({ status }: { status: Parcel["status"] }) => {
   const statusConfig = {
-    "available": { label: "Disponible", className: "bg-green-500" },
+    available: { label: "Disponible", className: "bg-green-500" },
     "in-use": { label: "En utilisation", className: "bg-blue-500" },
-    "resting": { label: "En jachère", className: "bg-amber-500" }
+    resting: { label: "En jachère", className: "bg-amber-500" },
   };
 
   return (
@@ -29,29 +40,38 @@ const ParcelStatusBadge = ({ status }: { status: Parcel["status"] }) => {
 
 const Parcels = () => {
   // Simuler un utilisateur connecté avec le rôle "manager"
-  const userRole: UserRole = "manager";
-  const userName = MOCK_USERS.find(user => user.role === userRole)?.name || "";
+  const userRole: UserRole = "MANAGER"; //
+  const userName =
+    MOCK_USERS.find((user) => user.role === userRole)?.name || "";
   const navigate = useNavigate();
-  
+
   const [activeTab, setActiveTab] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterSoilType, setFilterSoilType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterSoilType, setFilterSoilType] = useState("all");
   const [selectedParcelId, setSelectedParcelId] = useState<number | null>(null);
-  const [viewMode, setViewMode] = useState<'cards' | 'map'>('cards');
+  const [viewMode, setViewMode] = useState<"cards" | "map">("cards");
 
   // Filtrer les parcelles en fonction de l'onglet actif et de la recherche
-  const filteredParcels = MOCK_PARCELS.filter(parcel => {
+  const filteredParcels = MOCK_PARCELS.filter((parcel) => {
     const matchesStatus = activeTab === "all" || parcel.status === activeTab;
-    const matchesSearch = !searchTerm || 
-      (parcel.name && parcel.name.toLowerCase().includes(searchTerm.toLowerCase())) || 
+    const matchesSearch =
+      !searchTerm ||
+      (parcel.name &&
+        parcel.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
       parcel.id.toString().includes(searchTerm);
-    const matchesSoilType = filterSoilType === 'all' || parcel.soilType === filterSoilType;
-    
+    const matchesSoilType =
+      filterSoilType === "all" || parcel.soilType === filterSoilType;
+
     return matchesStatus && matchesSearch && matchesSoilType;
   });
 
   // Get unique soil types for filter
-  const soilTypes = ['all', ...new Set(MOCK_PARCELS.filter(p => p.soilType).map(p => p.soilType as string))];
+  const soilTypes = [
+    "all",
+    ...new Set(
+      MOCK_PARCELS.filter((p) => p.soilType).map((p) => p.soilType as string)
+    ),
+  ];
 
   // Handle parcel selection in map
   const handleParcelSelect = (parcelId: number) => {
@@ -77,7 +97,12 @@ const Parcels = () => {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-            <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
+            <Tabs
+              defaultValue="all"
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full md:w-auto"
+            >
               <TabsList>
                 <TabsTrigger value="all">Toutes</TabsTrigger>
                 <TabsTrigger value="available">Disponibles</TabsTrigger>
@@ -85,25 +110,33 @@ const Parcels = () => {
                 <TabsTrigger value="resting">En jachère</TabsTrigger>
               </TabsList>
             </Tabs>
-            
+
             <div className="flex items-center space-x-2">
-              <Button 
-                variant={viewMode === 'cards' ? 'default' : 'outline'} 
-                onClick={() => setViewMode('cards')}
-                className={viewMode === 'cards' ? 'bg-isra-green hover:bg-isra-green-dark' : ''}
+              <Button
+                variant={viewMode === "cards" ? "default" : "outline"}
+                onClick={() => setViewMode("cards")}
+                className={
+                  viewMode === "cards"
+                    ? "bg-isra-green hover:bg-isra-green-dark"
+                    : ""
+                }
               >
                 Cartes
               </Button>
-              <Button 
-                variant={viewMode === 'map' ? 'default' : 'outline'}
-                onClick={() => setViewMode('map')}
-                className={viewMode === 'map' ? 'bg-isra-green hover:bg-isra-green-dark' : ''}
+              <Button
+                variant={viewMode === "map" ? "default" : "outline"}
+                onClick={() => setViewMode("map")}
+                className={
+                  viewMode === "map"
+                    ? "bg-isra-green hover:bg-isra-green-dark"
+                    : ""
+                }
               >
                 Carte
               </Button>
             </div>
           </div>
-          
+
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
               <Input
@@ -114,18 +147,19 @@ const Parcels = () => {
               />
             </div>
             <div className="w-full md:w-64">
-              <Select
-                value={filterSoilType}
-                onValueChange={setFilterSoilType}
-              >
+              <Select value={filterSoilType} onValueChange={setFilterSoilType}>
                 <SelectTrigger>
                   <SelectValue placeholder="Type de sol" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les types de sol</SelectItem>
-                  {soilTypes.filter(s => s !== 'all').map(soilType => (
-                    <SelectItem key={soilType} value={soilType}>{soilType}</SelectItem>
-                  ))}
+                  {soilTypes
+                    .filter((s) => s !== "all")
+                    .map((soilType) => (
+                      <SelectItem key={soilType} value={soilType}>
+                        {soilType}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -134,18 +168,18 @@ const Parcels = () => {
             </Button>
           </div>
 
-          {viewMode === 'map' ? (
+          {viewMode === "map" ? (
             <div className="space-y-4">
               <Card>
                 <CardContent className="p-0">
-                  <ParcelMap 
-                    parcels={filteredParcels} 
-                    selectedParcelId={selectedParcelId} 
+                  <ParcelMap
+                    parcels={filteredParcels}
+                    selectedParcelId={selectedParcelId}
                     onParcelSelect={handleParcelSelect}
                   />
                 </CardContent>
               </Card>
-              
+
               {selectedParcelId && (
                 <Card>
                   <CardHeader>
@@ -153,42 +187,60 @@ const Parcels = () => {
                   </CardHeader>
                   <CardContent>
                     {(() => {
-                      const parcel = MOCK_PARCELS.find(p => p.id === selectedParcelId);
-                      
-                      if (!parcel) return <p>Sélectionnez une parcelle sur la carte</p>;
-                      
+                      const parcel = MOCK_PARCELS.find(
+                        (p) => p.id === selectedParcelId
+                      );
+
+                      if (!parcel)
+                        return <p>Sélectionnez une parcelle sur la carte</p>;
+
                       return (
                         <div className="space-y-4">
                           <div className="flex justify-between items-start">
                             <div>
-                              <h3 className="text-lg font-medium">{parcel.name || `Parcelle #${parcel.id}`}</h3>
+                              <h3 className="text-lg font-medium">
+                                {parcel.name || `Parcelle #${parcel.id}`}
+                              </h3>
                               <div className="text-sm text-gray-500 mt-1">
-                                {parcel.location.lat.toFixed(6)}, {parcel.location.lng.toFixed(6)}
+                                {parcel.location.lat.toFixed(6)},{" "}
+                                {parcel.location.lng.toFixed(6)}
                               </div>
                             </div>
                             <ParcelStatusBadge status={parcel.status} />
                           </div>
-                          
+
                           <div className="space-y-2">
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">Superficie:</span>
-                              <span className="font-medium">{parcel.area} hectares</span>
+                              <span className="text-muted-foreground">
+                                Superficie:
+                              </span>
+                              <span className="font-medium">
+                                {parcel.area} hectares
+                              </span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-muted-foreground">Type de sol:</span>
-                              <span className="font-medium">{parcel.soilType}</span>
+                              <span className="text-muted-foreground">
+                                Type de sol:
+                              </span>
+                              <span className="font-medium">
+                                {parcel.soilType}
+                              </span>
                             </div>
                             {parcel.irrigationSystem && (
                               <div className="flex justify-between">
-                                <span className="text-muted-foreground">Irrigation:</span>
-                                <span className="font-medium">{parcel.irrigationSystem}</span>
+                                <span className="text-muted-foreground">
+                                  Irrigation:
+                                </span>
+                                <span className="font-medium">
+                                  {parcel.irrigationSystem}
+                                </span>
                               </div>
                             )}
                           </div>
-                          
+
                           <div className="flex space-x-2 mt-4">
-                            <Button 
-                              variant="outline" 
+                            <Button
+                              variant="outline"
                               className="flex-1"
                               onClick={() => handleViewParcelDetail(parcel.id)}
                             >
@@ -208,12 +260,15 @@ const Parcels = () => {
                 <Card key={parcel.id} className="overflow-hidden">
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
-                      <CardTitle>{parcel.name || `Parcelle #${parcel.id}`}</CardTitle>
+                      <CardTitle>
+                        {parcel.name || `Parcelle #${parcel.id}`}
+                      </CardTitle>
                       <ParcelStatusBadge status={parcel.status} />
                     </div>
                     <CardDescription className="flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
-                      {parcel.location.lat.toFixed(4)}, {parcel.location.lng.toFixed(4)}
+                      {parcel.location.lat.toFixed(4)},{" "}
+                      {parcel.location.lng.toFixed(4)}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -221,28 +276,38 @@ const Parcels = () => {
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1">
                           <Ruler className="h-3 w-3 text-gray-500" />
-                          <span className="text-muted-foreground">Superficie:</span>
+                          <span className="text-muted-foreground">
+                            Superficie:
+                          </span>
                         </div>
-                        <span className="font-medium">{parcel.area} hectares</span>
+                        <span className="font-medium">
+                          {parcel.area} hectares
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-1">
                           <Crop className="h-3 w-3 text-gray-500" />
-                          <span className="text-muted-foreground">Type de sol:</span>
+                          <span className="text-muted-foreground">
+                            Type de sol:
+                          </span>
                         </div>
                         <span className="font-medium">{parcel.soilType}</span>
                       </div>
                       {parcel.irrigationSystem && (
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Irrigation:</span>
-                          <span className="font-medium">{parcel.irrigationSystem}</span>
+                          <span className="text-muted-foreground">
+                            Irrigation:
+                          </span>
+                          <span className="font-medium">
+                            {parcel.irrigationSystem}
+                          </span>
                         </div>
                       )}
                     </div>
                     <div className="mt-4 flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         className="flex-1"
                         onClick={() => handleViewParcelDetail(parcel.id)}
                       >
@@ -255,10 +320,12 @@ const Parcels = () => {
                   </CardContent>
                 </Card>
               ))}
-              
+
               {filteredParcels.length === 0 && (
                 <div className="col-span-full text-center py-10">
-                  <p className="text-gray-500">Aucune parcelle ne correspond à vos critères</p>
+                  <p className="text-gray-500">
+                    Aucune parcelle ne correspond à vos critères
+                  </p>
                 </div>
               )}
             </div>

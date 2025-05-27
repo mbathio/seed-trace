@@ -109,7 +109,6 @@ apiClient.interceptors.response.use(
   (response) => {
     // Transformation des données si nécessaire
     if (response.data && response.data.data) {
-      // Conversion des données depuis le backend
       if (Array.isArray(response.data.data)) {
         response.data.data = response.data.data.map((item) =>
           transformItemFromBackend(item)
@@ -123,7 +122,10 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("isra_user");
-      window.location.href = "/login";
+      // ✅ Correction: Éviter la redirection automatique si on est déjà sur la page de login
+      if (window.location.pathname !== "/login") {
+        window.location.href = "/login";
+      }
     }
 
     // Gestion des erreurs avec messages plus spécifiques

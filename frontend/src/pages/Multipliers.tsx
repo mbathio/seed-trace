@@ -159,7 +159,7 @@ const Multipliers = () => {
                       </span>
                       <span className="font-medium">
                         {multiplier.contracts?.filter(
-                          (c) => c.status === "active"
+                          (c) => c.status === "ACTIVE"
                         ).length || 0}
                       </span>
                     </div>

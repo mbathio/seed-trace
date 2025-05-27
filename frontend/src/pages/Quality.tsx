@@ -1,16 +1,41 @@
-
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MOCK_SEED_LOTS, MOCK_USERS, QualityControl, UserRole } from "@/utils/seedTypes";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  MOCK_SEED_LOTS,
+  MOCK_USERS,
+  QualityControl,
+  UserRole,
+} from "@/utils/seedTypes";
 import { toast } from "sonner";
 import { FlaskConical, TestTube } from "lucide-react";
 
@@ -26,7 +51,7 @@ const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     observations: "Excellente qualité, conforme aux normes",
     inspectorId: 4,
     moistureContent: 11.5,
-    seedHealth: 97
+    seedHealth: 97,
   },
   {
     id: 2,
@@ -38,7 +63,7 @@ const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     observations: "Qualité satisfaisante pour G1",
     inspectorId: 4,
     moistureContent: 12.0,
-    seedHealth: 95
+    seedHealth: 95,
   },
   {
     id: 3,
@@ -50,7 +75,7 @@ const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     observations: "Qualité acceptable mais à surveiller",
     inspectorId: 4,
     moistureContent: 12.5,
-    seedHealth: 92
+    seedHealth: 92,
   },
   {
     id: 4,
@@ -62,8 +87,8 @@ const MOCK_QUALITY_CONTROLS: QualityControl[] = [
     observations: "Taux de germination en dessous du seuil minimal requis",
     inspectorId: 4,
     moistureContent: 13.2,
-    seedHealth: 88
-  }
+    seedHealth: 88,
+  },
 ];
 
 interface SampleFormData {
@@ -82,52 +107,53 @@ interface TestFormData {
 
 const Quality = () => {
   // Simuler un utilisateur connecté avec le rôle d'inspecteur
-  const userRole: UserRole = "inspector";
-  const userName = MOCK_USERS.find(user => user.role === userRole)?.name || "Inspecteur";
+  const userRole: UserRole = "INSPECTOR";
+  const userName =
+    MOCK_USERS.find((user) => user.role === userRole)?.name || "Inspecteur";
   const [activeTab, setActiveTab] = useState("tests");
-  
+
   // State for forms
   const [sampleFormData, setSampleFormData] = useState<SampleFormData>({
     lotId: "",
     quantity: "",
     location: "",
-    notes: ""
+    notes: "",
   });
-  
+
   const [testFormData, setTestFormData] = useState<TestFormData>({
     lotId: "",
     germinationRate: "",
     varietyPurity: "",
-    observations: ""
+    observations: "",
   });
-  
+
   // Handlers for sample form
   const handleSampleChange = (field: keyof SampleFormData, value: string) => {
-    setSampleFormData(prev => ({ ...prev, [field]: value }));
+    setSampleFormData((prev) => ({ ...prev, [field]: value }));
   };
-  
+
   const handleSampleSubmit = () => {
     toast.success("Échantillon prélevé avec succès");
     setSampleFormData({
       lotId: "",
       quantity: "",
       location: "",
-      notes: ""
+      notes: "",
     });
   };
-  
+
   // Handlers for test form
   const handleTestChange = (field: keyof TestFormData, value: string) => {
-    setTestFormData(prev => ({ ...prev, [field]: value }));
+    setTestFormData((prev) => ({ ...prev, [field]: value }));
   };
-  
+
   const handleTestSubmit = () => {
     toast.success("Test de qualité enregistré avec succès");
     setTestFormData({
       lotId: "",
       germinationRate: "",
       varietyPurity: "",
-      observations: ""
+      observations: "",
     });
   };
 
@@ -147,13 +173,17 @@ const Quality = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
             <TabsList>
               <TabsTrigger value="tests">Tests de qualité</TabsTrigger>
-              <TabsTrigger value="samples">Gestion des échantillons</TabsTrigger>
+              <TabsTrigger value="samples">
+                Gestion des échantillons
+              </TabsTrigger>
               <TabsTrigger value="standards">Normes et standards</TabsTrigger>
             </TabsList>
 
             <TabsContent value="tests" className="mt-4">
               <div className="flex justify-between mb-4">
-                <h2 className="text-xl font-semibold">Résultats des tests récents</h2>
+                <h2 className="text-xl font-semibold">
+                  Résultats des tests récents
+                </h2>
                 <Dialog>
                   <DialogTrigger asChild>
                     <Button className="bg-isra-green hover:bg-isra-green-dark flex gap-2">
@@ -165,59 +195,75 @@ const Quality = () => {
                     <DialogHeader>
                       <DialogTitle>Enregistrer un nouveau test</DialogTitle>
                       <DialogDescription>
-                        Saisissez les informations du test de qualité effectué sur un lot de semences.
+                        Saisissez les informations du test de qualité effectué
+                        sur un lot de semences.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2">
                         <Label htmlFor="lot">Lot de semences</Label>
-                        <Select 
-                          value={testFormData.lotId} 
-                          onValueChange={(value) => handleTestChange("lotId", value)}
+                        <Select
+                          value={testFormData.lotId}
+                          onValueChange={(value) =>
+                            handleTestChange("lotId", value)
+                          }
                         >
                           <SelectTrigger id="lot">
                             <SelectValue placeholder="Sélectionner un lot" />
                           </SelectTrigger>
                           <SelectContent>
-                            {MOCK_SEED_LOTS.map(lot => (
-                              <SelectItem key={lot.id} value={lot.id}>{lot.id}</SelectItem>
+                            {MOCK_SEED_LOTS.map((lot) => (
+                              <SelectItem key={lot.id} value={lot.id}>
+                                {lot.id}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="grid gap-2">
-                        <Label htmlFor="germination">Taux de germination (%)</Label>
-                        <Input 
-                          id="germination" 
-                          type="number" 
-                          min="0" 
-                          max="100" 
+                        <Label htmlFor="germination">
+                          Taux de germination (%)
+                        </Label>
+                        <Input
+                          id="germination"
+                          type="number"
+                          min="0"
+                          max="100"
                           value={testFormData.germinationRate}
-                          onChange={(e) => handleTestChange("germinationRate", e.target.value)}
+                          onChange={(e) =>
+                            handleTestChange("germinationRate", e.target.value)
+                          }
                         />
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="purity">Pureté variétale (%)</Label>
-                        <Input 
-                          id="purity" 
-                          type="number" 
-                          min="0" 
-                          max="100" 
+                        <Input
+                          id="purity"
+                          type="number"
+                          min="0"
+                          max="100"
                           value={testFormData.varietyPurity}
-                          onChange={(e) => handleTestChange("varietyPurity", e.target.value)}
+                          onChange={(e) =>
+                            handleTestChange("varietyPurity", e.target.value)
+                          }
                         />
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="observations">Observations</Label>
-                        <Input 
-                          id="observations" 
+                        <Input
+                          id="observations"
                           value={testFormData.observations}
-                          onChange={(e) => handleTestChange("observations", e.target.value)}
+                          onChange={(e) =>
+                            handleTestChange("observations", e.target.value)
+                          }
                         />
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button onClick={handleTestSubmit} className="bg-isra-green hover:bg-isra-green-dark">
+                      <Button
+                        onClick={handleTestSubmit}
+                        className="bg-isra-green hover:bg-isra-green-dark"
+                      >
                         Enregistrer le test
                       </Button>
                     </DialogFooter>
@@ -226,32 +272,51 @@ const Quality = () => {
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 {MOCK_QUALITY_CONTROLS.map((control) => {
-                  const lot = MOCK_SEED_LOTS.find(lot => lot.id === control.lotId);
+                  const lot = MOCK_SEED_LOTS.find(
+                    (lot) => lot.id === control.lotId
+                  );
                   return (
                     <Card key={control.id}>
                       <CardHeader className="pb-2">
                         <div className="flex justify-between items-start">
                           <CardTitle>Test #{control.id}</CardTitle>
-                          <Badge className={control.result === "pass" ? "bg-green-500" : "bg-red-500"}>
-                            {control.result === "pass" ? "Réussi" : "Échoué"}
+                          <Badge
+                            className={
+                              control.result === "PASS"
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            }
+                          >
+                            {control.result === "PASS" ? "Réussi" : "Échoué"}
                           </Badge>
                         </div>
                         <CardDescription>
-                          Lot: {control.lotId} | Date: {control.controlDate.toLocaleDateString()}
+                          Lot: {control.lotId} | Date:{" "}
+                          {control.controlDate.toLocaleDateString()}
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-2">
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Taux de germination:</span>
-                            <span className="font-medium">{control.germinationRate}%</span>
+                            <span className="text-muted-foreground">
+                              Taux de germination:
+                            </span>
+                            <span className="font-medium">
+                              {control.germinationRate}%
+                            </span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-muted-foreground">Pureté variétale:</span>
-                            <span className="font-medium">{control.varietyPurity}%</span>
+                            <span className="text-muted-foreground">
+                              Pureté variétale:
+                            </span>
+                            <span className="font-medium">
+                              {control.varietyPurity}%
+                            </span>
                           </div>
                           <div className="mt-2 text-sm">
-                            <p className="text-muted-foreground">{control.observations}</p>
+                            <p className="text-muted-foreground">
+                              {control.observations}
+                            </p>
                           </div>
                         </div>
                       </CardContent>
@@ -268,7 +333,9 @@ const Quality = () => {
 
             <TabsContent value="samples" className="mt-4">
               <div className="bg-white p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Gestion des échantillons</h2>
+                <h2 className="text-xl font-semibold mb-4">
+                  Gestion des échantillons
+                </h2>
                 <p className="text-gray-600 mb-4">
                   Module de gestion des échantillons pour les tests de qualité.
                 </p>
@@ -283,55 +350,69 @@ const Quality = () => {
                     <DialogHeader>
                       <DialogTitle>Prélever un nouvel échantillon</DialogTitle>
                       <DialogDescription>
-                        Enregistrez les informations concernant le nouvel échantillon prélevé.
+                        Enregistrez les informations concernant le nouvel
+                        échantillon prélevé.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid gap-2">
                         <Label htmlFor="sample-lot">Lot de semences</Label>
-                        <Select 
-                          value={sampleFormData.lotId} 
-                          onValueChange={(value) => handleSampleChange("lotId", value)}
+                        <Select
+                          value={sampleFormData.lotId}
+                          onValueChange={(value) =>
+                            handleSampleChange("lotId", value)
+                          }
                         >
                           <SelectTrigger id="sample-lot">
                             <SelectValue placeholder="Sélectionner un lot" />
                           </SelectTrigger>
                           <SelectContent>
-                            {MOCK_SEED_LOTS.map(lot => (
-                              <SelectItem key={lot.id} value={lot.id}>{lot.id}</SelectItem>
+                            {MOCK_SEED_LOTS.map((lot) => (
+                              <SelectItem key={lot.id} value={lot.id}>
+                                {lot.id}
+                              </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="quantity">Quantité prélevée (g)</Label>
-                        <Input 
-                          id="quantity" 
-                          type="number" 
-                          min="0" 
+                        <Input
+                          id="quantity"
+                          type="number"
+                          min="0"
                           value={sampleFormData.quantity}
-                          onChange={(e) => handleSampleChange("quantity", e.target.value)}
+                          onChange={(e) =>
+                            handleSampleChange("quantity", e.target.value)
+                          }
                         />
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="location">Lieu de prélèvement</Label>
-                        <Input 
-                          id="location" 
+                        <Input
+                          id="location"
                           value={sampleFormData.location}
-                          onChange={(e) => handleSampleChange("location", e.target.value)}
+                          onChange={(e) =>
+                            handleSampleChange("location", e.target.value)
+                          }
                         />
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="notes">Notes additionnelles</Label>
-                        <Input 
-                          id="notes" 
+                        <Input
+                          id="notes"
                           value={sampleFormData.notes}
-                          onChange={(e) => handleSampleChange("notes", e.target.value)}
+                          onChange={(e) =>
+                            handleSampleChange("notes", e.target.value)
+                          }
                         />
                       </div>
                     </div>
                     <DialogFooter>
-                      <Button onClick={handleSampleSubmit} className="bg-isra-green hover:bg-isra-green-dark">
+                      <Button
+                        onClick={handleSampleSubmit}
+                        className="bg-isra-green hover:bg-isra-green-dark"
+                      >
                         Enregistrer l'échantillon
                       </Button>
                     </DialogFooter>
@@ -342,17 +423,24 @@ const Quality = () => {
 
             <TabsContent value="standards" className="mt-4">
               <div className="bg-white p-6 rounded-lg shadow-sm">
-                <h2 className="text-xl font-semibold mb-4">Normes et standards</h2>
+                <h2 className="text-xl font-semibold mb-4">
+                  Normes et standards
+                </h2>
                 <p className="text-gray-600 mb-4">
-                  Consultez les normes et standards de qualité applicables à chaque niveau de semence.
+                  Consultez les normes et standards de qualité applicables à
+                  chaque niveau de semence.
                 </p>
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr className="border-b">
                         <th className="px-4 py-2 text-left">Niveau</th>
-                        <th className="px-4 py-2 text-left">Taux min. germination</th>
-                        <th className="px-4 py-2 text-left">Pureté variétale min.</th>
+                        <th className="px-4 py-2 text-left">
+                          Taux min. germination
+                        </th>
+                        <th className="px-4 py-2 text-left">
+                          Pureté variétale min.
+                        </th>
                         <th className="px-4 py-2 text-left">Humidité max.</th>
                       </tr>
                     </thead>

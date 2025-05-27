@@ -67,7 +67,7 @@ export const useLogin = () => {
     onSuccess: (response) => {
       const { user, tokens } = response.data;
 
-      // Conversion du rôle backend vers frontend
+      // ✅ Correction: Meilleure gestion de la conversion des rôles
       const convertedUser = {
         ...user,
         role: convertUserRoleFromBackend(user.role),
@@ -82,6 +82,7 @@ export const useLogin = () => {
       toast.success("Connexion réussie");
     },
     onError: (error: Error) => {
+      console.error("Erreur de connexion:", error);
       toast.error(error.message || "Erreur de connexion");
     },
   });

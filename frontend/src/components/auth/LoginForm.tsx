@@ -77,13 +77,16 @@ const LoginForm = () => {
     setEmail(userEmail);
     setPassword("12345");
 
-    // Auto-submit après un petit délai
     setTimeout(() => {
       loginMutation.mutate(
         { email: userEmail, password: "12345" },
         {
           onSuccess: () => {
             navigate("/dashboard");
+          },
+          onError: (error: Error) => {
+            console.error("Erreur de connexion:", error);
+            setErrors({ password: error.message });
           },
         }
       );
