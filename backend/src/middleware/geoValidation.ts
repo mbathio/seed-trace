@@ -1,5 +1,14 @@
+// backend/src/middleware/geoValidation.ts
 import { Request, Response, NextFunction } from "express";
 import { ResponseHandler } from "../utils/response";
+
+// Limites géographiques du Sénégal
+const SENEGAL_BOUNDS = {
+  latMin: 12.0,
+  latMax: 16.7,
+  lngMin: -17.6,
+  lngMax: -11.3,
+};
 
 export function validateCoordinates(
   req: Request,
@@ -22,16 +31,17 @@ export function validateCoordinates(
       ]);
     }
 
-    // Validation spécifique pour le Sénégal
+    // Validation spécifique pour le Sénégal avec avertissement
     if (
-      latitude < 12.0 ||
-      latitude > 16.7 ||
-      longitude < -17.6 ||
-      longitude > -11.3
+      latitude < SENEGAL_BOUNDS.latMin ||
+      latitude > SENEGAL_BOUNDS.latMax ||
+      longitude < SENEGAL_BOUNDS.lngMin ||
+      longitude > SENEGAL_BOUNDS.lngMax
     ) {
       console.warn("⚠️ Coordonnées en dehors du Sénégal:", {
         latitude,
         longitude,
+        bounds: SENEGAL_BOUNDS,
       });
     }
   }

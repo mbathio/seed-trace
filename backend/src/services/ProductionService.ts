@@ -1,35 +1,29 @@
-// backend/src/services/ProductionService.ts (correction finale)
+// backend/src/services/ProductionService.ts
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { PaginationQuery } from "../types/api";
+import { ProductionStatus } from "@prisma/client";
 
 export class ProductionService {
   static async createProduction(data: any): Promise<any> {
     try {
-      // ✅ Construire l'objet de données conditionnellement
       const createData: any = {
         lotId: data.lotId,
         multiplierId: data.multiplierId,
         parcelId: data.parcelId,
         startDate: new Date(data.startDate),
+        status: data.status || ProductionStatus.PLANNED,
         plannedQuantity: data.plannedQuantity,
-        actualYield: data.actualYield,
         notes: data.notes,
         weatherConditions: data.weatherConditions,
       };
 
-      // ✅ Ajouter les champs optionnels seulement s'ils existent
-      if (data.endDate) {
-        createData.endDate = new Date(data.endDate);
-      }
-
-      if (data.sowingDate) {
-        createData.sowingDate = new Date(data.sowingDate);
-      }
-
-      if (data.harvestDate) {
-        createData.harvestDate = new Date(data.harvestDate);
-      }
+      // Ajouter les dates optionnelles seulement si définies
+      if (data.endDate) createData.endDate = new Date(data.endDate);
+      if (data.sowingDate) createData.sowingDate = new Date(data.sowingDate);
+      if (data.harvestDate) createData.harvestDate = new Date(data.harvestDate);
+      if (data.actualYield !== undefined)
+        createData.actualYield = data.actualYield;
 
       const production = await prisma.production.create({
         data: createData,
@@ -182,7 +176,6 @@ export class ProductionService {
 
   static async updateProduction(id: number, data: any): Promise<any> {
     try {
-      // ✅ Même approche pour la mise à jour
       const updateData: any = {};
 
       // Copier les champs simples

@@ -1,4 +1,4 @@
-// backend/src/utils/encryption.ts (solution alternative si la première ne marche pas)
+// backend/src/utils/encryption.ts
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { config } from "../config/environment";
@@ -16,26 +16,6 @@ export class EncryptionService {
     return bcrypt.compare(password, hashedPassword);
   }
 
-  // ✅ Fonction utilitaire pour convertir les durées string en secondes
-  private static parseExpiresIn(duration: string): number {
-    const units: { [key: string]: number } = {
-      s: 1,
-      m: 60,
-      h: 3600,
-      d: 86400,
-      w: 604800,
-      y: 31536000,
-    };
-
-    const match = duration.match(/^(\d+)([smhdwy])$/);
-    if (!match) {
-      throw new Error(`Invalid duration format: ${duration}`);
-    }
-
-    const [, amount, unit] = match;
-    return parseInt(amount) * (units[unit] || 1);
-  }
-
   static generateTokens(payload: JwtPayload): AuthTokens {
     const secret = config.jwt.secret;
 
@@ -43,13 +23,12 @@ export class EncryptionService {
       throw new Error("JWT_SECRET must be a valid string");
     }
 
-    // ✅ Option 1: Utiliser les durées en secondes
     const accessToken = jwt.sign(payload, secret, {
-      expiresIn: this.parseExpiresIn(config.jwt.accessTokenExpiry), // Convertit "15m" en 900 secondes
+      expiresIn: config.jwt.accessTokenExpiry,
     });
 
     const refreshToken = jwt.sign({ userId: payload.userId }, secret, {
-      expiresIn: this.parseExpiresIn(config.jwt.refreshTokenExpiry), // Convertit "7d" en 604800 secondes
+      expiresIn: config.jwt.refreshTokenExpiry,
     });
 
     return { accessToken, refreshToken };
@@ -71,5 +50,15 @@ export class EncryptionService {
       .toString()
       .padStart(3, "0");
     return `SL-${level}-${currentYear}-${randomNum}`;
+  }
+
+  static generateSecureToken(length: number = 32): string {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
   }
 }

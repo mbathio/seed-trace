@@ -1,9 +1,17 @@
-// backend/src/validators/seedLot.ts - Version corrigée
-
+// backend/src/validators/seedLot.ts
 import { z } from "zod";
 
 export const createSeedLotSchema = z.object({
-  varietyId: z.number().positive(), // Correction: number au lieu de string
+  varietyId: z.union([
+    z.number().positive(),
+    z.string().transform((val) => {
+      const num = parseInt(val);
+      if (isNaN(num)) {
+        throw new Error("varietyId doit être un nombre ou un string numérique");
+      }
+      return num;
+    }),
+  ]),
   level: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]),
   quantity: z.number().positive("La quantité doit être positive"),
   productionDate: z
@@ -59,7 +67,7 @@ export const seedLotQuerySchema = z.object({
       "DISTRIBUTED",
     ])
     .optional(),
-  varietyId: z.string().transform(Number).optional(), // ✅ Accepte string et convertit en number
+  varietyId: z.union([z.string().transform(Number), z.number()]).optional(),
   multiplierId: z.string().transform(Number).optional(),
   sortBy: z.enum(["productionDate", "quantity", "level", "status"]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),

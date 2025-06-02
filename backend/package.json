@@ -17,6 +17,7 @@
     "db:seed": "tsx --tsconfig prisma/tsconfig.json prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset && npm run db:seed",
+    "db:push": "prisma db push",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "format": "prettier --write src/**/*.ts",
@@ -28,7 +29,9 @@
     "logs": "tail -f logs/combined.log",
     "logs:error": "tail -f logs/error.log",
     "health": "curl -f http://localhost:3001/health || exit 1",
-    "setup": "npm install && npm run db:generate && npm run db:migrate && npm run db:seed"
+    "setup": "npm install && npm run db:generate && npm run db:migrate && npm run db:seed",
+    "setup:prod": "npm ci --only=production && npm run db:generate && npx prisma migrate deploy",
+    "setup:docker": "docker-compose up -d && sleep 10 && npm run db:migrate && npm run db:seed"
   },
   "keywords": [
     "agriculture",
@@ -50,8 +53,6 @@
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.0",
     "helmet": "^7.0.0",
-    "isra-seed-traceability-backend": "file:",
-    "isra-seeds-backend": "file:",
     "jsonwebtoken": "^9.0.1",
     "jsqr": "^1.4.0",
     "morgan": "^1.10.0",
@@ -90,7 +91,7 @@
     "typescript": "^5.8.3"
   },
   "prisma": {
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "tsx --tsconfig prisma/tsconfig.json prisma/seed.ts"
   },
   "engines": {
     "node": ">=18.0.0",

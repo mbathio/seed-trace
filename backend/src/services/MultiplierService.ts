@@ -1,7 +1,8 @@
-// backend/src/services/MultiplierService.ts (corrections)
+// backend/src/services/MultiplierService.ts
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { PaginationQuery } from "../types/api";
+import { MultiplierStatus } from "@prisma/client";
 
 export class MultiplierService {
   static async createMultiplier(data: any): Promise<any> {
@@ -9,7 +10,7 @@ export class MultiplierService {
       const multiplier = await prisma.multiplier.create({
         data: {
           name: data.name,
-          status: data.status || "ACTIVE",
+          status: data.status || MultiplierStatus.ACTIVE,
           address: data.address,
           latitude: data.latitude,
           longitude: data.longitude,
@@ -205,21 +206,23 @@ export class MultiplierService {
 
   static async createContract(data: any): Promise<any> {
     try {
-      // Trouver la variété par ID ou code
-      const variety = await prisma.variety.findFirst({
-        where: {
-          OR: [{ id: parseInt(data.varietyId) }, { code: data.varietyId }],
-        },
-      });
+      // Gérer varietyId comme number ou string
+      let varietyId: number;
 
-      if (!variety) {
-        throw new Error("Variété non trouvée");
+      if (typeof data.varietyId === "string") {
+        const variety = await prisma.variety.findFirst({
+          where: { code: data.varietyId },
+        });
+        if (!variety) throw new Error("Variété non trouvée");
+        varietyId = variety.id;
+      } else {
+        varietyId = data.varietyId;
       }
 
       const contract = await prisma.contract.create({
         data: {
           multiplierId: data.multiplierId,
-          varietyId: variety.id,
+          varietyId,
           startDate: new Date(data.startDate),
           endDate: new Date(data.endDate),
           seedLevel: data.seedLevel,

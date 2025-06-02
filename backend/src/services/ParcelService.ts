@@ -2,6 +2,7 @@
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { PaginationQuery } from "../types/api";
+import { ParcelStatus } from "@prisma/client";
 
 export class ParcelService {
   static async createParcel(data: any): Promise<any> {
@@ -12,7 +13,7 @@ export class ParcelService {
           area: data.area,
           latitude: data.latitude,
           longitude: data.longitude,
-          status: data.status || "available",
+          status: data.status || ParcelStatus.AVAILABLE,
           soilType: data.soilType,
           irrigationSystem: data.irrigationSystem,
           address: data.address,
