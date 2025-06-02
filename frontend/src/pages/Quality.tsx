@@ -44,10 +44,10 @@ const MOCK_QUALITY_CONTROLS: QualityControl[] = [
   {
     id: 1,
     lotId: "SL-GO-2023-001",
-    controlDate: new Date("2023-02-10"),
+    controlDate: new Date("2023-02-10"), // Utiliser Date au lieu de string
     germinationRate: 95,
     varietyPurity: 98,
-    result: "PASS",
+    result: "PASS", // Type explicite
     observations: "Excellente qualité, conforme aux normes",
     inspectorId: 4,
     moistureContent: 11.5,

@@ -67,7 +67,7 @@ export const useLogin = () => {
     onSuccess: (response) => {
       const { user, tokens } = response.data;
 
-      // ✅ Correction: Meilleure gestion de la conversion des rôles
+      // Meilleure gestion de la conversion des rôles
       const convertedUser = {
         ...user,
         role: convertUserRoleFromBackend(user.role),

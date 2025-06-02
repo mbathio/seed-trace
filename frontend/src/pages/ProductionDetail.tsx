@@ -60,18 +60,17 @@ import {
   IssueSeverity,
 } from "@/utils/seedTypes";
 
-const ProductionDetail = () => {
-  const { id } = useParams();
-
+  const { id } = useParams<{ id: string }>();
   const productionId = parseInt(id || "1");
   const production = MOCK_PRODUCTIONS.find((p) => p.id === productionId);
-
-  // Retrieve related data
   const lot = MOCK_SEED_LOTS.find((l) => l.id === production?.lotId);
-  const parcel = production
-    ? MOCK_PARCELS.find((p) => p.id === production.parcelId)
-    : undefined;
+  const parcel = production ? MOCK_PARCELS.find((p) => p.id === production.parcelId) : undefined;
 
+  // Simulate user data
+  const userRole: UserRole = "TECHNICIAN";
+  const userName = MOCK_USERS.find((user) => user.role === userRole)?.name || "";
+
+  // Vérification des conditions après tous les hooks
   if (!production || !lot || !parcel) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -81,13 +80,9 @@ const ProductionDetail = () => {
   }
 
   // Simulate a logged in user with technician role
-  const userRole: UserRole = "TECHNICIAN"; // Can be "RESEARCHER", "TECHNICIAN", "MANAGER", etc.
-  const userName =
-    MOCK_USERS.find((user) => user.role === userRole)?.name || "";
+  
 
-  const [activeTab, setActiveTab] = useState("OVERVIEW");
-
-  // State for adding a new activity
+  const [activeTab, setActiveTab] = useState("overview");
   const [newActivity, setNewActivity] = useState({
     type: "SOIL_PREPARATION" as ActivityType,
     date: new Date().toISOString().split("T")[0],
@@ -97,7 +92,6 @@ const ProductionDetail = () => {
     notes: "",
   });
 
-  // State for adding a new issue
   const [newIssue, setNewIssue] = useState({
     date: new Date().toISOString().split("T")[0],
     type: "DISEASE" as IssueType,
@@ -107,7 +101,6 @@ const ProductionDetail = () => {
     resolved: false,
   });
 
-  // State for adding weather data
   const [newWeatherData, setNewWeatherData] = useState({
     date: new Date().toISOString().split("T")[0],
     temperature: "",
@@ -333,10 +326,10 @@ const ProductionDetail = () => {
                 <div className="flex items-center">
                   <Calendar className="h-5 w-5 mr-2 text-isra-green" />
                   <span className="text-xl font-bold">
-                    {production.sowingDate
-                      ? new Date(production.sowingDate).toLocaleDateString()
-                      : "Non définie"}
-                  </span>
+  {production.sowingDate 
+    ? new Date(production.sowingDate).toLocaleDateString() 
+    : "Non définie"}
+</span>
                 </div>
               </CardContent>
             </Card>
@@ -352,11 +345,11 @@ const ProductionDetail = () => {
               <CardContent>
                 <div className="flex items-center">
                   <Timer className="h-5 w-5 mr-2 text-isra-brown" />
-                  <span className="text-xl font-bold">
-                    {production.harvestDate
-                      ? production.harvestDate.toLocaleDateString()
-                      : "Non définie"}
-                  </span>
+                 <span className="text-xl font-bold">
+  {production.sowingDate 
+    ? new Date(production.sowingDate).toLocaleDateString() 
+    : "Non définie"}
+</span>
                 </div>
               </CardContent>
             </Card>
@@ -425,9 +418,9 @@ const ProductionDetail = () => {
                       <div className="flex justify-between py-2 border-b">
                         <span className="text-gray-600">Date de récolte</span>
                         <span className="font-medium">
-                          {production.harvestDate
-                            ? production.harvestDate.toLocaleDateString()
-                            : "Non définie"}
+                          {production.sowingDate 
+    ? new Date(production.sowingDate).toLocaleDateString() 
+    : "Non définie"}
                         </span>
                       </div>
                       <div className="flex justify-between py-2 border-b">

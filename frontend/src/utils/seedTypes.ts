@@ -118,12 +118,12 @@ export interface SeedLot {
 export interface QualityControl {
   id: number;
   lotId: string;
-  controlDate: string;
+  controlDate: string; // Au lieu de Date
   germinationRate: number;
   varietyPurity: number;
   moistureContent?: number;
   seedHealth?: number;
-  result: QualityControlResult;
+  result: "PASS" | "FAIL";
   observations?: string;
   testMethod?: string;
   inspectorId: number;
@@ -202,14 +202,17 @@ export interface Production {
   startDate: string;
   endDate?: string;
   sowingDate?: string;
-  harvestDate?: string;
+  harvestDate?: string | Date; // Support des deux formats
   plannedQuantity?: number;
   actualYield?: number;
+  yield?: number; // Alias pour compatibilité
   status: ProductionStatus;
   notes?: string;
-  weatherConditions?: string;
   createdAt: string;
   updatedAt?: string;
+  activities?: ProductionActivity[];
+  issues?: ProductionIssue[];
+  weatherData?: WeatherData[];
 
   // Relations
   seedLot?: SeedLot;

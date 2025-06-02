@@ -122,7 +122,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("isra_user");
-      // ✅ Correction: Éviter la redirection automatique si on est déjà sur la page de login
+      // Éviter la redirection automatique si on est déjà sur la page de login
       if (window.location.pathname !== "/login") {
         window.location.href = "/login";
       }
