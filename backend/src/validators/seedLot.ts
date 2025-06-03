@@ -4,15 +4,9 @@ import { z } from "zod";
 export const createSeedLotSchema = z.object({
   varietyId: z.union([
     z.number().positive(),
-    z.string().transform((val) => {
-      const num = parseInt(val);
-      if (isNaN(num)) {
-        throw new Error("varietyId doit être un nombre ou un string numérique");
-      }
-      return num;
-    }),
+    z.string(), // ✅ Accepte string pour le code de variété
   ]),
-  level: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]),
+  level: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]), // ✅ MAJUSCULES
   quantity: z.number().positive("La quantité doit être positive"),
   productionDate: z
     .string()
@@ -27,7 +21,7 @@ export const updateSeedLotSchema = z.object({
   quantity: z.number().positive().optional(),
   status: z
     .enum([
-      "PENDING",
+      "PENDING", // ✅ MAJUSCULES
       "CERTIFIED",
       "REJECTED",
       "IN_STOCK",
@@ -55,10 +49,10 @@ export const seedLotQuerySchema = z.object({
     .refine((n) => n > 0 && n <= 100)
     .optional(),
   search: z.string().optional(),
-  level: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]).optional(),
+  level: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]).optional(), // ✅ MAJUSCULES
   status: z
     .enum([
-      "PENDING",
+      "PENDING", // ✅ MAJUSCULES
       "CERTIFIED",
       "REJECTED",
       "IN_STOCK",
@@ -67,7 +61,7 @@ export const seedLotQuerySchema = z.object({
       "DISTRIBUTED",
     ])
     .optional(),
-  varietyId: z.union([z.string().transform(Number), z.number()]).optional(),
+  varietyId: z.union([z.string(), z.number()]).optional(), // ✅ Accepte les deux types
   multiplierId: z.string().transform(Number).optional(),
   sortBy: z.enum(["productionDate", "quantity", "level", "status"]).optional(),
   sortOrder: z.enum(["asc", "desc"]).optional(),

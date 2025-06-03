@@ -27,4 +27,5 @@ export const updateQualityControlSchema = z.object({
   seedHealth: z.number().min(0).max(100).optional(),
   observations: z.string().optional(),
   testMethod: z.string().optional(),
+  // ✅ Note: Le résultat est calculé automatiquement, pas besoin de le valider
 });

@@ -1,6 +1,6 @@
 // backend/src/types/entities.ts
 export interface CreateSeedLotData {
-  varietyId: string;
+  varietyId: string | number; // ✅ Peut être un ID numérique ou un code string
   level: string;
   quantity: number;
   productionDate: string;
@@ -36,6 +36,7 @@ export interface CreateProductionData {
   sowingDate?: string;
   plannedQuantity?: number;
   notes?: string;
+  weatherConditions?: string;
 }
 
 export interface CreateMultiplierData {
@@ -48,4 +49,29 @@ export interface CreateMultiplierData {
   specialization: string[];
   phone?: string;
   email?: string;
+  status?: string;
+}
+
+export interface CreateVarietyData {
+  code: string;
+  name: string;
+  cropType: string;
+  description?: string;
+  maturityDays: number;
+  yieldPotential?: number;
+  resistances?: string[];
+  origin?: string;
+  releaseYear?: number;
+}
+
+export interface CreateParcelData {
+  name?: string;
+  area: number;
+  latitude: number;
+  longitude: number;
+  status?: string;
+  soilType?: string;
+  irrigationSystem?: string;
+  address?: string;
+  multiplierId?: number;
 }

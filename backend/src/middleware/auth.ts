@@ -4,7 +4,7 @@ import { EncryptionService } from "../utils/encryption";
 import { ResponseHandler } from "../utils/response";
 import { prisma } from "../config/database";
 import { JwtPayload } from "../types/api";
-import { logger } from "../utils/logger"; // Import manquant
+import { logger } from "../utils/logger"; // ✅ Import ajouté
 
 export interface AuthenticatedRequest extends Request {
   user?: JwtPayload;

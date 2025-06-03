@@ -1,10 +1,11 @@
-// backend/src/services/SeedLotService.ts (corrections)
+// backend/src/services/SeedLotService.ts
 import { prisma } from "../config/database";
 import { EncryptionService } from "../utils/encryption";
 import { QRCodeService } from "../utils/qrCode";
 import { logger } from "../utils/logger";
 import { CreateSeedLotData, UpdateSeedLotData } from "../types/entities";
 import { PaginationQuery } from "../types/api";
+import { SeedLevel, LotStatus } from "@prisma/client"; // ✅ Import des enums
 
 export class SeedLotService {
   static async createSeedLot(data: CreateSeedLotData): Promise<any> {
@@ -12,30 +13,42 @@ export class SeedLotService {
       // Générer un ID unique pour le lot
       const lotId = EncryptionService.generateLotId(data.level);
 
-      // Vérifier que la variété existe
-      const variety = await prisma.variety.findFirst({
-        where: {
-          OR: [{ id: parseInt(data.varietyId) }, { code: data.varietyId }],
-        },
-      });
-
-      if (!variety) {
-        throw new Error("Variété non trouvée");
+      // ✅ Gestion correcte de varietyId (number ou string)
+      let varietyId: number;
+      if (typeof data.varietyId === "string") {
+        // Si c'est un string, essayer de le parser comme nombre
+        const parsedId = parseInt(data.varietyId);
+        if (!isNaN(parsedId)) {
+          varietyId = parsedId;
+        } else {
+          // Si ce n'est pas un nombre, chercher par code
+          const variety = await prisma.variety.findFirst({
+            where: { code: data.varietyId },
+          });
+          if (!variety) {
+            throw new Error(
+              `Variété non trouvée avec le code: ${data.varietyId}`
+            );
+          }
+          varietyId = variety.id;
+        }
+      } else {
+        varietyId = data.varietyId;
       }
 
       // Créer le lot de semences
       const seedLot = await prisma.seedLot.create({
         data: {
           id: lotId,
-          varietyId: variety.id,
-          level: data.level as any,
+          varietyId,
+          level: data.level as SeedLevel, // ✅ Cast vers l'enum
           quantity: data.quantity,
           productionDate: new Date(data.productionDate),
           multiplierId: data.multiplierId,
           parcelId: data.parcelId,
           parentLotId: data.parentLotId,
           notes: data.notes,
-          status: "PENDING",
+          status: LotStatus.PENDING, // ✅ Utilisation de l'enum
         },
         include: {
           variety: true,
@@ -48,7 +61,7 @@ export class SeedLotService {
       // Générer le QR code
       const qrCodeData = await QRCodeService.generateQRCode({
         lotId: seedLot.id,
-        varietyName: variety.name,
+        varietyName: seedLot.variety.name,
         level: seedLot.level,
         timestamp: new Date().toISOString(),
       });
@@ -110,12 +123,18 @@ export class SeedLotService {
         where.status = status;
       }
 
+      // ✅ Gestion améliorée de varietyId
       if (varietyId) {
-        // Gérer à la fois l'ID numérique et le code string
-        if (isNaN(parseInt(varietyId))) {
-          where.variety = { code: varietyId };
+        if (typeof varietyId === "string") {
+          const parsedId = parseInt(varietyId);
+          if (!isNaN(parsedId)) {
+            where.varietyId = parsedId;
+          } else {
+            // Recherche par code
+            where.variety = { code: varietyId };
+          }
         } else {
-          where.varietyId = parseInt(varietyId);
+          where.varietyId = varietyId;
         }
       }
 
@@ -222,7 +241,7 @@ export class SeedLotService {
       }
 
       if (data.status) {
-        updateData.status = data.status;
+        updateData.status = data.status as LotStatus; // ✅ Cast vers l'enum
       }
 
       if (data.notes !== undefined) {
@@ -232,6 +251,8 @@ export class SeedLotService {
       if (data.expiryDate) {
         updateData.expiryDate = new Date(data.expiryDate);
       }
+
+      updateData.updatedAt = new Date();
 
       const seedLot = await prisma.seedLot.update({
         where: { id },

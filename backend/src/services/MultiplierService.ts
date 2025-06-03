@@ -2,7 +2,12 @@
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { PaginationQuery } from "../types/api";
-import { MultiplierStatus } from "@prisma/client";
+import {
+  MultiplierStatus,
+  CertificationLevel,
+  SeedLevel,
+  ContractStatus,
+} from "@prisma/client"; // ✅ Import des enums
 
 export class MultiplierService {
   static async createMultiplier(data: any): Promise<any> {
@@ -10,12 +15,12 @@ export class MultiplierService {
       const multiplier = await prisma.multiplier.create({
         data: {
           name: data.name,
-          status: data.status || MultiplierStatus.ACTIVE,
+          status: data.status || MultiplierStatus.ACTIVE, // ✅ Utilisation de l'enum
           address: data.address,
           latitude: data.latitude,
           longitude: data.longitude,
           yearsExperience: data.yearsExperience,
-          certificationLevel: data.certificationLevel,
+          certificationLevel: data.certificationLevel as CertificationLevel, // ✅ Cast vers l'enum
           specialization: data.specialization || [],
           phone: data.phone,
           email: data.email,
@@ -58,11 +63,11 @@ export class MultiplierService {
       }
 
       if (status) {
-        where.status = status;
+        where.status = status as MultiplierStatus; // ✅ Cast vers l'enum
       }
 
       if (certificationLevel) {
-        where.certificationLevel = certificationLevel;
+        where.certificationLevel = certificationLevel as CertificationLevel; // ✅ Cast vers l'enum
       }
 
       const [multipliers, total] = await Promise.all([
@@ -160,12 +165,34 @@ export class MultiplierService {
 
   static async updateMultiplier(id: number, data: any): Promise<any> {
     try {
+      // ✅ Validation des enums si fournis
+      const updateData: any = {};
+
+      if (data.name !== undefined) updateData.name = data.name;
+      if (data.address !== undefined) updateData.address = data.address;
+      if (data.latitude !== undefined) updateData.latitude = data.latitude;
+      if (data.longitude !== undefined) updateData.longitude = data.longitude;
+      if (data.yearsExperience !== undefined)
+        updateData.yearsExperience = data.yearsExperience;
+      if (data.phone !== undefined) updateData.phone = data.phone;
+      if (data.email !== undefined) updateData.email = data.email;
+      if (data.specialization !== undefined)
+        updateData.specialization = data.specialization;
+
+      if (data.status !== undefined) {
+        updateData.status = data.status as MultiplierStatus;
+      }
+
+      if (data.certificationLevel !== undefined) {
+        updateData.certificationLevel =
+          data.certificationLevel as CertificationLevel;
+      }
+
+      updateData.updatedAt = new Date();
+
       const multiplier = await prisma.multiplier.update({
         where: { id },
-        data: {
-          ...data,
-          updatedAt: new Date(),
-        },
+        data: updateData,
       });
 
       return multiplier;
@@ -206,15 +233,26 @@ export class MultiplierService {
 
   static async createContract(data: any): Promise<any> {
     try {
-      // Gérer varietyId comme number ou string
+      // ✅ Gestion correcte de varietyId (number ou string)
       let varietyId: number;
 
       if (typeof data.varietyId === "string") {
-        const variety = await prisma.variety.findFirst({
-          where: { code: data.varietyId },
-        });
-        if (!variety) throw new Error("Variété non trouvée");
-        varietyId = variety.id;
+        // Essayer de parser comme nombre
+        const parsedId = parseInt(data.varietyId);
+        if (!isNaN(parsedId)) {
+          varietyId = parsedId;
+        } else {
+          // Si ce n'est pas un nombre, chercher par code
+          const variety = await prisma.variety.findFirst({
+            where: { code: data.varietyId },
+          });
+          if (!variety) {
+            throw new Error(
+              `Variété non trouvée avec le code: ${data.varietyId}`
+            );
+          }
+          varietyId = variety.id;
+        }
       } else {
         varietyId = data.varietyId;
       }
@@ -225,11 +263,12 @@ export class MultiplierService {
           varietyId,
           startDate: new Date(data.startDate),
           endDate: new Date(data.endDate),
-          seedLevel: data.seedLevel,
+          seedLevel: data.seedLevel as SeedLevel, // ✅ Cast vers l'enum
           expectedQuantity: data.expectedQuantity,
           parcelId: data.parcelId,
           paymentTerms: data.paymentTerms,
           notes: data.notes,
+          status: (data.status as ContractStatus) || ContractStatus.DRAFT, // ✅ Cast vers l'enum
         },
         include: {
           variety: true,

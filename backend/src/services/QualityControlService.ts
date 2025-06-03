@@ -1,8 +1,9 @@
-// backend/src/services/QualityControlService.ts (corrigé)
+// backend/src/services/QualityControlService.ts
 import { prisma } from "../config/database";
 import { logger } from "../utils/logger";
 import { CreateQualityControlData } from "../types/entities";
 import { PaginationQuery } from "../types/api";
+import { TestResult, LotStatus } from "@prisma/client"; // ✅ Import des enums
 
 export class QualityControlService {
   static async createQualityControl(
@@ -33,7 +34,7 @@ export class QualityControlService {
           varietyPurity: data.varietyPurity,
           moistureContent: data.moistureContent,
           seedHealth: data.seedHealth,
-          result, // Utilise directement la valeur de l'énumération
+          result, // ✅ Utilise directement la valeur de l'énumération
           observations: data.observations,
           testMethod: data.testMethod,
           inspectorId: data.inspectorId,
@@ -52,15 +53,16 @@ export class QualityControlService {
       });
 
       // Mettre à jour le statut du lot si le test passe
-      if (result === "PASS") {
+      if (result === TestResult.PASS) {
+        // ✅ Utilisation de l'enum
         await prisma.seedLot.update({
           where: { id: data.lotId },
-          data: { status: "CERTIFIED" },
+          data: { status: LotStatus.CERTIFIED }, // ✅ Utilisation de l'enum
         });
       } else {
         await prisma.seedLot.update({
           where: { id: data.lotId },
-          data: { status: "REJECTED" },
+          data: { status: LotStatus.REJECTED }, // ✅ Utilisation de l'enum
         });
       }
 
@@ -75,8 +77,8 @@ export class QualityControlService {
     germinationRate: number,
     varietyPurity: number,
     level: string
-  ): "PASS" | "FAIL" {
-    // Correction ici : utiliser les valeurs de l'énumération
+  ): TestResult {
+    // ✅ Type de retour avec l'enum
     // Seuils minimaux selon le niveau de semence
     const thresholds: {
       [key: string]: { germination: number; purity: number };
@@ -94,8 +96,8 @@ export class QualityControlService {
 
     return germinationRate >= threshold.germination &&
       varietyPurity >= threshold.purity
-      ? "PASS" // Correction ici
-      : "FAIL"; // Correction ici
+      ? TestResult.PASS // ✅ Utilisation de l'enum
+      : TestResult.FAIL; // ✅ Utilisation de l'enum
   }
 
   static async getQualityControls(
@@ -208,6 +210,39 @@ export class QualityControlService {
 
   static async updateQualityControl(id: number, data: any): Promise<any> {
     try {
+      // Si on met à jour le résultat, recalculer automatiquement
+      if (
+        data.germinationRate !== undefined ||
+        data.varietyPurity !== undefined
+      ) {
+        const existingControl = await prisma.qualityControl.findUnique({
+          where: { id },
+          include: { seedLot: true },
+        });
+
+        if (existingControl) {
+          const newResult = this.determineResult(
+            data.germinationRate ?? existingControl.germinationRate,
+            data.varietyPurity ?? existingControl.varietyPurity,
+            existingControl.seedLot.level
+          );
+          data.result = newResult;
+
+          // Mettre à jour le statut du lot
+          if (newResult === TestResult.PASS) {
+            await prisma.seedLot.update({
+              where: { id: existingControl.lotId },
+              data: { status: LotStatus.CERTIFIED },
+            });
+          } else {
+            await prisma.seedLot.update({
+              where: { id: existingControl.lotId },
+              data: { status: LotStatus.REJECTED },
+            });
+          }
+        }
+      }
+
       const qualityControl = await prisma.qualityControl.update({
         where: { id },
         data: {

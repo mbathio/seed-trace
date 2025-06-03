@@ -1,5 +1,4 @@
-// backend/src/routes/varieties.ts - Version corrigée
-
+// backend/src/routes/varieties.ts
 import { Router } from "express";
 import { VarietyController } from "../controllers/VarietyController";
 import { validateRequest } from "../middleware/validation";
@@ -9,9 +8,9 @@ import { z } from "zod";
 const router = Router();
 
 const createVarietySchema = z.object({
-  code: z.string().min(1), // ✅ Ajouté le champ code
+  code: z.string().min(1), // ✅ Code obligatoire
   name: z.string().min(1),
-  cropType: z.enum(["RICE", "MAIZE", "PEANUT", "SORGHUM", "COWPEA", "MILLET"]), // ✅ Majuscules
+  cropType: z.enum(["RICE", "MAIZE", "PEANUT", "SORGHUM", "COWPEA", "MILLET"]), // ✅ MAJUSCULES
   description: z.string().optional(),
   maturityDays: z.number().positive(),
   yieldPotential: z.number().positive().optional(),
@@ -25,13 +24,13 @@ const updateVarietySchema = createVarietySchema.partial().omit({ code: true }); 
 // GET /api/varieties
 router.get("/", VarietyController.getVarieties);
 
-// GET /api/varieties/:id
+// GET /api/varieties/:id (peut être un ID numérique ou un code)
 router.get("/:id", VarietyController.getVarietyById);
 
 // POST /api/varieties
 router.post(
   "/",
-  requireRole("RESEARCHER", "ADMIN"), // ✅ Majuscules
+  requireRole("RESEARCHER", "ADMIN"), // ✅ MAJUSCULES
   validateRequest({ body: createVarietySchema }),
   VarietyController.createVariety
 );
@@ -39,12 +38,16 @@ router.post(
 // PUT /api/varieties/:id
 router.put(
   "/:id",
-  requireRole("RESEARCHER", "ADMIN"),
+  requireRole("RESEARCHER", "ADMIN"), // ✅ MAJUSCULES
   validateRequest({ body: updateVarietySchema }),
   VarietyController.updateVariety
 );
 
 // DELETE /api/varieties/:id
-router.delete("/:id", requireRole("ADMIN"), VarietyController.deleteVariety);
+router.delete(
+  "/:id",
+  requireRole("ADMIN"), // ✅ MAJUSCULES
+  VarietyController.deleteVariety
+);
 
 export default router;

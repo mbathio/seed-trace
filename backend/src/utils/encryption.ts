@@ -23,13 +23,22 @@ export class EncryptionService {
       throw new Error("JWT_SECRET must be a valid string");
     }
 
-    const accessToken = jwt.sign(payload, secret, {
-      expiresIn: config.jwt.accessTokenExpiry,
-    });
+    // ✅ Conversion explicite des options pour TypeScript
+    const accessToken = jwt.sign(
+      payload,
+      secret as jwt.Secret,
+      {
+        expiresIn: config.jwt.accessTokenExpiry,
+      } as jwt.SignOptions
+    );
 
-    const refreshToken = jwt.sign({ userId: payload.userId }, secret, {
-      expiresIn: config.jwt.refreshTokenExpiry,
-    });
+    const refreshToken = jwt.sign(
+      { userId: payload.userId },
+      secret as jwt.Secret,
+      {
+        expiresIn: config.jwt.refreshTokenExpiry,
+      } as jwt.SignOptions
+    );
 
     return { accessToken, refreshToken };
   }
@@ -41,7 +50,7 @@ export class EncryptionService {
       throw new Error("JWT_SECRET must be a valid string");
     }
 
-    return jwt.verify(token, secret) as JwtPayload;
+    return jwt.verify(token, secret as jwt.Secret) as JwtPayload;
   }
 
   static generateLotId(level: string, year?: number): string {

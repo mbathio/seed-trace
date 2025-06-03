@@ -13,7 +13,7 @@ export const registerSchema = z.object({
     .string()
     .min(6, "Le mot de passe doit contenir au moins 6 caractères"),
   role: z.enum([
-    "ADMIN",
+    "ADMIN", // ✅ MAJUSCULES
     "MANAGER",
     "INSPECTOR",
     "MULTIPLIER",
