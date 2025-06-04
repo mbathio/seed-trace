@@ -21,14 +21,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Parcel, UserRole, MOCK_USERS, MOCK_PARCELS } from "@/utils/seedTypes";
+import {
+  Parcel,
+  UserRole,
+  MOCK_USERS,
+  MOCK_PARCELS,
+  ParcelStatus,
+} from "@/utils/seedTypes";
 import { MapPin, Ruler, Crop } from "lucide-react";
 
-const ParcelStatusBadge = ({ status }: { status: Parcel["status"] }) => {
+const ParcelStatusBadge = ({ status }: { status: ParcelStatus }) => {
   const statusConfig = {
-    available: { label: "Disponible", className: "bg-green-500" },
-    "in-use": { label: "En utilisation", className: "bg-blue-500" },
-    resting: { label: "En jachère", className: "bg-amber-500" },
+    AVAILABLE: { label: "Disponible", className: "bg-green-500" },
+    IN_USE: { label: "En utilisation", className: "bg-blue-500" },
+    RESTING: { label: "En jachère", className: "bg-amber-500" },
   };
 
   return (
@@ -40,7 +46,7 @@ const ParcelStatusBadge = ({ status }: { status: Parcel["status"] }) => {
 
 const Parcels = () => {
   // Simuler un utilisateur connecté avec le rôle "manager"
-  const userRole: UserRole = "MANAGER"; //
+  const userRole: UserRole = "MANAGER";
   const userName =
     MOCK_USERS.find((user) => user.role === userRole)?.name || "";
   const navigate = useNavigate();
@@ -105,9 +111,9 @@ const Parcels = () => {
             >
               <TabsList>
                 <TabsTrigger value="all">Toutes</TabsTrigger>
-                <TabsTrigger value="available">Disponibles</TabsTrigger>
-                <TabsTrigger value="in-use">En utilisation</TabsTrigger>
-                <TabsTrigger value="resting">En jachère</TabsTrigger>
+                <TabsTrigger value="AVAILABLE">Disponibles</TabsTrigger>
+                <TabsTrigger value="IN_USE">En utilisation</TabsTrigger>
+                <TabsTrigger value="RESTING">En jachère</TabsTrigger>
               </TabsList>
             </Tabs>
 
@@ -174,7 +180,7 @@ const Parcels = () => {
                 <CardContent className="p-0">
                   <ParcelMap
                     parcels={filteredParcels}
-                    selectedParcelId={selectedParcelId}
+                    selectedParcelId={selectedParcelId || undefined}
                     onParcelSelect={handleParcelSelect}
                   />
                 </CardContent>

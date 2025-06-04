@@ -13,10 +13,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { UserRole, MOCK_USERS, MOCK_MULTIPLIERS } from "@/utils/seedTypes";
-
-type MultiplierStatus = "ACTIVE" | "INACTIVE";
-type CertificationLevel = "BEGINNER" | "INTERMEDIATE" | "EXPERT";
+import {
+  UserRole,
+  MOCK_USERS,
+  MOCK_MULTIPLIERS,
+  MultiplierStatus,
+  CertificationLevel,
+} from "@/utils/seedTypes";
 
 const StatusBadge = ({ status }: { status: MultiplierStatus }) => {
   const statusConfig = {
@@ -47,7 +50,7 @@ const CertificationBadge = ({ level }: { level: CertificationLevel }) => {
 
 const Multipliers = () => {
   // Simuler un utilisateur connecté avec le rôle "manager"
-  const userRole: UserRole = "MANAGER"; // Peut être "ADMIN", "MANAGER", "AGENT", etc.
+  const userRole: UserRole = "MANAGER";
   const userName =
     MOCK_USERS.find((user) => user.role === userRole)?.name || "";
   const navigate = useNavigate();
@@ -60,8 +63,8 @@ const Multipliers = () => {
     const matchesTab = activeTab === "all" || multiplier.status === activeTab;
     const matchesSearch =
       multiplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      multiplier.location.lat.toString().includes(searchQuery) ||
-      multiplier.location.lng.toString().includes(searchQuery) ||
+      multiplier.latitude.toString().includes(searchQuery) ||
+      multiplier.longitude.toString().includes(searchQuery) ||
       multiplier.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (multiplier.email &&
         multiplier.email.toLowerCase().includes(searchQuery.toLowerCase())) ||
@@ -99,7 +102,7 @@ const Multipliers = () => {
               className="w-full md:w-auto"
             >
               <TabsList>
-                <TabsTrigger value="ALL">Tous</TabsTrigger>
+                <TabsTrigger value="all">Tous</TabsTrigger>
                 <TabsTrigger value="ACTIVE">Actifs</TabsTrigger>
                 <TabsTrigger value="INACTIVE">Inactifs</TabsTrigger>
               </TabsList>
