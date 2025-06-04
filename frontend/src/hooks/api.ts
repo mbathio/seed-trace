@@ -1,4 +1,4 @@
-// frontend/src/hooks/api.ts - Version corrigée avec cohérence backend
+// frontend/src/hooks/api.ts - Hooks API corrigés avec gestion complète des types
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -11,10 +11,9 @@ import {
   reportsAPI,
   varietiesAPI,
   usersAPI,
+  statisticsAPI,
 } from "@/lib/api";
 import { toast } from "sonner";
-
-// Import des types corrigés
 import {
   SeedLot,
   QualityControl,
@@ -23,62 +22,53 @@ import {
   Production,
   Variety,
   User,
-  SeedLevel,
-  SeedLotStatus,
-  UserRole,
+  Report,
   ApiResponse,
-  PaginationParams,
+  CreateSeedLotData,
+  UpdateSeedLotData,
+  CreateQualityControlData,
   SeedLotParams,
   QualityControlParams,
   MultiplierParams,
   ParcelParams,
   ProductionParams,
-  CreateSeedLotData,
-  UpdateSeedLotData,
-  CreateQualityControlData,
-  convertUserRoleFromBackend,
+  Role,
+  convertRoleFromBackend,
   convertStatusFromBackend,
+  formatDateForInput,
 } from "@/utils/seedTypes";
 
-// Interface AuthResponse mise à jour
-interface AuthResponse {
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    role: string; // Backend envoie string, on convertit côté frontend
-  };
-  tokens: {
-    accessToken: string;
-    refreshToken: string;
-  };
-}
+// ========== AUTH HOOKS ==========
 
 interface LoginCredentials {
   email: string;
   password: string;
 }
 
-// Auth hooks avec conversion des types
 export const useLogin = () => {
-  return useMutation<ApiResponse<AuthResponse>, Error, LoginCredentials>({
-    mutationFn: ({ email, password }) =>
-      authAPI.login(email, password).then((res) => res.data),
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse<any>, Error, LoginCredentials>({
+    mutationFn: async ({ email, password }) => {
+      const response = await authAPI.login(email, password);
+      return response.data;
+    },
     onSuccess: (response) => {
       const { user, tokens } = response.data;
 
-      // Meilleure gestion de la conversion des rôles
-      const convertedUser = {
-        ...user,
-        role: convertUserRoleFromBackend(user.role),
-        isActive: true,
-        createdAt: new Date().toISOString(),
-      };
-
+      // Sauvegarder les données utilisateur avec tokens
       localStorage.setItem(
         "isra_user",
-        JSON.stringify({ ...convertedUser, token: tokens.accessToken })
+        JSON.stringify({
+          ...user,
+          tokens,
+          token: tokens.accessToken, // Compatibilité
+        })
       );
+
+      // Invalider les queries pour forcer le refresh
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+
       toast.success("Connexion réussie");
     },
     onError: (error: Error) => {
@@ -88,59 +78,68 @@ export const useLogin = () => {
   });
 };
 
-export const useCurrentUser = () => {
-  return useQuery<ApiResponse<User>, Error>({
-    queryKey: ["currentUser"],
-    queryFn: () =>
-      authAPI.getCurrentUser().then((res) => {
-        // Conversion du rôle si nécessaire
-        const userData = res.data.data;
-        if (typeof userData.role === "string") {
-          userData.role = convertUserRoleFromBackend(userData.role);
+export const useLogout = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse<null>, Error>({
+    mutationFn: async () => {
+      const userData = localStorage.getItem("isra_user");
+      if (userData) {
+        const { tokens } = JSON.parse(userData);
+        if (tokens?.refreshToken) {
+          const response = await authAPI.logout(tokens.refreshToken);
+          return response.data;
         }
-        return res.data;
-      }),
-    enabled: !!localStorage.getItem("isra_user"),
-    retry: false,
+      }
+      throw new Error("No refresh token found");
+    },
+    onSuccess: () => {
+      localStorage.removeItem("isra_user");
+      queryClient.clear();
+      window.location.href = "/login";
+    },
+    onError: () => {
+      // Même en cas d'erreur, on déconnecte localement
+      localStorage.removeItem("isra_user");
+      queryClient.clear();
+      window.location.href = "/login";
+    },
   });
 };
 
-// Seed Lots hooks avec conversion des données
+export const useCurrentUser = () => {
+  return useQuery<ApiResponse<User>, Error>({
+    queryKey: ["currentUser"],
+    queryFn: async () => {
+      const response = await authAPI.getCurrentUser();
+      return response.data;
+    },
+    enabled: !!localStorage.getItem("isra_user"),
+    retry: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+};
+
+// ========== SEED LOTS HOOKS ==========
+
 export const useSeedLots = (params?: SeedLotParams) => {
   return useQuery<ApiResponse<SeedLot[]>, Error>({
     queryKey: ["seedLots", params],
-    queryFn: () =>
-      seedLotsAPI.getAll(params).then((res) => {
-        // Conversion des statuts et autres données si nécessaire
-        const lots = res.data.data.map((lot) => ({
-          ...lot,
-          status:
-            typeof lot.status === "string"
-              ? convertStatusFromBackend(lot.status)
-              : lot.status,
-        }));
-
-        return {
-          ...res.data,
-          data: lots,
-        };
-      }),
+    queryFn: async () => {
+      const response = await seedLotsAPI.getAll(params);
+      return response.data;
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 };
 
 export const useSeedLot = (id: string) => {
   return useQuery<ApiResponse<SeedLot>, Error>({
     queryKey: ["seedLot", id],
-    queryFn: () =>
-      seedLotsAPI.getById(id).then((res) => {
-        // Conversion des données si nécessaire
-        const lot = res.data.data;
-        if (typeof lot.status === "string") {
-          lot.status = convertStatusFromBackend(lot.status);
-        }
-
-        return res.data;
-      }),
+    queryFn: async () => {
+      const response = await seedLotsAPI.getById(id);
+      return response.data;
+    },
     enabled: !!id,
   });
 };
@@ -155,7 +154,10 @@ export const useSeedLotGenealogy = (id: string) => {
     Error
   >({
     queryKey: ["seedLotGenealogy", id],
-    queryFn: () => seedLotsAPI.getGenealogy(id).then((res) => res.data),
+    queryFn: async () => {
+      const response = await seedLotsAPI.getGenealogy(id);
+      return response.data;
+    },
     enabled: !!id,
   });
 };
@@ -164,15 +166,9 @@ export const useCreateSeedLot = () => {
   const queryClient = useQueryClient();
 
   return useMutation<ApiResponse<SeedLot>, Error, CreateSeedLotData>({
-    mutationFn: (data) => {
-      // Validation et transformation des données avant envoi
-      const validatedData = {
-        ...data,
-        varietyId: Number(data.varietyId), // S'assurer que c'est un number
-        level: data.level.toUpperCase() as SeedLevel, // S'assurer du format
-      };
-
-      return seedLotsAPI.create(validatedData).then((res) => res.data);
+    mutationFn: async (data) => {
+      const response = await seedLotsAPI.create(data);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seedLots"] });
@@ -192,11 +188,13 @@ export const useUpdateSeedLot = () => {
     Error,
     { id: string; data: UpdateSeedLotData }
   >({
-    mutationFn: ({ id, data }) =>
-      seedLotsAPI.update(id, data).then((res) => res.data),
-    onSuccess: () => {
+    mutationFn: async ({ id, data }) => {
+      const response = await seedLotsAPI.update(id, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["seedLots"] });
-      queryClient.invalidateQueries({ queryKey: ["seedLot"] });
+      queryClient.invalidateQueries({ queryKey: ["seedLot", variables.id] });
       toast.success("Lot mis à jour avec succès");
     },
     onError: (error: Error) => {
@@ -205,11 +203,44 @@ export const useUpdateSeedLot = () => {
   });
 };
 
-// Quality Controls hooks
+export const useDeleteSeedLot = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<ApiResponse<null>, Error, string>({
+    mutationFn: async (id) => {
+      const response = await seedLotsAPI.delete(id);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["seedLots"] });
+      toast.success("Lot supprimé avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de la suppression");
+    },
+  });
+};
+
+// ========== QUALITY CONTROLS HOOKS ==========
+
 export const useQualityControls = (params?: QualityControlParams) => {
   return useQuery<ApiResponse<QualityControl[]>, Error>({
     queryKey: ["qualityControls", params],
-    queryFn: () => qualityControlsAPI.getAll(params).then((res) => res.data),
+    queryFn: async () => {
+      const response = await qualityControlsAPI.getAll(params);
+      return response.data;
+    },
+  });
+};
+
+export const useQualityControl = (id: number) => {
+  return useQuery<ApiResponse<QualityControl>, Error>({
+    queryKey: ["qualityControl", id],
+    queryFn: async () => {
+      const response = await qualityControlsAPI.getById(id);
+      return response.data;
+    },
+    enabled: !!id,
   });
 };
 
@@ -221,11 +252,13 @@ export const useCreateQualityControl = () => {
     Error,
     CreateQualityControlData
   >({
-    mutationFn: (data) =>
-      qualityControlsAPI.create(data).then((res) => res.data),
-    onSuccess: () => {
+    mutationFn: async (data) => {
+      const response = await qualityControlsAPI.create(data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["qualityControls"] });
-      queryClient.invalidateQueries({ queryKey: ["seedLots"] });
+      queryClient.invalidateQueries({ queryKey: ["seedLot", variables.lotId] });
       toast.success("Contrôle qualité enregistré avec succès");
     },
     onError: (error: Error) => {
@@ -234,19 +267,26 @@ export const useCreateQualityControl = () => {
   });
 };
 
-// Multipliers hooks
+// ========== MULTIPLIERS HOOKS ==========
+
 export const useMultipliers = (params?: MultiplierParams) => {
   return useQuery<ApiResponse<Multiplier[]>, Error>({
     queryKey: ["multipliers", params],
-    queryFn: () => multipliersAPI.getAll(params).then((res) => res.data),
+    queryFn: async () => {
+      const response = await multipliersAPI.getAll(params);
+      return response.data;
+    },
   });
 };
 
 export const useMultiplier = (id: number) => {
   return useQuery<ApiResponse<Multiplier>, Error>({
     queryKey: ["multiplier", id],
-    queryFn: () => multipliersAPI.getById(id).then((res) => res.data),
-    enabled: !!id,
+    queryFn: async () => {
+      const response = await multipliersAPI.getById(id);
+      return response.data;
+    },
+    enabled: !!id && id > 0,
   });
 };
 
@@ -254,7 +294,10 @@ export const useCreateMultiplier = () => {
   const queryClient = useQueryClient();
 
   return useMutation<ApiResponse<Multiplier>, Error, Partial<Multiplier>>({
-    mutationFn: (data) => multipliersAPI.create(data).then((res) => res.data),
+    mutationFn: async (data) => {
+      const response = await multipliersAPI.create(data);
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["multipliers"] });
       toast.success("Multiplicateur créé avec succès");
@@ -265,19 +308,76 @@ export const useCreateMultiplier = () => {
   });
 };
 
-// Parcels hooks
+export const useUpdateMultiplier = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<Multiplier>,
+    Error,
+    { id: number; data: Partial<Multiplier> }
+  >({
+    mutationFn: async ({ id, data }) => {
+      const response = await multipliersAPI.update(id, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["multipliers"] });
+      queryClient.invalidateQueries({ queryKey: ["multiplier", variables.id] });
+      toast.success("Multiplicateur mis à jour avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de la mise à jour");
+    },
+  });
+};
+
+export const useCreateMultiplierContract = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<any>,
+    Error,
+    {
+      multiplierId: number;
+      data: any;
+    }
+  >({
+    mutationFn: async ({ multiplierId, data }) => {
+      const response = await multipliersAPI.createContract(multiplierId, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["multiplier", variables.multiplierId],
+      });
+      toast.success("Contrat créé avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de la création du contrat");
+    },
+  });
+};
+
+// ========== PARCELS HOOKS ==========
+
 export const useParcels = (params?: ParcelParams) => {
   return useQuery<ApiResponse<Parcel[]>, Error>({
     queryKey: ["parcels", params],
-    queryFn: () => parcelsAPI.getAll(params).then((res) => res.data),
+    queryFn: async () => {
+      const response = await parcelsAPI.getAll(params);
+      return response.data;
+    },
   });
 };
 
 export const useParcel = (id: number) => {
   return useQuery<ApiResponse<Parcel>, Error>({
     queryKey: ["parcel", id],
-    queryFn: () => parcelsAPI.getById(id).then((res) => res.data),
-    enabled: !!id,
+    queryFn: async () => {
+      const response = await parcelsAPI.getById(id);
+      return response.data;
+    },
+    enabled: !!id && id > 0,
   });
 };
 
@@ -285,16 +385,9 @@ export const useCreateParcel = () => {
   const queryClient = useQueryClient();
 
   return useMutation<ApiResponse<Parcel>, Error, Partial<Parcel>>({
-    mutationFn: (data) => {
-      // Adaptation des données pour le backend
-      const adaptedData = {
-        ...data,
-        // Le backend attend latitude/longitude séparément
-        latitude: data.latitude,
-        longitude: data.longitude,
-      };
-
-      return parcelsAPI.create(adaptedData).then((res) => res.data);
+    mutationFn: async (data) => {
+      const response = await parcelsAPI.create(data);
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["parcels"] });
@@ -306,19 +399,53 @@ export const useCreateParcel = () => {
   });
 };
 
-// Productions hooks
+export const useAddSoilAnalysis = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<any>,
+    Error,
+    {
+      parcelId: number;
+      data: any;
+    }
+  >({
+    mutationFn: async ({ parcelId, data }) => {
+      const response = await parcelsAPI.addSoilAnalysis(parcelId, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["parcel", variables.parcelId],
+      });
+      toast.success("Analyse du sol enregistrée avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de l'enregistrement");
+    },
+  });
+};
+
+// ========== PRODUCTIONS HOOKS ==========
+
 export const useProductions = (params?: ProductionParams) => {
   return useQuery<ApiResponse<Production[]>, Error>({
     queryKey: ["productions", params],
-    queryFn: () => productionsAPI.getAll(params).then((res) => res.data),
+    queryFn: async () => {
+      const response = await productionsAPI.getAll(params);
+      return response.data;
+    },
   });
 };
 
 export const useProduction = (id: number) => {
   return useQuery<ApiResponse<Production>, Error>({
     queryKey: ["production", id],
-    queryFn: () => productionsAPI.getById(id).then((res) => res.data),
-    enabled: !!id,
+    queryFn: async () => {
+      const response = await productionsAPI.getById(id);
+      return response.data;
+    },
+    enabled: !!id && id > 0,
   });
 };
 
@@ -326,7 +453,10 @@ export const useCreateProduction = () => {
   const queryClient = useQueryClient();
 
   return useMutation<ApiResponse<Production>, Error, Partial<Production>>({
-    mutationFn: (data) => productionsAPI.create(data).then((res) => res.data),
+    mutationFn: async (data) => {
+      const response = await productionsAPI.create(data);
+      return response.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["productions"] });
       toast.success("Production créée avec succès");
@@ -337,133 +467,186 @@ export const useCreateProduction = () => {
   });
 };
 
-// Varieties hooks
-export const useVarieties = (params?: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  cropType?: string;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-}) => {
+export const useAddProductionActivity = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<any>,
+    Error,
+    {
+      productionId: number;
+      data: any;
+    }
+  >({
+    mutationFn: async ({ productionId, data }) => {
+      const response = await productionsAPI.addActivity(productionId, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["production", variables.productionId],
+      });
+      toast.success("Activité enregistrée avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de l'enregistrement");
+    },
+  });
+};
+
+export const useAddProductionIssue = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<any>,
+    Error,
+    {
+      productionId: number;
+      data: any;
+    }
+  >({
+    mutationFn: async ({ productionId, data }) => {
+      const response = await productionsAPI.addIssue(productionId, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["production", variables.productionId],
+      });
+      toast.success("Problème enregistré avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de l'enregistrement");
+    },
+  });
+};
+
+export const useAddWeatherData = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    ApiResponse<any>,
+    Error,
+    {
+      productionId: number;
+      data: any;
+    }
+  >({
+    mutationFn: async ({ productionId, data }) => {
+      const response = await productionsAPI.addWeatherData(productionId, data);
+      return response.data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["production", variables.productionId],
+      });
+      toast.success("Données météo enregistrées avec succès");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de l'enregistrement");
+    },
+  });
+};
+
+// ========== VARIETIES HOOKS ==========
+
+export const useVarieties = (params?: any) => {
   return useQuery<ApiResponse<Variety[]>, Error>({
     queryKey: ["varieties", params],
-    queryFn: () => varietiesAPI.getAll(params).then((res) => res.data),
+    queryFn: async () => {
+      const response = await varietiesAPI.getAll(params);
+      return response.data;
+    },
   });
 };
 
 export const useVariety = (id: string) => {
   return useQuery<ApiResponse<Variety>, Error>({
     queryKey: ["variety", id],
-    queryFn: () => varietiesAPI.getById(id).then((res) => res.data),
+    queryFn: async () => {
+      const response = await varietiesAPI.getById(id);
+      return response.data;
+    },
     enabled: !!id,
   });
 };
 
-// Reports hooks
-export const useReports = (params?: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  type?: string;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-}) => {
-  return useQuery<ApiResponse<unknown[]>, Error>({
-    queryKey: ["reports", params],
-    queryFn: () => reportsAPI.getAll(params).then((res) => res.data),
-  });
-};
+// ========== USERS HOOKS ==========
 
-export const useProductionReport = (params?: Record<string, unknown>) => {
-  return useQuery<ApiResponse<unknown>, Error>({
-    queryKey: ["productionReport", params],
-    queryFn: () => reportsAPI.getProduction(params).then((res) => res.data),
-    enabled: !!params,
-  });
-};
-
-export const useQualityReport = (params?: Record<string, unknown>) => {
-  return useQuery<ApiResponse<unknown>, Error>({
-    queryKey: ["qualityReport", params],
-    queryFn: () => reportsAPI.getQuality(params).then((res) => res.data),
-    enabled: !!params,
-  });
-};
-
-// Users hooks
-export const useUsers = (params?: {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  role?: string;
-  isActive?: boolean;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
-}) => {
+export const useUsers = (params?: any) => {
   return useQuery<ApiResponse<User[]>, Error>({
     queryKey: ["users", params],
-    queryFn: () =>
-      usersAPI.getAll(params).then((res) => {
-        // Conversion des rôles pour tous les utilisateurs
-        const users = res.data.data.map((user) => ({
-          ...user,
-          role:
-            typeof user.role === "string"
-              ? convertUserRoleFromBackend(user.role)
-              : user.role,
-        }));
-
-        return {
-          ...res.data,
-          data: users,
-        };
-      }),
+    queryFn: async () => {
+      const response = await usersAPI.getAll(params);
+      return response.data;
+    },
   });
 };
 
 export const useUser = (id: number) => {
   return useQuery<ApiResponse<User>, Error>({
     queryKey: ["user", id],
-    queryFn: () =>
-      usersAPI.getById(id).then((res) => {
-        // Conversion du rôle utilisateur
-        const userData = res.data.data;
-        if (typeof userData.role === "string") {
-          userData.role = convertUserRoleFromBackend(userData.role);
-        }
-        return res.data;
-      }),
-    enabled: !!id,
+    queryFn: async () => {
+      const response = await usersAPI.getById(id);
+      return response.data;
+    },
+    enabled: !!id && id > 0,
   });
 };
 
-// Hook pour les statistiques du dashboard
+// ========== REPORTS HOOKS ==========
+
+export const useReports = (params?: any) => {
+  return useQuery<ApiResponse<Report[]>, Error>({
+    queryKey: ["reports", params],
+    queryFn: async () => {
+      const response = await reportsAPI.getAll(params);
+      return response.data;
+    },
+  });
+};
+
+export const useProductionReport = (params?: any) => {
+  return useQuery<ApiResponse<any>, Error>({
+    queryKey: ["productionReport", params],
+    queryFn: async () => {
+      const response = await reportsAPI.getProduction(params);
+      return response.data;
+    },
+    enabled: !!params,
+  });
+};
+
+export const useQualityReport = (params?: any) => {
+  return useQuery<ApiResponse<any>, Error>({
+    queryKey: ["qualityReport", params],
+    queryFn: async () => {
+      const response = await reportsAPI.getQuality(params);
+      return response.data;
+    },
+    enabled: !!params,
+  });
+};
+
+// ========== STATISTICS HOOKS ==========
+
 export const useDashboardStats = () => {
-  return useQuery<ApiResponse<unknown>, Error>({
+  return useQuery<ApiResponse<any>, Error>({
     queryKey: ["dashboardStats"],
-    queryFn: () =>
-      fetch("/api/statistics/dashboard", {
-        headers: {
-          Authorization: `Bearer ${
-            JSON.parse(localStorage.getItem("isra_user") || "{}").token
-          }`,
-        },
-      }).then((res) => res.json()),
+    queryFn: async () => {
+      const response = await statisticsAPI.getDashboard();
+      return response.data;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
-// Hook pour les tendances mensuelles
 export const useMonthlyTrends = (months: number = 12) => {
-  return useQuery<ApiResponse<unknown>, Error>({
+  return useQuery<ApiResponse<any>, Error>({
     queryKey: ["monthlyTrends", months],
-    queryFn: () =>
-      fetch(`/api/statistics/trends?months=${months}`, {
-        headers: {
-          Authorization: `Bearer ${
-            JSON.parse(localStorage.getItem("isra_user") || "{}").token
-          }`,
-        },
-      }).then((res) => res.json()),
+    queryFn: async () => {
+      const response = await statisticsAPI.getTrends(months);
+      return response.data;
+    },
   });
 };
