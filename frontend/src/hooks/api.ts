@@ -1,4 +1,4 @@
-// frontend/src/hooks/api.ts - Hooks API corrigés avec gestion complète des types
+// frontend/src/hooks/api.ts - Hooks API corrigés avec types explicites
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -33,22 +33,191 @@ import {
   ParcelParams,
   ProductionParams,
   Role,
-  convertRoleFromBackend,
-  convertStatusFromBackend,
-  formatDateForInput,
+  MultiplierHistory,
+  Contract,
+  SoilAnalysis,
+  ProductionActivity,
+  ProductionIssue,
+  WeatherData,
 } from "@/utils/seedTypes";
 
-// ========== AUTH HOOKS ==========
+// ========== TYPES SPÉCIFIQUES ==========
+
+interface AuthResponse {
+  user: User;
+  tokens: {
+    accessToken: string;
+    refreshToken: string;
+  };
+}
 
 interface LoginCredentials {
   email: string;
   password: string;
 }
 
+interface DashboardStats {
+  totalLots: number;
+  totalProduction: number;
+  activeMultipliers: number;
+  certificationRate: number;
+  monthlyTrends: Array<{
+    month: string;
+    production: number;
+    lots: number;
+  }>;
+}
+
+interface TrendsData {
+  production: Array<{
+    month: string;
+    quantity: number;
+    value: number;
+  }>;
+  quality: Array<{
+    month: string;
+    passRate: number;
+    totalTests: number;
+  }>;
+  multipliers: Array<{
+    month: string;
+    active: number;
+    total: number;
+  }>;
+}
+
+interface ProductionReportData {
+  summary: {
+    totalProduction: number;
+    totalArea: number;
+    averageYield: number;
+    topVarieties: Array<{
+      varietyId: number;
+      varietyName: string;
+      quantity: number;
+    }>;
+  };
+  byPeriod: Array<{
+    period: string;
+    production: number;
+    area: number;
+  }>;
+  byMultiplier: Array<{
+    multiplierId: number;
+    multiplierName: string;
+    production: number;
+  }>;
+}
+
+interface QualityReportData {
+  summary: {
+    totalTests: number;
+    passRate: number;
+    averageGermination: number;
+    averagePurity: number;
+  };
+  byLevel: Array<{
+    level: string;
+    tests: number;
+    passRate: number;
+  }>;
+  trends: Array<{
+    date: string;
+    passRate: number;
+    tests: number;
+  }>;
+}
+
+interface SoilAnalysisData {
+  analysisDate: string;
+  pH?: number;
+  organicMatter?: number;
+  nitrogen?: number;
+  phosphorus?: number;
+  potassium?: number;
+  notes?: string;
+}
+
+interface ActivityData {
+  type: string;
+  activityDate: string;
+  description: string;
+  personnel?: string[];
+  notes?: string;
+  inputs?: Array<{
+    name: string;
+    quantity: string;
+    unit: string;
+    cost?: number;
+  }>;
+}
+
+interface IssueData {
+  issueDate: string;
+  type: string;
+  description: string;
+  severity: string;
+  actions: string;
+  cost?: number;
+}
+
+interface WeatherInputData {
+  recordDate: string;
+  temperature: number;
+  rainfall: number;
+  humidity: number;
+  windSpeed?: number;
+  notes?: string;
+  source?: string;
+}
+
+interface ContractData {
+  multiplierId: number;
+  varietyId: number;
+  startDate: string;
+  endDate: string;
+  seedLevel: string;
+  expectedQuantity: number;
+  parcelId?: number;
+  paymentTerms?: string;
+  notes?: string;
+  status: string;
+}
+
+interface VarietyParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  cropType?: string;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
+interface UserParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  role?: string;
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
+interface ReportParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  type?: string;
+  sortBy?: string;
+  sortOrder?: string;
+}
+
+// ========== AUTH HOOKS ==========
+
 export const useLogin = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<ApiResponse<any>, Error, LoginCredentials>({
+  return useMutation<ApiResponse<AuthResponse>, Error, LoginCredentials>({
     mutationFn: async ({ email, password }) => {
       const response = await authAPI.login(email, password);
       return response.data;
@@ -335,11 +504,11 @@ export const useCreateMultiplierContract = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ApiResponse<any>,
+    ApiResponse<Contract>,
     Error,
     {
       multiplierId: number;
-      data: any;
+      data: ContractData;
     }
   >({
     mutationFn: async ({ multiplierId, data }) => {
@@ -403,11 +572,11 @@ export const useAddSoilAnalysis = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ApiResponse<any>,
+    ApiResponse<SoilAnalysis>,
     Error,
     {
       parcelId: number;
-      data: any;
+      data: SoilAnalysisData;
     }
   >({
     mutationFn: async ({ parcelId, data }) => {
@@ -471,11 +640,11 @@ export const useAddProductionActivity = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ApiResponse<any>,
+    ApiResponse<ProductionActivity>,
     Error,
     {
       productionId: number;
-      data: any;
+      data: ActivityData;
     }
   >({
     mutationFn: async ({ productionId, data }) => {
@@ -498,11 +667,11 @@ export const useAddProductionIssue = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ApiResponse<any>,
+    ApiResponse<ProductionIssue>,
     Error,
     {
       productionId: number;
-      data: any;
+      data: IssueData;
     }
   >({
     mutationFn: async ({ productionId, data }) => {
@@ -525,11 +694,11 @@ export const useAddWeatherData = () => {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ApiResponse<any>,
+    ApiResponse<WeatherData>,
     Error,
     {
       productionId: number;
-      data: any;
+      data: WeatherInputData;
     }
   >({
     mutationFn: async ({ productionId, data }) => {
@@ -550,7 +719,7 @@ export const useAddWeatherData = () => {
 
 // ========== VARIETIES HOOKS ==========
 
-export const useVarieties = (params?: any) => {
+export const useVarieties = (params?: VarietyParams) => {
   return useQuery<ApiResponse<Variety[]>, Error>({
     queryKey: ["varieties", params],
     queryFn: async () => {
@@ -573,7 +742,7 @@ export const useVariety = (id: string) => {
 
 // ========== USERS HOOKS ==========
 
-export const useUsers = (params?: any) => {
+export const useUsers = (params?: UserParams) => {
   return useQuery<ApiResponse<User[]>, Error>({
     queryKey: ["users", params],
     queryFn: async () => {
@@ -596,7 +765,7 @@ export const useUser = (id: number) => {
 
 // ========== REPORTS HOOKS ==========
 
-export const useReports = (params?: any) => {
+export const useReports = (params?: ReportParams) => {
   return useQuery<ApiResponse<Report[]>, Error>({
     queryKey: ["reports", params],
     queryFn: async () => {
@@ -606,8 +775,8 @@ export const useReports = (params?: any) => {
   });
 };
 
-export const useProductionReport = (params?: any) => {
-  return useQuery<ApiResponse<any>, Error>({
+export const useProductionReport = (params?: Record<string, unknown>) => {
+  return useQuery<ApiResponse<ProductionReportData>, Error>({
     queryKey: ["productionReport", params],
     queryFn: async () => {
       const response = await reportsAPI.getProduction(params);
@@ -617,8 +786,8 @@ export const useProductionReport = (params?: any) => {
   });
 };
 
-export const useQualityReport = (params?: any) => {
-  return useQuery<ApiResponse<any>, Error>({
+export const useQualityReport = (params?: Record<string, unknown>) => {
+  return useQuery<ApiResponse<QualityReportData>, Error>({
     queryKey: ["qualityReport", params],
     queryFn: async () => {
       const response = await reportsAPI.getQuality(params);
@@ -631,7 +800,7 @@ export const useQualityReport = (params?: any) => {
 // ========== STATISTICS HOOKS ==========
 
 export const useDashboardStats = () => {
-  return useQuery<ApiResponse<any>, Error>({
+  return useQuery<ApiResponse<DashboardStats>, Error>({
     queryKey: ["dashboardStats"],
     queryFn: async () => {
       const response = await statisticsAPI.getDashboard();
@@ -642,7 +811,7 @@ export const useDashboardStats = () => {
 };
 
 export const useMonthlyTrends = (months: number = 12) => {
-  return useQuery<ApiResponse<any>, Error>({
+  return useQuery<ApiResponse<TrendsData>, Error>({
     queryKey: ["monthlyTrends", months],
     queryFn: async () => {
       const response = await statisticsAPI.getTrends(months);
