@@ -24,6 +24,12 @@ describe("Auth Endpoints", () => {
         password: "12345",
       });
 
+      // Debug : afficher la réponse en cas d'erreur
+      if (res.status !== 200) {
+        console.log("Response status:", res.status);
+        console.log("Response body:", JSON.stringify(res.body, null, 2));
+      }
+
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data).toHaveProperty("tokens");
@@ -33,11 +39,29 @@ describe("Auth Endpoints", () => {
       expect(res.body.data.user.email).toBe("adiop@isra.sn");
     });
 
+    it("should handle validation errors", async () => {
+      // Test avec email invalide
+      const res = await request(app).post("/api/auth/login").send({
+        email: "invalid-email",
+        password: "12345",
+      });
+
+      expect(res.status).toBe(422);
+      expect(res.body.success).toBe(false);
+      expect(res.body.errors).toBeDefined();
+    });
+
     it("should reject invalid credentials", async () => {
       const res = await request(app).post("/api/auth/login").send({
         email: "wrong@email.com",
         password: "wrongpassword",
       });
+
+      // Debug : afficher la réponse
+      if (res.status !== 401) {
+        console.log("Response status:", res.status);
+        console.log("Response body:", JSON.stringify(res.body, null, 2));
+      }
 
       expect(res.status).toBe(401);
       expect(res.body.success).toBe(false);

@@ -1,4 +1,4 @@
-// backend/src/app.ts
+// backend/src/app.ts - Ajout du body parser
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -8,7 +8,6 @@ import rateLimit from "express-rate-limit";
 import { config } from "./config/environment";
 import { errorHandler } from "./middleware/errorHandler";
 import { authMiddleware } from "./middleware/auth";
-import { validateRequest } from "./middleware/validation";
 
 // Routes
 import authRoutes from "./routes/auth";
@@ -28,8 +27,10 @@ const app = express();
 // Security middleware
 app.use(helmet());
 app.use(compression());
-app.use("/api/statistics", authMiddleware, statisticsRoutes);
-app.use("/api/export", authMiddleware, exportRoutes);
+
+// 🔴 IMPORTANT: Body parsing middleware DOIT être avant les routes
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -49,7 +50,7 @@ const corsOptions = {
       "http://localhost:3000",
       "http://localhost:5173",
       "http://127.0.0.1:5173",
-      "http://localhost:8080", // Ajout du port Vite par défaut
+      "http://localhost:8080",
       "http://127.0.0.1:8080",
     ];
 
@@ -67,18 +68,18 @@ const corsOptions = {
   exposedHeaders: ["X-Total-Count"],
   maxAge: 86400, // 24 heures
 };
-// Body parsing middleware
 
 app.use(cors(corsOptions));
 
 // Handler spécifique pour OPTIONS
 app.options("*", cors(corsOptions));
+
 // Logging
 if (config.environment !== "test") {
   app.use(morgan("combined"));
 }
 
-// 🆕 Route racine - Ajouter cette route
+// Route racine
 app.get("/", (req, res) => {
   res.status(200).json({
     success: true,
@@ -127,6 +128,8 @@ app.use("/api/seed-lots", authMiddleware, seedLotRoutes);
 app.use("/api/quality-controls", authMiddleware, qualityControlRoutes);
 app.use("/api/productions", authMiddleware, productionRoutes);
 app.use("/api/reports", authMiddleware, reportRoutes);
+app.use("/api/statistics", authMiddleware, statisticsRoutes);
+app.use("/api/export", authMiddleware, exportRoutes);
 
 // 404 handler
 app.use("*", (req, res) => {
