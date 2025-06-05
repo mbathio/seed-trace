@@ -3,6 +3,7 @@ import request from "supertest";
 import app from "../src/app";
 import { prisma, createTestUser } from "./setup";
 import { EncryptionService } from "../src/utils/encryption";
+import { describe, it, expect, beforeEach } from "@jest/globals";
 
 describe("Auth Endpoints", () => {
   describe("POST /api/auth/login", () => {
