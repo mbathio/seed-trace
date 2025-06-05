@@ -12,6 +12,12 @@ export enum Role {
   RESEARCHER = "RESEARCHER",
 }
 
+// ========== EXPORTS COMPLETS ==========
+
+// Export des types principaux
+export type UserRole = Role;
+export type SeedLotStatus = LotStatus;
+
 export enum SeedLevel {
   GO = "GO",
   G1 = "G1",
@@ -215,8 +221,10 @@ export interface Parcel {
   id: number;
   name?: string;
   area: number;
-  latitude: number;
-  longitude: number;
+  location: {
+    lat: number;
+    lng: number;
+  };
   status: ParcelStatus;
   soilType?: string;
   irrigationSystem?: string;
