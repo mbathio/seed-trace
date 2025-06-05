@@ -20,12 +20,16 @@ import seedLotRoutes from "./routes/seedLots";
 import qualityControlRoutes from "./routes/qualityControls";
 import productionRoutes from "./routes/productions";
 import reportRoutes from "./routes/reports";
+import statisticsRoutes from "./routes/statistics";
+import exportRoutes from "./routes/export";
 
 const app = express();
 
 // Security middleware
 app.use(helmet());
 app.use(compression());
+app.use("/api/statistics", authMiddleware, statisticsRoutes);
+app.use("/api/export", authMiddleware, exportRoutes);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -38,24 +42,35 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS configuration
-app.use(
-  cors({
-    origin: [
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: Function) {
+    const allowedOrigins = [
       config.client.url,
       "http://localhost:3000",
-      "http://localhost:5173", // Vite dev server
+      "http://localhost:5173",
       "http://127.0.0.1:5173",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+    ];
 
+    // Permettre les requêtes sans origine (Postman, etc.)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Non autorisé par CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  exposedHeaders: ["X-Total-Count"],
+  maxAge: 86400, // 24 heures
+};
 // Body parsing middleware
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+app.use(cors(corsOptions));
 
+// Handler spécifique pour OPTIONS
+app.options("*", cors(corsOptions));
 // Logging
 if (config.environment !== "test") {
   app.use(morgan("combined"));

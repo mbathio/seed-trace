@@ -2,11 +2,8 @@
 import { z } from "zod";
 
 export const createSeedLotSchema = z.object({
-  varietyId: z.union([
-    z.number().positive(),
-    z.string(), // ✅ Accepte string pour le code de variété
-  ]),
-  level: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]), // ✅ MAJUSCULES
+  varietyId: z.union([z.number().positive(), z.string()]),
+  level: z.enum(["GO", "G1", "G2", "G3", "G4", "R1", "R2"]),
   quantity: z.number().positive("La quantité doit être positive"),
   productionDate: z
     .string()
@@ -21,14 +18,15 @@ export const updateSeedLotSchema = z.object({
   quantity: z.number().positive().optional(),
   status: z
     .enum([
-      "PENDING", // ✅ MAJUSCULES
-      "CERTIFIED",
-      "REJECTED",
-      "IN_STOCK",
-      "SOLD",
-      "ACTIVE",
-      "DISTRIBUTED",
+      "pending",
+      "certified",
+      "rejected",
+      "in-stock",
+      "sold",
+      "active",
+      "distributed",
     ])
+    .transform((status) => status.toUpperCase().replace("-", "_"))
     .optional(),
   notes: z.string().optional(),
   expiryDate: z

@@ -3,6 +3,8 @@ import app from "./app";
 import { config } from "./config/environment";
 import { logger } from "./utils/logger";
 import { connectDatabase } from "./config/database";
+import fs from "fs";
+import path from "path";
 
 async function startServer() {
   try {
@@ -37,6 +39,11 @@ async function startServer() {
     logger.error("Erreur lors du démarrage du serveur:", error);
     process.exit(1);
   }
+}
+
+const logsDir = path.join(__dirname, "..", "logs");
+if (!fs.existsSync(logsDir)) {
+  fs.mkdirSync(logsDir, { recursive: true });
 }
 
 startServer();

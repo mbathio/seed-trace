@@ -4,6 +4,9 @@ export interface CreateSeedLotData {
   level: string;
   quantity: number;
   productionDate: string;
+  expiryDate?: string; // ✅ Ajouté - optionnel
+  status?: string; // ✅ Ajouté - optionnel, pour le statut du lot
+  batchNumber?: string; // ✅ Ajouté - optionnel, pour le numéro de lot
   multiplierId?: number;
   parcelId?: number;
   parentLotId?: string;
@@ -15,6 +18,7 @@ export interface UpdateSeedLotData {
   status?: string;
   notes?: string;
   expiryDate?: string;
+  batchNumber?: string; // ✅ Ajouté - optionnel, pour le numéro de lot
 }
 
 export interface CreateQualityControlData {
