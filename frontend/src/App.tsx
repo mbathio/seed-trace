@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,8 +18,6 @@ import Multipliers from "./pages/Multipliers";
 import MultiplierDetail from "./pages/MultiplierDetail";
 import Reports from "./pages/Reports";
 import ProductionDetail from "./pages/ProductionDetail";
-
-console.log("App component loading...");
 
 const queryClient = new QueryClient();
 

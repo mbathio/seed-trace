@@ -1,36 +1,13 @@
+
 import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import AdvancedAnalytics from "@/components/reports/AdvancedAnalytics";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserRole, MOCK_USERS } from "@/utils/seedTypes";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 // Mock data for reports
 const MOCK_PRODUCTION_DATA = [
@@ -39,14 +16,14 @@ const MOCK_PRODUCTION_DATA = [
   { name: "Mar", riz: 180, mais: 90, arachide: 80 },
   { name: "Avr", riz: 200, mais: 110, arachide: 90 },
   { name: "Mai", riz: 250, mais: 130, arachide: 100 },
-  { name: "Jun", riz: 270, mais: 150, arachide: 110 },
+  { name: "Jun", riz: 270, mais: 150, arachide: 110 }
 ];
 
 const MOCK_QUALITY_DATA = [
   { name: "Excellente", value: 65 },
   { name: "Bonne", value: 25 },
   { name: "Moyenne", value: 8 },
-  { name: "Insuffisante", value: 2 },
+  { name: "Insuffisante", value: 2 }
 ];
 
 const MOCK_REGION_DATA = [
@@ -54,22 +31,19 @@ const MOCK_REGION_DATA = [
   { region: "Dagana", production: 380, surface: 100 },
   { region: "Podor", production: 320, surface: 85 },
   { region: "Richard-Toll", production: 290, surface: 75 },
-  { region: "Matam", production: 250, surface: 65 },
+  { region: "Matam", production: 250, surface: 65 }
 ];
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 const Reports = () => {
   // Simuler un utilisateur connecté avec le rôle "manager"
-  const userRole: UserRole = "MANAGER"; // Peut être "ADMIN", "MANAGER", "AGENT", etc.
-  const userName =
-    MOCK_USERS.find((user) => user.role === userRole)?.name || "";
+  const userRole: UserRole = "manager";
+  const userName = MOCK_USERS.find(user => user.role === userRole)?.name || "";
   const [period, setPeriod] = useState<string>("6months");
   const [crop, setCrop] = useState<string>("all");
-  const [reportMode, setReportMode] = useState<"dashboard" | "advanced">(
-    "dashboard"
-  );
-
+  const [reportMode, setReportMode] = useState<'dashboard' | 'advanced'>('dashboard');
+  
   return (
     <div className="min-h-screen bg-gray-100">
       <Navbar userRole={userRole} userName={userName} />
@@ -84,30 +58,22 @@ const Reports = () => {
               </p>
             </div>
             <div className="flex gap-2">
-              <button
-                className={`px-4 py-2 rounded-md ${
-                  reportMode === "dashboard"
-                    ? "bg-isra-green text-white"
-                    : "bg-gray-100 hover:bg-gray-200"
-                }`}
-                onClick={() => setReportMode("dashboard")}
+              <button 
+                className={`px-4 py-2 rounded-md ${reportMode === 'dashboard' ? 'bg-isra-green text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                onClick={() => setReportMode('dashboard')}
               >
                 Tableau de bord
               </button>
-              <button
-                className={`px-4 py-2 rounded-md ${
-                  reportMode === "advanced"
-                    ? "bg-isra-green text-white"
-                    : "bg-gray-100 hover:bg-gray-200"
-                }`}
-                onClick={() => setReportMode("advanced")}
+              <button 
+                className={`px-4 py-2 rounded-md ${reportMode === 'advanced' ? 'bg-isra-green text-white' : 'bg-gray-100 hover:bg-gray-200'}`}
+                onClick={() => setReportMode('advanced')}
               >
                 Analyses avancées
               </button>
             </div>
           </div>
-
-          {reportMode === "dashboard" ? (
+          
+          {reportMode === 'dashboard' ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 <Card>
@@ -115,12 +81,8 @@ const Reports = () => {
                     <CardTitle className="text-lg">Production Totale</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-isra-green">
-                      1,450 tonnes
-                    </div>
-                    <p className="text-sm text-green-600">
-                      ↑ 12% par rapport à la période précédente
-                    </p>
+                    <div className="text-3xl font-bold text-isra-green">1,450 tonnes</div>
+                    <p className="text-sm text-green-600">↑ 12% par rapport à la période précédente</p>
                   </CardContent>
                 </Card>
                 <Card>
@@ -128,40 +90,26 @@ const Reports = () => {
                     <CardTitle className="text-lg">Surface Cultivée</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-isra-green">
-                      385 hectares
-                    </div>
-                    <p className="text-sm text-green-600">
-                      ↑ 8% par rapport à la période précédente
-                    </p>
+                    <div className="text-3xl font-bold text-isra-green">385 hectares</div>
+                    <p className="text-sm text-green-600">↑ 8% par rapport à la période précédente</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">
-                      Multiplicateurs Actifs
-                    </CardTitle>
+                    <CardTitle className="text-lg">Multiplicateurs Actifs</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-3xl font-bold text-isra-green">48</div>
-                    <p className="text-sm text-orange-600">
-                      → Stable par rapport à la période précédente
-                    </p>
+                    <p className="text-sm text-orange-600">→ Stable par rapport à la période précédente</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-lg">
-                      Taux de Certification
-                    </CardTitle>
+                    <CardTitle className="text-lg">Taux de Certification</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-isra-green">
-                      92%
-                    </div>
-                    <p className="text-sm text-green-600">
-                      ↑ 5% par rapport à la période précédente
-                    </p>
+                    <div className="text-3xl font-bold text-isra-green">92%</div>
+                    <p className="text-sm text-green-600">↑ 5% par rapport à la période précédente</p>
                   </CardContent>
                 </Card>
               </div>
@@ -215,11 +163,7 @@ const Reports = () => {
                           <Legend />
                           <Bar dataKey="riz" name="Riz" fill="#8884d8" />
                           <Bar dataKey="mais" name="Maïs" fill="#82ca9d" />
-                          <Bar
-                            dataKey="arachide"
-                            name="Arachide"
-                            fill="#ffc658"
-                          />
+                          <Bar dataKey="arachide" name="Arachide" fill="#ffc658" />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
@@ -228,9 +172,7 @@ const Reports = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Qualité des Semences</CardTitle>
-                    <CardDescription>
-                      Répartition par niveau de qualité
-                    </CardDescription>
+                    <CardDescription>Répartition par niveau de qualité</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="h-80">
@@ -244,15 +186,10 @@ const Reports = () => {
                             outerRadius={80}
                             fill="#8884d8"
                             dataKey="value"
-                            label={({ name, percent }) =>
-                              `${name} ${(percent * 100).toFixed(0)}%`
-                            }
+                            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                           >
                             {MOCK_QUALITY_DATA.map((entry, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={COLORS[index % COLORS.length]}
-                              />
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
                           <Tooltip />
@@ -266,9 +203,7 @@ const Reports = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Production par Région</CardTitle>
-                  <CardDescription>
-                    Données des principales régions de production
-                  </CardDescription>
+                  <CardDescription>Données des principales régions de production</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
@@ -276,33 +211,18 @@ const Reports = () => {
                       <thead>
                         <tr className="border-b">
                           <th className="text-left py-3 px-4">Région</th>
-                          <th className="text-right py-3 px-4">
-                            Production (tonnes)
-                          </th>
-                          <th className="text-right py-3 px-4">
-                            Surface (hectares)
-                          </th>
-                          <th className="text-right py-3 px-4">
-                            Rendement (t/ha)
-                          </th>
+                          <th className="text-right py-3 px-4">Production (tonnes)</th>
+                          <th className="text-right py-3 px-4">Surface (hectares)</th>
+                          <th className="text-right py-3 px-4">Rendement (t/ha)</th>
                         </tr>
                       </thead>
                       <tbody>
                         {MOCK_REGION_DATA.map((item, index) => (
-                          <tr
-                            key={index}
-                            className={index % 2 === 0 ? "bg-gray-50" : ""}
-                          >
+                          <tr key={index} className={index % 2 === 0 ? "bg-gray-50" : ""}>
                             <td className="py-2 px-4">{item.region}</td>
-                            <td className="text-right py-2 px-4">
-                              {item.production}
-                            </td>
-                            <td className="text-right py-2 px-4">
-                              {item.surface}
-                            </td>
-                            <td className="text-right py-2 px-4">
-                              {(item.production / item.surface).toFixed(2)}
-                            </td>
+                            <td className="text-right py-2 px-4">{item.production}</td>
+                            <td className="text-right py-2 px-4">{item.surface}</td>
+                            <td className="text-right py-2 px-4">{(item.production / item.surface).toFixed(2)}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -310,28 +230,14 @@ const Reports = () => {
                         <tr className="border-t font-medium">
                           <td className="py-2 px-4">Total</td>
                           <td className="text-right py-2 px-4">
-                            {MOCK_REGION_DATA.reduce(
-                              (acc, item) => acc + item.production,
-                              0
-                            )}
+                            {MOCK_REGION_DATA.reduce((acc, item) => acc + item.production, 0)}
                           </td>
                           <td className="text-right py-2 px-4">
-                            {MOCK_REGION_DATA.reduce(
-                              (acc, item) => acc + item.surface,
-                              0
-                            )}
+                            {MOCK_REGION_DATA.reduce((acc, item) => acc + item.surface, 0)}
                           </td>
                           <td className="text-right py-2 px-4">
-                            {(
-                              MOCK_REGION_DATA.reduce(
-                                (acc, item) => acc + item.production,
-                                0
-                              ) /
-                              MOCK_REGION_DATA.reduce(
-                                (acc, item) => acc + item.surface,
-                                0
-                              )
-                            ).toFixed(2)}
+                            {(MOCK_REGION_DATA.reduce((acc, item) => acc + item.production, 0) / 
+                              MOCK_REGION_DATA.reduce((acc, item) => acc + item.surface, 0)).toFixed(2)}
                           </td>
                         </tr>
                       </tfoot>
