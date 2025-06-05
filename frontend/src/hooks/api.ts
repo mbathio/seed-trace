@@ -176,7 +176,7 @@ interface ContractData {
   varietyId: number;
   startDate: string;
   endDate: string;
-  seedLevel: string;
+  seedLevel: SeedLevel; // Changé de string à SeedLevel
   expectedQuantity: number;
   parcelId?: number;
   paymentTerms?: string;
