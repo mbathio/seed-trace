@@ -6,7 +6,7 @@ const API_BASE_URL =
   import.meta.env.VITE_API_URL || "http://localhost:3001/api";
 
 // Types pour les réponses API
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data: T | null;
@@ -18,6 +18,9 @@ interface ApiResponse<T = any> {
     totalPages?: number;
   };
 }
+
+// Types pour les paramètres de requête
+type QueryParams = Record<string, string | number | boolean | undefined>;
 
 // Client API singleton
 class ApiClient {
@@ -104,24 +107,42 @@ class ApiClient {
   // Méthodes HTTP
   async get<T>(
     endpoint: string,
-    params?: Record<string, any>
+    params?: QueryParams
   ): Promise<ApiResponse<T>> {
-    const queryString = params
-      ? `?${new URLSearchParams(params).toString()}`
-      : "";
+    let queryString = "";
+
+    if (params) {
+      // Convertir tous les paramètres en chaînes et filtrer les undefined
+      const searchParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.append(key, String(value));
+        }
+      });
+      queryString = searchParams.toString()
+        ? `?${searchParams.toString()}`
+        : "";
+    }
+
     return this.request<T>(`${endpoint}${queryString}`, {
       method: "GET",
     });
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async post<T>(
+    endpoint: string,
+    data?: Record<string, unknown>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async put<T>(
+    endpoint: string,
+    data?: Record<string, unknown>
+  ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -139,4 +160,4 @@ class ApiClient {
 export const apiClient = ApiClient.getInstance();
 
 // Export des types
-export type { ApiResponse };
+export type { ApiResponse, QueryParams };
