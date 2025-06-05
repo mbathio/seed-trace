@@ -1,6 +1,7 @@
-// backend/src/__tests__/setup.ts
+// backend/tests/setup.ts
 import { PrismaClient } from "@prisma/client";
 import { config } from "dotenv";
+import { beforeAll, afterAll, beforeEach, jest } from "@jest/globals";
 
 // Charger les variables d'environnement pour les tests
 config({ path: ".env.test" });
@@ -12,7 +13,7 @@ const prisma = new PrismaClient({
       url:
         process.env.DATABASE_URL_TEST ||
         process.env.DATABASE_URL ||
-        "postgresql://postgres:postgres@localhost:5432/isra_seeds_test",
+        "postgresql://postgres:user1@user1:5432/isra_seeds",
     },
   },
 });
@@ -21,7 +22,7 @@ const prisma = new PrismaClient({
 jest.setTimeout(30000);
 
 // Mock des services externes
-jest.mock("../utils/logger", () => ({
+jest.mock("../src/utils/logger", () => ({
   logger: {
     info: jest.fn(),
     error: jest.fn(),
@@ -55,41 +56,29 @@ afterAll(async () => {
 
 // Nettoyer la base de données avant chaque test
 beforeEach(async () => {
-  // Nettoyer les tables dans le bon ordre (respecter les contraintes de clés étrangères)
-  const tablesToClean = [
-    // D'abord les tables qui dépendent d'autres tables
-    "qualityControl",
-    "productionActivity",
-    "activityInput",
-    "productionIssue",
-    "weatherData",
-    "production",
-    "report",
-    "refreshToken",
-    "seedLot",
-    "contract",
-    "productionHistory",
-    "soilAnalysis",
-    "previousCrop",
-    "parcel",
-    "multiplier",
-    "variety",
-    "user",
-  ];
-
   try {
-    // Désactiver temporairement les contraintes de clés étrangères
-    await prisma.$executeRawUnsafe(`SET session_replication_role = 'replica';`);
-
-    // Nettoyer chaque table
-    for (const table of tablesToClean) {
-      await prisma[table].deleteMany({});
-    }
-
-    // Réactiver les contraintes
-    await prisma.$executeRawUnsafe(`SET session_replication_role = 'origin';`);
+    // Nettoyer les tables dans l'ordre inverse des dépendances
+    // pour éviter les violations de contraintes de clés étrangères
+    await prisma.refreshToken.deleteMany();
+    await prisma.qualityControl.deleteMany();
+    await prisma.activityInput.deleteMany();
+    await prisma.productionActivity.deleteMany();
+    await prisma.productionIssue.deleteMany();
+    await prisma.weatherData.deleteMany();
+    await prisma.production.deleteMany();
+    await prisma.report.deleteMany();
+    await prisma.seedLot.deleteMany();
+    await prisma.contract.deleteMany();
+    await prisma.productionHistory.deleteMany();
+    await prisma.soilAnalysis.deleteMany();
+    await prisma.previousCrop.deleteMany();
+    await prisma.parcel.deleteMany();
+    await prisma.multiplier.deleteMany();
+    await prisma.variety.deleteMany();
+    await prisma.user.deleteMany();
   } catch (error) {
     console.error("Error cleaning database:", error);
+    throw error;
   }
 });
 

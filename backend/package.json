@@ -54,6 +54,7 @@
     "zod": "^3.25.49"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
     "@types/bcrypt": "^5.0.2",
     "@types/compression": "^1.8.0",
     "@types/cors": "^2.8.18",
@@ -64,6 +65,7 @@
     "@types/multer": "^1.4.12",
     "@types/node": "^20.17.57",
     "@types/qrcode": "^1.5.5",
+    "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "eslint": "^8.57.0",
@@ -73,6 +75,7 @@
     "nodemon": "^3.1.10",
     "prettier": "^3.2.5",
     "prisma": "^5.22.0",
+    "supertest": "^7.0.0",
     "ts-jest": "^29.3.4",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

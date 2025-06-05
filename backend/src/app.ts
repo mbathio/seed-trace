@@ -49,10 +49,13 @@ const corsOptions = {
       "http://localhost:3000",
       "http://localhost:5173",
       "http://127.0.0.1:5173",
+      "http://localhost:8080", // Ajout du port Vite par défaut
+      "http://127.0.0.1:8080",
     ];
 
-    // Permettre les requêtes sans origine (Postman, etc.)
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin && config.environment === "development") {
+      callback(null, true);
+    } else if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Non autorisé par CORS"));
@@ -65,8 +68,7 @@ const corsOptions = {
   maxAge: 86400, // 24 heures
 };
 // Body parsing middleware
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
 app.use(cors(corsOptions));
 
 // Handler spécifique pour OPTIONS

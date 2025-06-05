@@ -1,8 +1,9 @@
 // backend/jest.config.js
+/** @type {import('jest').Config} */
 module.exports = {
   preset: "ts-jest",
   testEnvironment: "node",
-  roots: ["<rootDir>/src"],
+  roots: ["<rootDir>/src", "<rootDir>/tests"],
   testMatch: [
     "**/__tests__/**/*.test.ts",
     "**/__tests__/**/*.spec.ts",
@@ -12,7 +13,16 @@ module.exports = {
     "**/*.spec.ts",
   ],
   transform: {
-    "^.+\\.ts$": "ts-jest",
+    "^.+\\.tsx?$": [
+      "ts-jest",
+      {
+        tsconfig: {
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+          types: ["node", "jest", "@jest/globals"],
+        },
+      },
+    ],
   },
   collectCoverageFrom: [
     "src/**/*.ts",
@@ -24,19 +34,19 @@ module.exports = {
   ],
   coverageDirectory: "coverage",
   coverageReporters: ["text", "lcov", "html"],
-  setupFilesAfterEnv: ["<rootDir>/src/__tests__/setup.ts"],
+  setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
-  },
-  globals: {
-    "ts-jest": {
-      tsconfig: {
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-      },
-    },
   },
   testTimeout: 30000,
   clearMocks: true,
   restoreMocks: true,
+  // Support pour les modules ES6
+  extensionsToTreatAsEsm: [".ts"],
+  // Globals explicites
+  globals: {
+    "ts-jest": {
+      useESM: false,
+    },
+  },
 };
