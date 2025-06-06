@@ -1,202 +1,320 @@
-// frontend/src/pages/GenealogyView.tsx
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import Navbar from "@/components/layout/Navbar";
-import Sidebar from "@/components/layout/Sidebar";
-import GenealogyViewer from "@/components/seeds/GenealogyViewer";
-import QRScanner from "@/components/seeds/QRScanner";
-import { User, MOCK_SEED_LOTS, MOCK_VARIETIES } from "@/utils/seedTypes";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import { QrCode } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { MOCK_SEED_LOTS, MOCK_VARIETIES, SeedLot } from "@/utils/seedTypes";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  ChevronDown,
+  ChevronRight,
+  Package,
+  Calendar,
+  MapPin,
+} from "lucide-react";
 
-const GenealogyView = () => {
-  const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isScannerOpen, setIsScannerOpen] = useState(false);
+interface GenealogyNode {
+  lot: SeedLot;
+  children: GenealogyNode[];
+}
+
+interface GenealogyViewerProps {
+  lotId: string;
+}
+
+const GenealogyViewer: React.FC<GenealogyViewerProps> = ({ lotId }) => {
+  const [genealogyTree, setGenealogyTree] = useState<GenealogyNode | null>(
+    null
+  );
+  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    // Check if user is logged in
-    const storedUser = localStorage.getItem("isra_user");
-    if (!storedUser) {
-      toast.error("Veuillez vous connecter pour accéder à cette page");
-      navigate("/login");
-      return;
+    // Build the genealogy tree
+    const buildTree = (currentLotId: string): GenealogyNode | null => {
+      const lot = MOCK_SEED_LOTS.find((l) => l.id === currentLotId);
+      if (!lot) return null;
+
+      // Find children (lots that have this lot as parent)
+      const childLots = MOCK_SEED_LOTS.filter(
+        (l) => l.parentLotId === currentLotId
+      );
+
+      return {
+        lot,
+        children: childLots
+          .map((childLot) => buildTree(childLot.id))
+          .filter(Boolean) as GenealogyNode[],
+      };
+    };
+
+    const tree = buildTree(lotId);
+    setGenealogyTree(tree);
+
+    // Expand all nodes by default
+    if (tree) {
+      const allNodeIds = new Set<string>();
+      const collectNodeIds = (node: GenealogyNode) => {
+        allNodeIds.add(node.lot.id);
+        node.children.forEach(collectNodeIds);
+      };
+      collectNodeIds(tree);
+      setExpandedNodes(allNodeIds);
     }
+  }, [lotId]);
 
-    try {
-      const parsedUser = JSON.parse(storedUser) as User;
-      setUser(parsedUser);
-    } catch (error) {
-      localStorage.removeItem("isra_user");
-      toast.error("Session invalide, veuillez vous reconnecter");
-      navigate("/login");
-    }
-  }, [navigate]);
-
-  // Filter lots based on search term
-  const filteredLots = MOCK_SEED_LOTS.filter((lot) => {
-    if (!searchTerm) return true;
-    return lot.id.toLowerCase().includes(searchTerm.toLowerCase());
-  });
-
-  const handleSelectLot = (lotId: string) => {
-    setSelectedLotId(lotId);
+  const toggleNode = (nodeId: string) => {
+    setExpandedNodes((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(nodeId)) {
+        newSet.delete(nodeId);
+      } else {
+        newSet.add(nodeId);
+      }
+      return newSet;
+    });
   };
 
-  const handleScanSuccess = (lotId: string) => {
-    // Vérifier si le lot existe dans les données
-    const lot = MOCK_SEED_LOTS.find((l) => l.id === lotId);
-    if (lot) {
-      setSelectedLotId(lotId);
-      setSearchTerm(lotId);
-      toast.success(`Lot ${lotId} sélectionné`);
-    } else {
-      toast.error(`Lot ${lotId} non trouvé dans la base de données`);
-    }
-  };
+  const renderNode = (node: GenealogyNode, level: number = 0): JSX.Element => {
+    const variety = MOCK_VARIETIES.find((v) => v.id === node.lot.varietyId);
+    const isExpanded = expandedNodes.has(node.lot.id);
+    const hasChildren = node.children.length > 0;
 
-  if (!user) {
+    const levelColors = {
+      GO: "bg-isra-brown text-white",
+      G1: "bg-blue-500 text-white",
+      G2: "bg-amber-500 text-white",
+      G3: "bg-green-500 text-white",
+      G4: "bg-teal-500 text-white",
+      R1: "bg-purple-500 text-white",
+      R2: "bg-pink-500 text-white",
+    };
+
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg">Chargement...</p>
-        </div>
+      <div key={node.lot.id} className={`${level > 0 ? "ml-8" : ""}`}>
+        <Card className="mb-4 hover:shadow-lg transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start flex-1">
+                {hasChildren && (
+                  <button
+                    onClick={() => toggleNode(node.lot.id)}
+                    className="mr-2 mt-1 p-0.5 hover:bg-gray-100 rounded"
+                  >
+                    {isExpanded ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </button>
+                )}
+                {!hasChildren && <div className="w-7" />}
+
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h3 className="font-semibold text-lg">{node.lot.id}</h3>
+                    <Badge
+                      className={
+                        levelColors[node.lot.level as keyof typeof levelColors]
+                      }
+                    >
+                      {node.lot.level}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {variety?.name || node.lot.variety}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      <span>{node.lot.quantity} kg</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        {new Date(node.lot.productionDate).toLocaleDateString(
+                          "fr-FR"
+                        )}
+                      </span>
+                    </div>
+                    {node.lot.parcelId && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>Parcelle #{node.lot.parcelId}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {node.lot.parentLotId && (
+                    <div className="mt-2 text-sm">
+                      <span className="text-gray-500">Parent: </span>
+                      <span className="text-isra-green font-medium">
+                        {node.lot.parentLotId}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="text-right">
+                <Badge
+                  variant="outline"
+                  className={
+                    node.lot.status === "certified"
+                      ? "border-green-500 text-green-700"
+                      : node.lot.status === "in-stock"
+                      ? "border-blue-500 text-blue-700"
+                      : node.lot.status === "pending"
+                      ? "border-amber-500 text-amber-700"
+                      : node.lot.status === "rejected"
+                      ? "border-red-500 text-red-700"
+                      : "border-gray-500 text-gray-700"
+                  }
+                >
+                  {node.lot.status === "certified"
+                    ? "Certifié"
+                    : node.lot.status === "in-stock"
+                    ? "En stock"
+                    : node.lot.status === "pending"
+                    ? "En attente"
+                    : node.lot.status === "rejected"
+                    ? "Rejeté"
+                    : node.lot.status === "sold"
+                    ? "Vendu"
+                    : node.lot.status === "active"
+                    ? "Actif"
+                    : node.lot.status === "distributed"
+                    ? "Distribué"
+                    : node.lot.status}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {hasChildren && isExpanded && (
+          <div className="relative">
+            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-300"></div>
+            <div className="pl-4">
+              {node.children.map((child) => renderNode(child, level + 1))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (!genealogyTree) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <p>Lot non trouvé ou pas de données de généalogie disponibles</p>
       </div>
     );
   }
 
+  // Find ancestors
+  const findAncestors = (lotId: string): SeedLot[] => {
+    const ancestors: SeedLot[] = [];
+    let currentLot = MOCK_SEED_LOTS.find((l) => l.id === lotId);
+
+    while (currentLot && currentLot.parentLotId) {
+      const parent = MOCK_SEED_LOTS.find(
+        (l) => l.id === currentLot!.parentLotId
+      );
+      if (parent) {
+        ancestors.unshift(parent);
+        currentLot = parent;
+      } else {
+        break;
+      }
+    }
+
+    return ancestors;
+  };
+
+  const ancestors = findAncestors(lotId);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar userRole={user.role} userName={user.name} />
-      <div className="flex pt-16">
-        <Sidebar userRole={user.role} />
-        <main className="flex-1 ml-0 md:ml-64 p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-isra-green-dark">
-              Généalogie des Lots
-            </h1>
-            <p className="text-gray-500">
-              Visualiser la généalogie complète des lots de semences
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-1">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle>Sélection d'un Lot</CardTitle>
-                  <div className="flex gap-2 mt-4">
-                    <Input
-                      type="text"
-                      placeholder="Rechercher un lot..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsScannerOpen(true)}
-                      title="Scanner un QR code"
-                      className="gap-2"
-                    >
-                      <QrCode className="h-5 w-5" />
-                      <span className="hidden sm:inline">Scanner</span>
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                    {filteredLots.length > 0 ? (
-                      filteredLots.map((lot) => {
-                        const variety = MOCK_VARIETIES.find(
-                          (v) => v.id === lot.varietyId
-                        );
-                        return (
-                          <div
-                            key={lot.id}
-                            className={`p-3 border rounded-md cursor-pointer transition-colors ${
-                              selectedLotId === lot.id
-                                ? "border-isra-green bg-isra-green-light bg-opacity-10"
-                                : "hover:bg-gray-50"
-                            }`}
-                            onClick={() => handleSelectLot(lot.id)}
-                          >
-                            <div className="flex items-center">
-                              <span className="inline-flex items-center justify-center w-6 h-6 mr-2 text-xs font-bold text-white bg-isra-green rounded-full">
-                                {lot.level}
-                              </span>
-                              <div>
-                                <h3 className="font-medium text-sm">
-                                  {lot.id}
-                                </h3>
-                                <p className="text-xs text-gray-500">
-                                  {variety?.name}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <div className="text-center py-8 text-gray-500">
-                        Aucun lot ne correspond à votre recherche
+    <div className="space-y-6">
+      {/* Ancestors */}
+      {ancestors.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4 text-gray-700">
+            Lignée ascendante
+          </h3>
+          <div className="relative">
+            {ancestors.map((ancestor, index) => {
+              const variety = MOCK_VARIETIES.find(
+                (v) => v.id === ancestor.varietyId
+              );
+              return (
+                <div key={ancestor.id} className="mb-2">
+                  <Card className="bg-gray-50">
+                    <CardContent className="p-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <Badge variant="outline" className="text-xs">
+                            {ancestor.level}
+                          </Badge>
+                          <span className="font-medium">{ancestor.id}</span>
+                          <span className="text-sm text-gray-500">
+                            {variety?.name || ancestor.variety}
+                          </span>
+                        </div>
+                        <span className="text-sm text-gray-500">
+                          {new Date(ancestor.productionDate).toLocaleDateString(
+                            "fr-FR"
+                          )}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Visualisation de la Généalogie</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {selectedLotId ? (
-                    <GenealogyViewer lotId={selectedLotId} />
-                  ) : (
-                    <div className="text-center py-12 text-gray-500">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-16 w-16 mx-auto text-gray-300 mb-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={1}
-                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                        />
-                      </svg>
-                      <p>Sélectionnez un lot pour visualiser sa généalogie</p>
-                      <p className="text-sm mt-2">
-                        Vous pouvez rechercher un lot ou scanner son QR code
-                      </p>
+                    </CardContent>
+                  </Card>
+                  {index < ancestors.length - 1 && (
+                    <div className="flex justify-center my-1">
+                      <ChevronDown className="h-4 w-4 text-gray-400" />
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </div>
+                </div>
+              );
+            })}
+            {ancestors.length > 0 && (
+              <div className="flex justify-center my-1">
+                <ChevronDown className="h-4 w-4 text-gray-400" />
+              </div>
+            )}
           </div>
-        </main>
+        </div>
+      )}
+
+      {/* Current lot and descendants */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4 text-gray-700">
+          Lot sélectionné et descendance
+        </h3>
+        {renderNode(genealogyTree)}
       </div>
 
-      {/* QR Scanner Modal */}
-      <QRScanner
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        onScanSuccess={handleScanSuccess}
-      />
+      {/* Summary */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="p-4">
+          <h4 className="font-semibold text-blue-900 mb-2">
+            Résumé de la généalogie
+          </h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-blue-700">Générations ascendantes:</span>
+              <span className="ml-2 font-medium text-blue-900">
+                {ancestors.length}
+              </span>
+            </div>
+            <div>
+              <span className="text-blue-700">Lots descendants directs:</span>
+              <span className="ml-2 font-medium text-blue-900">
+                {genealogyTree.children.length}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
 
-export default GenealogyView;
+export default GenealogyViewer;
