@@ -1,148 +1,202 @@
+// frontend/src/pages/GenealogyView.tsx
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/layout/Navbar";
+import Sidebar from "@/components/layout/Sidebar";
+import GenealogyViewer from "@/components/seeds/GenealogyViewer";
+import QRScanner from "@/components/seeds/QRScanner";
+import { User, MOCK_SEED_LOTS, MOCK_VARIETIES } from "@/utils/seedTypes";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { QrCode } from "lucide-react";
 
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { SeedLot, MOCK_SEED_LOTS, MOCK_VARIETIES } from '@/utils/seedTypes';
+const GenealogyView = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+  const [selectedLotId, setSelectedLotId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
-interface GenealogyViewerProps {
-  lotId: string;
-}
+  useEffect(() => {
+    // Check if user is logged in
+    const storedUser = localStorage.getItem("isra_user");
+    if (!storedUser) {
+      toast.error("Veuillez vous connecter pour accéder à cette page");
+      navigate("/login");
+      return;
+    }
 
-const GenealogyViewer = ({ lotId }: GenealogyViewerProps) => {
-  const [expandedView, setExpandedView] = useState(false);
+    try {
+      const parsedUser = JSON.parse(storedUser) as User;
+      setUser(parsedUser);
+    } catch (error) {
+      localStorage.removeItem("isra_user");
+      toast.error("Session invalide, veuillez vous reconnecter");
+      navigate("/login");
+    }
+  }, [navigate]);
 
-  // Find the current lot
-  const currentLot = MOCK_SEED_LOTS.find(lot => lot.id === lotId);
-  if (!currentLot) return <p>Lot non trouvé</p>;
-
-  // Find the variety
-  const variety = MOCK_VARIETIES.find(v => v.id === currentLot.varietyId);
-  if (!variety) return <p>Variété non trouvée</p>;
-
-  // Function to find parent lots recursively
-  const findAncestors = (lot: SeedLot): SeedLot[] => {
-    if (!lot.parentLotId) return [];
-    
-    const parent = MOCK_SEED_LOTS.find(l => l.id === lot.parentLotId);
-    if (!parent) return [];
-    
-    return [parent, ...findAncestors(parent)];
-  };
-
-  // Function to find child lots recursively
-  const findDescendants = (lot: SeedLot): SeedLot[] => {
-    const children = MOCK_SEED_LOTS.filter(l => l.parentLotId === lot.id);
-    if (children.length === 0) return [];
-    
-    return [...children, ...children.flatMap(child => findDescendants(child))];
-  };
-
-  const ancestors = findAncestors(currentLot);
-  const descendants = findDescendants(currentLot);
-
-  // Sort all lots by level for display
-  const allRelatedLots = [...ancestors, currentLot, ...descendants].sort((a, b) => {
-    const levelOrder = { 'GO': 0, 'G1': 1, 'G2': 2, 'G3': 3, 'G4': 4, 'R1': 5, 'R2': 6 };
-    return levelOrder[a.level as keyof typeof levelOrder] - levelOrder[b.level as keyof typeof levelOrder];
+  // Filter lots based on search term
+  const filteredLots = MOCK_SEED_LOTS.filter((lot) => {
+    if (!searchTerm) return true;
+    return lot.id.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  // Simplified view shows just direct parent and children
-  const simplifiedView = [
-    ...ancestors.slice(0, 1),
-    currentLot,
-    ...descendants.slice(0, 2)
-  ];
-
-  const lotsToDisplay = expandedView ? allRelatedLots : simplifiedView;
-
-  const getLotCardClasses = (lot: SeedLot) => {
-    const baseClasses = "p-4 rounded-lg shadow-sm";
-    if (lot.id === currentLot.id) return `${baseClasses} border-2 border-isra-green bg-isra-green-light bg-opacity-20`;
-    
-    let bgColor = "";
-    switch (lot.level) {
-      case 'GO': bgColor = "bg-isra-brown bg-opacity-10"; break;
-      case 'G1': bgColor = "bg-blue-100"; break;
-      case 'G2': bgColor = "bg-amber-100"; break;
-      case 'G3': bgColor = "bg-green-100"; break;
-      case 'G4': bgColor = "bg-teal-100"; break;
-      case 'R1': bgColor = "bg-purple-100"; break;
-      case 'R2': bgColor = "bg-pink-100"; break;
-      default: bgColor = "bg-gray-100";
-    }
-    
-    return `${baseClasses} ${bgColor}`;
+  const handleSelectLot = (lotId: string) => {
+    setSelectedLotId(lotId);
   };
 
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-medium">Généalogie du lot: {currentLot.id}</h3>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => setExpandedView(!expandedView)}
-        >
-          {expandedView ? "Vue simplifiée" : "Vue complète"}
-        </Button>
-      </div>
+  const handleScanSuccess = (lotId: string) => {
+    // Vérifier si le lot existe dans les données
+    const lot = MOCK_SEED_LOTS.find((l) => l.id === lotId);
+    if (lot) {
+      setSelectedLotId(lotId);
+      setSearchTerm(lotId);
+      toast.success(`Lot ${lotId} sélectionné`);
+    } else {
+      toast.error(`Lot ${lotId} non trouvé dans la base de données`);
+    }
+  };
 
-      <Card>
-        <CardContent className="py-6">
-          {lotsToDisplay.length > 0 ? (
-            <div className="flex flex-col space-y-4">
-              {lotsToDisplay.map((lot) => (
-                <div key={lot.id} className={getLotCardClasses(lot)}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center">
-                        <span className="inline-flex items-center justify-center w-6 h-6 mr-2 text-xs font-bold text-white bg-isra-green rounded-full">
-                          {lot.level}
-                        </span>
-                        <h4 className="font-medium">{lot.id}</h4>
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        {variety.name} - {lot.quantity} kg
-                      </p>
-                    </div>
-                    <div className="text-sm text-right">
-                      <p className="font-medium">
-                        {new Date(lot.productionDate).toLocaleDateString()}
-                      </p>
-                      <span className={`inline-block px-2 py-1 text-xs rounded-full ${
-                        lot.status === "active" ? 'bg-green-100 text-green-800' : 
-                        lot.status === "distributed" ? 'bg-blue-100 text-blue-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {lot.status === "active" ? 'Actif' : 
-                         lot.status === "distributed" ? 'Distribué' : 'Éliminé'}
-                      </span>
-                    </div>
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar userRole={user.role} userName={user.name} />
+      <div className="flex pt-16">
+        <Sidebar userRole={user.role} />
+        <main className="flex-1 ml-0 md:ml-64 p-6">
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold text-isra-green-dark">
+              Généalogie des Lots
+            </h1>
+            <p className="text-gray-500">
+              Visualiser la généalogie complète des lots de semences
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle>Sélection d'un Lot</CardTitle>
+                  <div className="flex gap-2 mt-4">
+                    <Input
+                      type="text"
+                      placeholder="Rechercher un lot..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsScannerOpen(true)}
+                      title="Scanner un QR code"
+                      className="gap-2"
+                    >
+                      <QrCode className="h-5 w-5" />
+                      <span className="hidden sm:inline">Scanner</span>
+                    </Button>
                   </div>
-                  
-                  {lot.id !== allRelatedLots[allRelatedLots.length - 1].id && (
-                    <div className="flex justify-center my-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                    {filteredLots.length > 0 ? (
+                      filteredLots.map((lot) => {
+                        const variety = MOCK_VARIETIES.find(
+                          (v) => v.id === lot.varietyId
+                        );
+                        return (
+                          <div
+                            key={lot.id}
+                            className={`p-3 border rounded-md cursor-pointer transition-colors ${
+                              selectedLotId === lot.id
+                                ? "border-isra-green bg-isra-green-light bg-opacity-10"
+                                : "hover:bg-gray-50"
+                            }`}
+                            onClick={() => handleSelectLot(lot.id)}
+                          >
+                            <div className="flex items-center">
+                              <span className="inline-flex items-center justify-center w-6 h-6 mr-2 text-xs font-bold text-white bg-isra-green rounded-full">
+                                {lot.level}
+                              </span>
+                              <div>
+                                <h3 className="font-medium text-sm">
+                                  {lot.id}
+                                </h3>
+                                <p className="text-xs text-gray-500">
+                                  {variety?.name}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">
+                        Aucun lot ne correspond à votre recherche
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Visualisation de la Généalogie</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {selectedLotId ? (
+                    <GenealogyViewer lotId={selectedLotId} />
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-16 w-16 mx-auto text-gray-300 mb-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={1}
+                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                        />
                       </svg>
+                      <p>Sélectionnez un lot pour visualiser sa généalogie</p>
+                      <p className="text-sm mt-2">
+                        Vous pouvez rechercher un lot ou scanner son QR code
+                      </p>
                     </div>
                   )}
-                </div>
-              ))}
+                </CardContent>
+              </Card>
             </div>
-          ) : (
-            <p className="text-center text-gray-500">Aucune information généalogique disponible pour ce lot</p>
-          )}
-        </CardContent>
-      </Card>
-      
-      {!expandedView && allRelatedLots.length > simplifiedView.length && (
-        <p className="text-xs text-center text-gray-500">
-          {allRelatedLots.length - simplifiedView.length} autre(s) lot(s) lié(s) non affiché(s). Cliquez sur "Vue complète" pour tout voir.
-        </p>
-      )}
+          </div>
+        </main>
+      </div>
+
+      {/* QR Scanner Modal */}
+      <QRScanner
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanSuccess={handleScanSuccess}
+      />
     </div>
   );
 };
 
-export default GenealogyViewer;
+export default GenealogyView;
