@@ -1,160 +1,107 @@
-// backend/src/app.ts - Ajout du body parser
-import express from "express";
+import express, { Application, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import helmet from "helmet";
-import compression from "compression";
 import morgan from "morgan";
+import compression from "compression";
 import rateLimit from "express-rate-limit";
-import { config } from "./config/environment";
-import { errorHandler } from "./middleware/errorHandler";
-import { authMiddleware } from "./middleware/auth";
+import dotenv from "dotenv";
+import path from "path";
 
-// Routes
+// Import des routes
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/users";
-import varietyRoutes from "./routes/varieties";
-import parcelRoutes from "./routes/parcels";
-import multiplierRoutes from "./routes/multipliers";
-import seedLotRoutes from "./routes/seedLots";
-import qualityControlRoutes from "./routes/qualityControls";
-import productionRoutes from "./routes/productions";
-import reportRoutes from "./routes/reports";
-import statisticsRoutes from "./routes/statistics";
-import exportRoutes from "./routes/export";
+import seedRoutes from "./routes/seedLots";
+// ... autres imports de routes
 
-const app = express();
+// Import des middlewares
+import { errorHandler } from "./middleware/errorHandler";
 
-// Security middleware
-app.use(helmet());
-app.use(compression());
+// Charger les variables d'environnement
+dotenv.config();
 
-// 🔴 IMPORTANT: Body parsing middleware DOIT être avant les routes
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+class App {
+  public app: Application;
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: "Trop de requêtes depuis cette IP, veuillez réessayer plus tard.",
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-app.use(limiter);
+  constructor() {
+    this.app = express();
+    this.configureMiddlewares();
+    this.configureRoutes();
+  }
 
-// CORS configuration
-const corsOptions = {
-  origin: function (origin: string | undefined, callback: Function) {
-    const allowedOrigins = [
-      config.client.url,
-      "http://localhost:3000",
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "http://localhost:8080",
-      "http://127.0.0.1:8080",
-    ];
+  private configureMiddlewares(): void {
+    // Configuration CORS corrigée
+    const corsOptions = {
+      origin: process.env.CLIENT_URL || "http://localhost:5173",
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+      exposedHeaders: ["X-Token-Expired", "X-Total-Count"],
+      maxAge: 86400, // 24 heures
+    };
 
-    if (!origin && config.environment === "development") {
-      callback(null, true);
-    } else if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Non autorisé par CORS"));
+    // Appliquer les middlewares
+    this.app.use(cors(corsOptions));
+    this.app.use(
+      helmet({
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+      })
+    );
+    this.app.use(compression());
+    this.app.use(express.json({ limit: "10mb" }));
+    this.app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+    // Logging en développement
+    if (process.env.NODE_ENV !== "production") {
+      this.app.use(morgan("dev"));
     }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  exposedHeaders: ["X-Total-Count"],
-  maxAge: 86400, // 24 heures
-};
 
-app.use(cors(corsOptions));
+    // Rate limiting
+    const limiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // Limite de 100 requêtes
+      message:
+        "Trop de requêtes depuis cette IP, veuillez réessayer plus tard.",
+    });
+    this.app.use("/api/", limiter);
 
-// Handler spécifique pour OPTIONS
-app.options("*", cors(corsOptions));
+    // Servir les fichiers statiques (uploads)
+    this.app.use(
+      "/uploads",
+      express.static(path.join(__dirname, "../uploads"))
+    );
+  }
 
-// Logging
-if (config.environment !== "test") {
-  app.use(morgan("combined"));
+  private configureRoutes(): void {
+    // Route de santé
+    this.app.get("/api/health", (req: Request, res: Response) => {
+      res.json({
+        status: "OK",
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || "development",
+        version: process.env.npm_package_version || "1.0.0",
+      });
+    });
+
+    // Routes API
+    this.app.use("/api/auth", authRoutes);
+    this.app.use("/api/users", userRoutes);
+    this.app.use("/api/seeds", seedRoutes);
+    // ... autres routes
+
+    // Route de base
+    this.app.get("/", (req: Request, res: Response) => {
+      res.json({
+        message: "ISRA Seed Trace API",
+        version: "1.0.0",
+        documentation: "/api/docs",
+      });
+    });
+  }
+
+  // Méthode pour obtenir l'application Express
+  public getApp(): Application {
+    return this.app;
+  }
 }
 
-// Route racine
-app.get("/", (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: "🌾 API ISRA Seed Traceability System",
-    data: {
-      version: "1.0.0",
-      environment: config.environment,
-      timestamp: new Date().toISOString(),
-      documentation: "/api/docs",
-      health: "/health",
-      endpoints: {
-        auth: "/api/auth",
-        users: "/api/users",
-        varieties: "/api/varieties",
-        parcels: "/api/parcels",
-        multipliers: "/api/multipliers",
-        seedLots: "/api/seed-lots",
-        qualityControls: "/api/quality-controls",
-        productions: "/api/productions",
-        reports: "/api/reports",
-      },
-    },
-  });
-});
-
-// Health check
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    timestamp: new Date().toISOString(),
-    service: "ISRA Seed Traceability System",
-    version: "1.0.0",
-    uptime: process.uptime(),
-    memory: process.memoryUsage(),
-    environment: config.environment,
-  });
-});
-
-// API Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", authMiddleware, userRoutes);
-app.use("/api/varieties", authMiddleware, varietyRoutes);
-app.use("/api/parcels", authMiddleware, parcelRoutes);
-app.use("/api/multipliers", authMiddleware, multiplierRoutes);
-app.use("/api/seed-lots", authMiddleware, seedLotRoutes);
-app.use("/api/quality-controls", authMiddleware, qualityControlRoutes);
-app.use("/api/productions", authMiddleware, productionRoutes);
-app.use("/api/reports", authMiddleware, reportRoutes);
-app.use("/api/statistics", authMiddleware, statisticsRoutes);
-app.use("/api/export", authMiddleware, exportRoutes);
-
-// 404 handler
-app.use("*", (req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Endpoint non trouvé",
-    data: null,
-    errors: [`Route ${req.method} ${req.originalUrl} non trouvée`],
-    availableEndpoints: [
-      "GET /",
-      "GET /health",
-      "POST /api/auth/login",
-      "GET /api/auth/me",
-      "GET /api/varieties",
-      "GET /api/seed-lots",
-      "GET /api/multipliers",
-      "GET /api/parcels",
-      "GET /api/productions",
-      "GET /api/quality-controls",
-      "GET /api/reports",
-    ],
-  });
-});
-
-// Global error handler
-app.use(errorHandler);
-
-export default app;
+export default new App().getApp();
